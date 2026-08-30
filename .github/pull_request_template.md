@@ -17,16 +17,30 @@
 2. <!-- step 2 -->
 3. <!-- expected result -->
 
-## Previews
+<!-- AUTO-PREVIEWS:START -->
+<!-- AUTO-PREVIEWS:END -->
 
-<!-- Auto-filled by the agent when opening the PR:
-- Mock: <url>
-- Live: <url>
--->
+## Reviewer checklist
 
-## Checklist
+**Correctness**
+- [ ] Logic is right — edge cases considered (empty data, zero values, max values)
+- [ ] Tax math (if touched) matches the spec in packages/tax
+- [ ] No accidental behavior change outside the PR scope
 
+**SSR safety**
+- [ ] No `window` / `document` / `localStorage` at module top level (breaks server render)
+- [ ] Routes still render server-side (check preview HTML, not just client behavior)
+
+**Data & secrets**
+- [ ] No API keys / tokens committed
+- [ ] Mock mode still works with the change (mock preview URL behaves sanely)
+- [ ] Live mode only uses env-configured endpoints
+
+**Quality**
 - [ ] Build passes (`pnpm build`)
 - [ ] Typecheck passes (`pnpm typecheck`)
-- [ ] Tested in preview
-- [ ] No secrets/keys committed
+- [ ] No console errors in preview
+- [ ] Naming/readability acceptable — no leftover debug code
+
+**Deploy**
+- [ ] Prelive checked after merge (before promoting to production)
