@@ -36,7 +36,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: webapp-dist
-          path: apps/webapp/dist/client
+          path: apps/webapp/dist
           if-no-files-found: error
 
   preview-mock:
@@ -48,7 +48,7 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: webapp-dist
-          path: apps/webapp/dist/client
+          path: apps/webapp/dist
       - name: Deploy mock preview
         working-directory: apps/webapp
         env:
@@ -67,7 +67,7 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: webapp-dist
-          path: apps/webapp/dist/client
+          path: apps/webapp/dist
       - name: Deploy live preview
         working-directory: apps/webapp
         env:
@@ -86,7 +86,7 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: webapp-dist
-          path: apps/webapp/dist/client
+          path: apps/webapp/dist
       - name: Deploy prelive
         working-directory: apps/webapp
         env:
@@ -105,7 +105,7 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: webapp-dist
-          path: apps/webapp/dist/client
+          path: apps/webapp/dist
       - name: Deploy production
         working-directory: apps/webapp
         env:
