@@ -1,0 +1,35 @@
+name: Deploy Prelive
+
+on:
+  push:
+    branches: [main]
+
+env:
+  WRANGLER_VERSION: "4.127.1"
+
+jobs:
+  prelive:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.12.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Build webapp
+        working-directory: apps/webapp
+        env:
+          VITE_API_MODE: live
+        run: pnpm build
+      - name: Deploy prelive
+        working-directory: apps/webapp
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          npx --yes wrangler@${{ env.WRANGLER_VERSION }} pages project create excited-live-prelive --production-branch main || true
+          npx --yes wrangler@${{ env.WRANGLER_VERSION }} pages deploy dist/client --project-name=excited-live-prelive --branch=main --commit-dirty=true
