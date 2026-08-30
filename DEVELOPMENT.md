@@ -23,10 +23,16 @@ Build-time switch via `VITE_API_MODE`:
 
 GitHub Actions (`.github/workflows/deploy.yml`), direct-upload pattern (Cloudflare does NOT build — no build-count limit):
 
-- PR open/update → two preview deploys: `-mock` and `-live` branch suffixes → two preview URLs on `excited-live.pages.dev`
-- Push to main → production deploy
+- PR open/update → two preview deploys on project `excited-live`: `<branch>-mock` and `<branch>-live` aliases (`*.excited-live.pages.dev`)
+- Merge/push to `main` → auto-deploy to **prelive** project (`excited-live-prelive`, URL: excited-live-prelive.pages.dev → eventually prelive.excited.live)
+- **Production** (`excited-live` project → excited.live) deploys ONLY via manual trigger: Actions → Deploy → Run workflow (workflow_dispatch)
 
-Required repo secrets (set by repo owner): `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`.
+Required repo secrets: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`.
+
+Pitfalls:
+- Must use wrangler@4 (v3 esbuild can't compile the SSR function — `with {type: json}` syntax)
+- The Pages Function (`apps/webapp/functions/[[path]].ts`) bundles `dist/server/server.js` — deploy jobs must run inside `apps/webapp` where both `functions/` and `dist/` exist
+- CF project needs `nodejs_compat` compatibility flag (set on both projects already)
 
 ## Conventions for agents (Hermes)
 
