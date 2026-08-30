@@ -18,7 +18,62 @@ env:
   WRANGLER_VERSION: "4.127.1"
 
 jobs:
-  build:
+  preview-mock:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.12.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Build webapp (mock)
+        working-directory: apps/webapp
+        env:
+          VITE_API_MODE: mock
+        run: pnpm build
+      - name: Deploy mock preview
+        working-directory: apps/webapp
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          npx --yes wrangler@${{ env.WRANGLER_VERSION }} pages project create excited-live --production-branch main || true
+          npx --yes wrangler@${{ env.WRANGLER_VERSION }} pages deploy dist/client --project-name=excited-live --branch=${{ github.head_ref }}-mock --commit-dirty=true
+
+  preview-live:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.12.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Build webapp (live)
+        working-directory: apps/webapp
+        env:
+          VITE_API_MODE: live
+        run: pnpm build
+      - name: Deploy live preview
+        working-directory: apps/webapp
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          npx --yes wrangler@${{ env.WRANGLER_VERSION }} pages project create excited-live --production-branch main || true
+          npx --yes wrangler@${{ env.WRANGLER_VERSION }} pages deploy dist/client --project-name=excited-live --branch=${{ github.head_ref }}-live --commit-dirty=true
+
+  prelive:
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -31,62 +86,10 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - name: Build webapp
-        run: pnpm --filter @excited-live/webapp build
-      - name: Upload build artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: webapp-dist
-          path: apps/webapp/dist
-          if-no-files-found: error
-
-  preview-mock:
-    needs: build
-    if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
-        with:
-          name: webapp-dist
-          path: apps/webapp/dist
-      - name: Deploy mock preview
         working-directory: apps/webapp
         env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: |
-          npx --yes wrangler@${{ env.WRANGLER_VERSION }} pages project create excited-live --production-branch main || true
-          npx --yes wrangler@${{ env.WRANGLER_VERSION }} pages deploy dist/client --project-name=excited-live --branch=${{ github.head_ref }}-mock --commit-dirty=true
-
-  preview-live:
-    needs: build
-    if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
-        with:
-          name: webapp-dist
-          path: apps/webapp/dist
-      - name: Deploy live preview
-        working-directory: apps/webapp
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: |
-          npx --yes wrangler@${{ env.WRANGLER_VERSION }} pages project create excited-live --production-branch main || true
-          npx --yes wrangler@${{ env.WRANGLER_VERSION }} pages deploy dist/client --project-name=excited-live --branch=${{ github.head_ref }}-live --commit-dirty=true
-
-  prelive:
-    needs: build
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
-        with:
-          name: webapp-dist
-          path: apps/webapp/dist
+          VITE_API_MODE: live
+        run: pnpm build
       - name: Deploy prelive
         working-directory: apps/webapp
         env:
@@ -97,15 +100,23 @@ jobs:
           npx --yes wrangler@${{ env.WRANGLER_VERSION }} pages deploy dist/client --project-name=excited-live-prelive --branch=main --commit-dirty=true
 
   production:
-    needs: build
     if: github.event_name == 'workflow_dispatch' && inputs.environment == 'production'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
+      - uses: pnpm/action-setup@v4
         with:
-          name: webapp-dist
-          path: apps/webapp/dist
+          version: 10.12.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Build webapp
+        working-directory: apps/webapp
+        env:
+          VITE_API_MODE: live
+        run: pnpm build
       - name: Deploy production
         working-directory: apps/webapp
         env:
