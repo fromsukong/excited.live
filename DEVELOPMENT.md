@@ -16,8 +16,8 @@ Run from repo root:
 
 Build-time switch via `VITE_API_MODE`:
 
-- `VITE_API_MODE=mock` — backend calls use stubbed data. Default for local dev and PR previews. Safe: no real keys, no real requests.
-- `VITE_API_MODE=live` — real backend. Only for production deploys (main branch).
+- `VITE_API_MODE=mock` — stubbed data. Safe default for local dev: no real keys, no real requests.
+- `VITE_API_MODE=live` — real backend. Used for the PR `live` preview and all main/production deploys.
 
 ## Deploy
 
@@ -25,7 +25,7 @@ GitHub Actions (`.github/workflows/deploy.yml`), direct-upload pattern (Cloudfla
 
 - PR open/update → two preview deploys on project `excited-live`: `<branch>-mock` and `<branch>-live` aliases (`*.excited-live.pages.dev`)
 - Merge/push to `main` → auto-deploy to **prelive** project (`excited-live-prelive`, URL: excited-live-prelive.pages.dev → eventually prelive.excited.live)
-- **Production** (`excited-live` project → excited.live) deploys ONLY via manual trigger: Actions → Deploy → Run workflow (workflow_dispatch)
+- **Production** (`excited-live` project → excited.live) deploys ONLY via manual trigger: Actions → Deploy Production → Run workflow (requires typing PROD to confirm) (workflow_dispatch)
 
 Required repo secrets: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`.
 
@@ -41,3 +41,4 @@ Pitfalls:
 - Verify your work: build must pass (`pnpm build`) and typecheck (`pnpm typecheck`) before opening the PR.
 - Keep the tax engine pure (no network, no DOM) — it lives in `packages/tax` and is shared.
 - SSR: routes run server-side first; don't touch `window`/`document` at module top level.
+- New user-facing text is bilingual: `{ en, th }`, EN-first. (The web UI is EN-only today; this rule applies to everything added from now on.)
