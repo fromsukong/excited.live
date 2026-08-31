@@ -1,0 +1,101 @@
+name: PR Unit Tests
+
+# Runs unit tests ONLY for packages/apps affected by a PR's changes.
+#
+# Affected = changed in this PR plus everything that depends on them
+# (turbo's dependency graph, `--filter=...[base-sha]`). No hardcoded path
+# mapping: add a package with a `test` script and it's picked up
+# automatically; packages without tests (e.g. apps/webapp today) are
+# skipped. Root-level changes (configs, lockfile, turbo.json) trigger all
+# packages with tests.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+concurrency:
+  group: pr-tests-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  detect:
+    name: Detect affected packages
+    runs-on: ubuntu-latest
+    outputs:
+      packages: ${{ steps.affected.outputs.packages }}
+      has-tests: ${{ steps.affected.outputs.has-tests }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # Full history + merge-base so turbo can diff against the real
+          # fork point, not the merge commit on the PR branch.
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 10.12.0
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+
+      # turbo comes from devDependencies — required for the affected-set
+      # computation below (pnpm exec prints "undefined" if the binary is
+      # missing, which previously surfaced as a confusing JSON.parse error).
+      - run: pnpm install --frozen-lockfile
+
+      - name: Compute affected packages
+        id: affected
+        run: |
+          BASE_SHA="$(git merge-base origin/${{ github.base_ref }} HEAD)"
+          echo "Diff base: $BASE_SHA"
+
+          # Dry-run the test task filtered to affected packages:
+          # `...[sha]` = changed since sha + all transitive dependents.
+          pnpm exec turbo run test --filter="...[$BASE_SHA]" --dry=json \
+            | node -e '
+              let raw = "";
+              process.stdin.on("data", (c) => (raw += c));
+              process.stdin.on("end", () => {
+                const plan = JSON.parse(raw);
+                // Only packages with a REAL test script (turbo emits
+                // command "<NONEXISTENT>" for packages without one).
+                const real = plan.tasks.filter((t) => t.command !== "<NONEXISTENT>");
+                const names = [...new Set(real.map((t) => t.package))].sort();
+                console.log(`Affected packages with tests: ${names.join(", ") || "(none)"}`);
+                require("fs").appendFileSync(
+                  process.env.GITHUB_OUTPUT,
+                  `packages=${JSON.stringify(names)}\n` +
+                  `has-tests=${names.length > 0}\n`,
+                );
+              });
+            '
+
+  test:
+    name: ${{ matrix.task }}
+    needs: detect
+    if: needs.detect.outputs.has-tests == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        task: ${{ fromJson(needs.detect.outputs.packages) }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 10.12.0
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # Run ONLY this package's test task. Turbo still builds upstream
+      # dependencies first (test dependsOn ^build) and caches them.
+      - name: Test ${{ matrix.task }}
+        run: pnpm exec turbo run test --filter=${{ matrix.task }} --output-logs=errors-only

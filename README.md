@@ -10,7 +10,7 @@ Excited.live is a pnpm + turbo monorepo for building financial simulators:
 - `apps/webapp` — the web app (TanStack Start + React 19, server-side rendered, deployed on Cloudflare Pages)
 - `packages/*` — pure shared engines (no network, no DOM, no framework imports) so the same math can power the web app, mobile, MCP tools, and white-label builds later
 
-The first engine (`packages/tax`) is under active development.
+The first engine, `packages/tax`, is done and tested: full Thai personal income tax 2026, plus a US 2026 placeholder. See [packages/tax/README.md](./packages/tax/README.md).
 
 ## Getting started
 
@@ -33,13 +33,21 @@ pnpm typecheck  # typecheck everything
 
 ## Deploy model
 
-GitHub Actions direct-upload (Cloudflare does not build — no build-count limit):
+GitHub Actions builds the app and uploads directly to Cloudflare Pages (Cloudflare does not build — no build-count limit).
 
 1. PR open/update → two preview deploys: `<branch>-mock` and `<branch>-live` on `*.excited-live.pages.dev`
-2. Push to `main` → auto-deploy to the prelive project (`excited-live-prelive.pages.dev`)
-3. Production (excited.live) → manual trigger only: Actions → Deploy Production → Run workflow (type PROD to confirm)
+2. Merge to `main` → automatically deployed to the prelive project: **https://excited-live-prelive.pages.dev**
+3. Production (excited.live) → manual trigger only: GitHub → Actions → Deploy Production → Run workflow → type PROD to confirm
+
+Preview and prelive URLs are where you review changes; production only updates when someone runs the manual workflow.
 
 See [DEVELOPMENT.md](./DEVELOPMENT.md) for the full guide and deployment pitfalls.
+
+## For AI coding agents
+
+Read [AGENTS.md](./AGENTS.md) before making changes — it covers the repo rules
+(branch + PR flow, pure engine packages, bilingual `{ en, th }` strings), the
+definition of done, and git safety for shared clones.
 
 ## Contributing
 
