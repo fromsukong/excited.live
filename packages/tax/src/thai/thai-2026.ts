@@ -101,15 +101,22 @@ function compute(input: TaxInput): TaxResult {
 
 	const grossIncome = round2(sum(lines.map((line) => line.amount)))
 
-	// Expense deductions per category (capped), applied on gross amounts.
+	// Expense deductions per category (capped), applied on the category's
+	// gross total. Caps are per taxpayer per category (e.g. employment 50%
+	// max 100,000 THB in aggregate), so multiple lines of the same category
+	// must be summed BEFORE the cap is applied.
+	const grossByCategory = new Map<string, number>()
+	for (const line of lines) {
+		grossByCategory.set(line.code, (grossByCategory.get(line.code) ?? 0) + line.amount)
+	}
 	const expenseDeductions = round2(
 		sum(
-			lines.map((line) => {
-				const deduction = line.category?.expenseDeduction ?? null
-				if (deduction === null || line.amount <= 0) {
+			[...grossByCategory].map(([code, amount]) => {
+				const deduction = byCode.get(code)?.expenseDeduction ?? null
+				if (deduction === null || amount <= 0) {
 					return 0
 				}
-				const raw = line.amount * deduction.rate
+				const raw = amount * deduction.rate
 				return deduction.cap === undefined ? raw : Math.min(raw, deduction.cap)
 			}),
 		),
@@ -258,6 +265,15 @@ function validate(input: TaxInput): string[] {
 	checkNonNegativeFinite(allowances.spouse, "allowances.spouse count")
 	checkNonNegativeFinite(allowances.children, "allowances.children count")
 	checkNonNegativeFinite(allowances.disabled, "allowances.disabled count")
+	const checkNonNegativeInteger = (value: number, label: string): void => {
+		if (!Number.isInteger(value)) {
+			problems.push(`${label} must be a whole number (got ${value})`)
+		}
+	}
+	checkNonNegativeInteger(allowances.personal, "allowances.personal count")
+	checkNonNegativeInteger(allowances.spouse, "allowances.spouse count")
+	checkNonNegativeInteger(allowances.children, "allowances.children count")
+	checkNonNegativeInteger(allowances.disabled, "allowances.disabled count")
 
 	const deductions = input.deductions
 	checkNonNegativeFinite(deductions.insurance, "deductions.insurance")
