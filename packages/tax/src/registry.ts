@@ -39,4 +39,4 @@ export function availableTaxSystems(): TaxSystem[] {
 
 // Built-in systems.
 registerTaxSystem(thai2026System)
-registerTaxSystem(us2026System)// [ci self-test] triggers affected-package detection; reverted in next commit
+registerTaxSystem(us2026System)
