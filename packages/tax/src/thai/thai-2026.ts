@@ -321,4 +321,11 @@ export const thai2026System: TaxSystem = {
 	validate,
 	compute,
 	assumptions,
+	config: {
+		country: "TH",
+		taxYear: TAX_YEAR,
+		currency: CURRENCY,
+		brackets: BRACKETS,
+		incomeCategories: INCOME_CATEGORIES,
+	},
 }
