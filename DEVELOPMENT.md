@@ -36,6 +36,10 @@ Pitfalls:
 
 ## Conventions for agents (Hermes)
 
+**AI agents: read [AGENTS.md](./AGENTS.md) first** — it is the canonical agent
+contract (rules, definition of done, git safety for shared clones). The notes
+below are a quick summary.
+
 - Work on a branch, open a PR. Never push straight to main.
 - Before starting a task: `git pull --ff-only` on main, branch from it.
 - Verify your work: build must pass (`pnpm build`) and typecheck (`pnpm typecheck`) before opening the PR.
