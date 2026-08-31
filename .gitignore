@@ -5,3 +5,7 @@ dist/
 .output/
 *.log
 .DS_Store
+.verify/
+apps/webapp/.worker2/
+apps/webapp/.worker/
+.verify/
