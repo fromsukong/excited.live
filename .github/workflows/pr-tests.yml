@@ -40,6 +40,11 @@ jobs:
           node-version: 22
           cache: pnpm
 
+      # turbo comes from devDependencies — required for the affected-set
+      # computation below (pnpm exec prints "undefined" if the binary is
+      # missing, which previously surfaced as a confusing JSON.parse error).
+      - run: pnpm install --frozen-lockfile
+
       - name: Compute affected packages
         id: affected
         run: |
