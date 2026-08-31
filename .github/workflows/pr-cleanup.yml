@@ -15,7 +15,7 @@ jobs:
           PR_BRANCH: ${{ github.event.pull_request.head.ref }}
         run: |
           python3 - <<'PYEOF'
-          import json, os, urllib.request
+          import json, os, urllib.request, urllib.error
 
           token = os.environ['CLOUDFLARE_API_TOKEN']
           account = os.environ['CLOUDFLARE_ACCOUNT_ID']
@@ -25,22 +25,32 @@ jobs:
           headers = {'Authorization': 'Bearer ' + token}
 
           deleted = 0
-          for page in range(1, 11):
+          page = 1
+          while page <= 10:
               req = urllib.request.Request(f'{base}?page={page}&per_page=25', headers=headers)
               with urllib.request.urlopen(req, timeout=30) as r:
                   data = json.loads(r.read().decode())
               results = data.get('result') or []
               if not results:
                   break
+              deleted_on_page = 0
               for d in results:
                   env_branch = (d.get('deployment_trigger') or {}).get('metadata', {}).get('branch', '')
                   if env_branch in targets:
                       did = d['id']
-                      del_req = urllib.request.Request(f'{base}/{did}', method='DELETE', headers=headers)
-                      with urllib.request.urlopen(del_req, timeout=30) as r:
-                          ok = json.loads(r.read().decode()).get('success')
-                      print(f'deleted {env_branch}: {did} success={ok}')
-                      deleted += 1
+                      try:
+                          # aliased deployments (branch/PR preview URLs) require force=true
+                          del_req = urllib.request.Request(f'{base}/{did}?force=true', method='DELETE', headers=headers)
+                          with urllib.request.urlopen(del_req, timeout=30) as r:
+                              ok = json.loads(r.read().decode()).get('success')
+                          print(f'deleted {env_branch}: {did} success={ok}')
+                          deleted += 1
+                          deleted_on_page += 1
+                      except urllib.error.HTTPError as e:
+                          body = e.read().decode(errors='replace')[:300]
+                          print(f'WARN delete failed {env_branch}: {did} HTTP {e.code}: {body}')
+              if deleted_on_page == 0:
+                  page += 1  # deletions shift remaining items back a page, so re-scan same page
           print(f'Cleanup done — {deleted} deployment(s) removed')
           PYEOF
 
