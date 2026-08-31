@@ -29,9 +29,30 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          # Untrusted input: go through env, never inline ${{ }} in the script.
+          PR_HEAD_REF: ${{ github.head_ref }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
+          # NOTE: the PY terminator must land at column 0 after YAML strips
+          # this block scalar's indentation — do not re-indent this run block.
+          # Sanitize the branch name so the pages.dev alias is always a valid
+          # hostname (Cloudflare aliases: lowercase, non-[a-z0-9-] -> '-',
+          # trim dashes, max 28 chars). We cut the branch part to 23 chars so
+          # that the '-mock'/'-live' suffix always survives the 28-char limit
+          # and the two preview aliases can never collide.
+          SANITIZED_BRANCH="$(python3 - <<'PY'
+          import os, re
+          b = os.environ.get('PR_HEAD_REF', '')
+          s = re.sub('[A-Z]', lambda m: m.group(0).lower(), b)
+          s = re.sub('[^a-z0-9-]', '-', s).strip('-')[:23].strip('-')
+          if not s:
+              s = 'branch-' + os.environ.get('PR_HEAD_SHA', '')[:8]
+          print(s)
+          PY
+          )"
+          echo "Preview alias base: $SANITIZED_BRANCH"
           npx --yes wrangler@${{ env.WRANGLER_VERSION }} pages project create excited-live --production-branch main || true
-          npx --yes wrangler@${{ env.WRANGLER_VERSION }} pages deploy dist/client --project-name=excited-live --branch=${{ github.head_ref }}-mock --commit-dirty=true
+          npx --yes wrangler@${{ env.WRANGLER_VERSION }} pages deploy dist/client --project-name=excited-live --branch="${SANITIZED_BRANCH}-mock" --commit-dirty=true
 
   preview-live:
     runs-on: ubuntu-latest
@@ -55,6 +76,21 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          # Untrusted input: go through env, never inline ${{ }} in the script.
+          PR_HEAD_REF: ${{ github.head_ref }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
+          # Same sanitization as the mock job — keep the two in sync.
+          SANITIZED_BRANCH="$(python3 - <<'PY'
+          import os, re
+          b = os.environ.get('PR_HEAD_REF', '')
+          s = re.sub('[A-Z]', lambda m: m.group(0).lower(), b)
+          s = re.sub('[^a-z0-9-]', '-', s).strip('-')[:23].strip('-')
+          if not s:
+              s = 'branch-' + os.environ.get('PR_HEAD_SHA', '')[:8]
+          print(s)
+          PY
+          )"
+          echo "Preview alias base: $SANITIZED_BRANCH"
           npx --yes wrangler@${{ env.WRANGLER_VERSION }} pages project create excited-live --production-branch main || true
-          npx --yes wrangler@${{ env.WRANGLER_VERSION }} pages deploy dist/client --project-name=excited-live --branch=${{ github.head_ref }}-live --commit-dirty=true
+          npx --yes wrangler@${{ env.WRANGLER_VERSION }} pages deploy dist/client --project-name=excited-live --branch="${SANITIZED_BRANCH}-live" --commit-dirty=true

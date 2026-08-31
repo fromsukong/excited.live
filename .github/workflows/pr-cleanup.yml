@@ -15,6 +15,7 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           PR_BRANCH: ${{ github.event.pull_request.head.ref }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           python3 - <<'PYEOF'
           import json, os, urllib.request, urllib.error
@@ -22,7 +23,23 @@ jobs:
           token = os.environ['CLOUDFLARE_API_TOKEN']
           account = os.environ['CLOUDFLARE_ACCOUNT_ID']
           branch = os.environ['PR_BRANCH']
-          targets = {branch + '-mock', branch + '-live'}
+
+          # Must mirror the sanitization in preview.yml exactly: ASCII
+          # lowercase, non-[a-z0-9-] -> '-', trim dashes, cut to 23
+          # codepoints, re-trim trailing dashes, fallback branch-<sha8>.
+          # preview.yml then appends '-mock'/'-live' (total <= 28 chars,
+          # Cloudflare's alias limit).
+          import re
+          s = re.sub('[A-Z]', lambda m: m.group(0).lower(), branch)
+          s = re.sub('[^a-z0-9-]', '-', s).strip('-')[:23].strip('-')
+          if not s:
+              s = 'branch-' + os.environ.get('PR_HEAD_SHA', '')[:8]
+          # sanitized targets, plus legacy raw targets for branches the old
+          # workflow deployed un-sanitized (only when they actually differ;
+          # review finding: avoid pointless/overreaching legacy matching)
+          targets = {s + '-mock', s + '-live'}
+          if branch != s:
+              targets |= {branch + '-mock', branch + '-live'}
           base = f'https://api.cloudflare.com/client/v4/accounts/{account}/pages/projects/excited-live/deployments'
           headers = {'Authorization': 'Bearer ' + token}
 

@@ -18,11 +18,28 @@ jobs:
         uses: actions/github-script@v9
         with:
           script: |
+            // Must mirror the sanitization in preview.yml exactly:
+            // ASCII-lowercase, non-[a-z0-9-] -> '-', trim dashes, cut to 23
+            // codepoints, re-trim trailing dashes, fallback branch-<sha8>.
+            // preview.yml then appends '-mock'/'-live' (total <= 28 chars,
+            // Cloudflare's alias limit), so the URL is always valid and
+            // matches the deployed alias verbatim.
+            const sanitizeBranch = (b, sha) => {
+              // Astral chars are 1 codepoint in Python but 2 surrogate units
+              // in JS regex — pre-replace them so both sides emit one dash.
+              let s = String(b || '').replace(/[\u{10000}-\u{10FFFF}]/gu, '-');
+              s = s.replace(/[A-Z]/g, (c) => c.toLowerCase());
+              s = s.replace(/[^a-z0-9-]/g, '-').replace(/^-+|-+$/g, '');
+              s = Array.from(s).slice(0, 23).join('').replace(/-+$/g, '');
+              if (!s) s = 'branch-' + String(sha || '').slice(0, 8);
+              return s;
+            };
             const prNumber = context.payload.workflow_run.pull_requests[0]?.number;
             if (!prNumber) { core.info('No PR found for this run'); return; }
             const head = context.payload.workflow_run.head_branch;
-            const mockUrl = `https://${head}-mock.excited-live.pages.dev`;
-            const liveUrl = `https://${head}-live.excited-live.pages.dev`;
+            const sha = context.payload.workflow_run.head_sha;
+            const mockUrl = `https://${sanitizeBranch(head, sha)}-mock.excited-live.pages.dev`;
+            const liveUrl = `https://${sanitizeBranch(head, sha)}-live.excited-live.pages.dev`;
             const { data: pr } = await github.rest.pulls.get({
               owner: context.repo.owner,
               repo: context.repo.repo,

@@ -23,7 +23,7 @@ Build-time switch via `VITE_API_MODE`:
 
 GitHub Actions (`.github/workflows/deploy.yml`), direct-upload pattern (Cloudflare does NOT build — no build-count limit):
 
-- PR open/update → two preview deploys on project `excited-live`: `<branch>-mock` and `<branch>-live` aliases (`*.excited-live.pages.dev`)
+- PR open/update → two preview deploys on project `excited-live`: `<sanitized-branch>-mock` and `<sanitized-branch>-live` aliases (`*.excited-live.pages.dev`). Branch names are sanitized first (lowercase, non-alphanumeric → `-`, dashes trimmed, max 23 chars so the suffix always fits Cloudflare's 28-char alias limit) — see the sanitize step in `.github/workflows/preview.yml`
 - Merge/push to `main` → auto-deploy to **prelive** project (`excited-live-prelive`, URL: excited-live-prelive.pages.dev → eventually prelive.excited.live)
 - **Production** (`excited-live` project → excited.live) deploys ONLY via manual trigger: Actions → Deploy Production → Run workflow (requires typing PROD to confirm) (workflow_dispatch)
 
