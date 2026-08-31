@@ -21,6 +21,7 @@ jobs:
   detect:
     name: Detect affected packages
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     outputs:
       packages: ${{ steps.affected.outputs.packages }}
       has-tests: ${{ steps.affected.outputs.has-tests }}
@@ -77,6 +78,7 @@ jobs:
     needs: detect
     if: needs.detect.outputs.has-tests == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
@@ -97,5 +99,9 @@ jobs:
 
       # Run ONLY this package's test task. Turbo still builds upstream
       # dependencies first (test dependsOn ^build) and caches them.
+      # Package name arrives via env (not direct interpolation) so shell
+      # metacharacters in a PR-supplied package.json name can't inject.
       - name: Test ${{ matrix.task }}
-        run: pnpm exec turbo run test --filter=${{ matrix.task }} --output-logs=errors-only
+        env:
+          AFFECTED_PACKAGE: ${{ matrix.task }}
+        run: pnpm exec turbo run test --filter="$AFFECTED_PACKAGE" --output-logs=errors-only
