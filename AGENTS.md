@@ -22,7 +22,9 @@ advisors and institutions. User-facing text is bilingual `{ en, th }`, EN first.
    `fix/*`, `docs/*`) and open a PR. PR previews deploy automatically.
 2. `packages/*` engines stay PURE: no network, no DOM, no framework imports,
    no locale/timezone-dependent logic.
-3. All user-facing strings are bilingual from day one: `{ en, th }`, EN first.
+3. All user-facing strings must be bilingual from day one: `{ en, th }`, EN
+   first. No i18n layer exists yet — every NEW string ships with both
+   languages.
 4. Never commit secrets, tokens, or `.env` files. Cloudflare credentials live
    only in GitHub repo secrets, referenced by workflows.
 5. Don't hand-edit generated files: `apps/webapp/src/routeTree.gen.ts`,
@@ -41,7 +43,8 @@ CI runs Node 22; pnpm 10 is pinned via the `packageManager` field.
 
 ## Definition of done (before you open a PR)
 
-- `pnpm build` and `pnpm typecheck` pass from the repo root.
+- `pnpm build` and `pnpm typecheck` pass from the repo root. CI does not run
+  typecheck on PRs — your local verification IS the gate.
 - New engine logic has tests, co-located as `*.test.ts` next to the source.
   A root `pnpm test` task is being introduced; if it does not exist yet, say
   so in your PR instead of wiring a test runner ad hoc.

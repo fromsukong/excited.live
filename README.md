@@ -8,3 +8,5 @@ Read [AGENTS.md](./AGENTS.md) before making changes — it covers the repo rules
 definition of done, and git safety for shared clones.
 
 Human contributors: see [DEVELOPMENT.md](./DEVELOPMENT.md).
+
+(`CLAUDE.md` is a symlink to `AGENTS.md`, so Claude Code reads the same contract.)
