@@ -46,8 +46,8 @@ jobs:
                           print(f'deleted {env_branch}: {did} success={ok}')
                           deleted += 1
                           deleted_on_page += 1
-                      except urllib.error.HTTPError as e:
-                          body = e.read().decode(errors='replace')[:300]
+                      except (urllib.error.HTTPError, urllib.error.URLError) as e:
+                          body = e.read().decode(errors='replace')[:300] if hasattr(e, 'read') else str(e)[:300]
                           print(f'WARN delete failed {env_branch}: {did} HTTP {e.code}: {body}')
               if deleted_on_page == 0:
                   page += 1  # deletions shift remaining items back a page, so re-scan same page
