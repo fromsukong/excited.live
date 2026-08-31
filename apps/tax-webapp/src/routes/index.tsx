@@ -120,7 +120,7 @@ const COPY = {
     effectiveRate: 'อัตราภาษีเฉลี่ย',
     marginalRate: 'อัตราภาษีขั้นสูงสุด',
     bracketsTitle: 'ขั้นบันไดภาษี',
-    bracketColumn: 'กระบอก',
+    bracketColumn: 'ขั้น',
     taxableColumn: 'ฐานภาษี',
     taxColumn: 'ภาษี',
     rateColumn: 'อัตรา',
@@ -253,7 +253,10 @@ function zeroResult(system: TaxSystem, warnings: string[]): TaxResult {
     marginalRate: 0,
     effectiveRate: 0,
     balance: 0,
-    brackets: [],
+    brackets: (system.config?.brackets ?? []).map((bracket, index) => {
+      const from = index === 0 ? 0 : system.config!.brackets[index - 1].upTo
+      return { index, from, to: bracket.upTo, rate: bracket.rate, taxableInBracket: 0, tax: 0 }
+    }),
     warnings,
   }
 }
@@ -291,7 +294,7 @@ function TaxContent({
   result,
   isPlaceholder,
 }: TaxContentProps) {
-  const currency = system.config?.currency ?? 'THB'
+  const currency = result.currency
   const brackets = system.config?.brackets ?? []
   const categories = system.config?.incomeCategories ?? []
   const filingStatuses =
@@ -471,7 +474,7 @@ function TaxContent({
               </div>
               <div className="tax-section__grid tax-section__grid--three" style={{ marginTop: 14 }}>
                 <NumberInput
-                  label={locale === 'en' ? 'SSF' : 'กอช. (SSF)'}
+                  label={locale === 'en' ? 'SSF' : 'กองทุน SSF'}
                   value={input.deductions.retirementSavings.ssf}
                   onChange={(value) => patchRetirement('ssf', value)}
                   min={0}
@@ -481,7 +484,7 @@ function TaxContent({
                   size="md"
                 />
                 <NumberInput
-                  label={locale === 'en' ? 'RMF' : 'กอช. (RMF)'}
+                  label={locale === 'en' ? 'RMF' : 'กองทุน RMF'}
                   value={input.deductions.retirementSavings.rmf}
                   onChange={(value) => patchRetirement('rmf', value)}
                   min={0}
@@ -583,10 +586,10 @@ function TaxContent({
                     {balanceLabel}: <strong>{formatMoney(Math.abs(result.balance), currency, locale)}</strong>
                   </Text>
                 </div>
-                <Badge
-                  label={copy.netTax}
-                  variant={result.netTax === 0 ? 'success' : 'neutral'}
-                />
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                  {isPlaceholder && <Badge label={locale === 'en' ? 'Placeholder' : 'ยังไม่ใช้จริง'} variant="warning" />}
+                  <Badge label={copy.netTax} variant={result.netTax === 0 ? 'success' : 'neutral'} />
+                </div>
               </div>
               <div className="tax-metrics" style={{ marginTop: 16 }}>
                 <MetricRow label={copy.grossIncome} value={formatMoney(result.grossIncome, currency, locale)} />
@@ -637,6 +640,13 @@ function TaxContent({
 
             <Card padding={6}>
               <SectionHeading title={copy.assumptionsTitle} />
+              {result.warnings.length > 0 && (
+                <ul style={{ margin: '0 0 12px', paddingLeft: 18, fontSize: 13, lineHeight: 1.6, color: 'var(--color-warning, #e6b450)' }}>
+                  {result.warnings.map((warning, index) => (
+                    <li key={index}>{warning}</li>
+                  ))}
+                </ul>
+              )}
               <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13, lineHeight: 1.6, color: 'var(--color-text-secondary)' }}>
                 {system.assumptions.map((assumption, index) => (
                   <li key={index}>{t(assumption)}</li>

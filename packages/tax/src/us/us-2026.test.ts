@@ -38,7 +38,8 @@ describe("us2026System (PLACEHOLDER)", () => {
 		expect(us2026System.assumptions.length).toBeGreaterThanOrEqual(3)
 		// system brackets = SINGLE status brackets
 		expect(us2026System.config.brackets[0]).toMatchObject({ upTo: 11_925, rate: 0.1 })
-		expect(us2026System.config.brackets).toBe(
+		// config exposes a snapshot (deep-equal, not the same array instance compute reads)
+		expect(us2026System.config.brackets).toStrictEqual(
 			us2026System.config.options.bracketsByStatus.single,
 		)
 		expect(us2026System.config.options.filingStatuses).toHaveLength(4)

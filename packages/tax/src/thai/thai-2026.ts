@@ -325,7 +325,8 @@ export const thai2026System: TaxSystem = {
 		country: "TH",
 		taxYear: TAX_YEAR,
 		currency: CURRENCY,
-		brackets: BRACKETS,
-		incomeCategories: INCOME_CATEGORIES,
+		// Copies: consumers must not be able to mutate the arrays compute() reads.
+		brackets: BRACKETS.map((bracket) => ({ ...bracket })),
+		incomeCategories: INCOME_CATEGORIES.map((category) => ({ ...category })),
 	},
 }
