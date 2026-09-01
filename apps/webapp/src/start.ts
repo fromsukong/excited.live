@@ -21,8 +21,8 @@ import { routeTree } from "./routeTree.gen"
 const localeMiddleware = createMiddleware({ type: "request" }).server(async ({ next }) => {
 	const request = getRequest()
 	const cookieLocale = localeFromCookie(request.headers.get("cookie"))
-	let locale: Locale = cookieLocale ?? localeFromAcceptLanguage(request.headers.get("accept-language")) ?? "en"
-	let setCookieNeeded = cookieLocale === undefined && locale !== "en"
+	const locale: Locale = cookieLocale ?? localeFromAcceptLanguage(request.headers.get("accept-language")) ?? "en"
+	const setCookieNeeded = cookieLocale === undefined && locale !== "en"
 
 	const response = await next({ context: { locale } })
 
