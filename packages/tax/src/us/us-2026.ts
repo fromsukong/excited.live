@@ -357,8 +357,9 @@ export const us2026System: UsTaxSystem = {
 		// System-level brackets = the SINGLE status brackets (PLACEHOLDER).
 		// Status-specific brackets live in config.options.bracketsByStatus;
 		// compute() picks by input.filingStatus, defaulting to "single".
-		brackets: SINGLE_BRACKETS,
-		incomeCategories: INCOME_CATEGORIES,
+		// Copies: consumers must not be able to mutate the arrays compute() reads.
+		brackets: SINGLE_BRACKETS.map((bracket) => ({ ...bracket })),
+		incomeCategories: INCOME_CATEGORIES.map((category) => ({ ...category })),
 		options: {
 			filingStatuses: FILING_STATUSES,
 			bracketsByStatus: BRACKETS_BY_STATUS,

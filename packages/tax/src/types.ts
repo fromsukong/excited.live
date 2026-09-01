@@ -151,4 +151,11 @@ export interface TaxSystem {
 	compute(input: TaxInput): TaxResult
 	/** Assumptions & simplifications of this system, for docs and UI footnotes. */
 	assumptions: LocalizedLabel[]
+	/**
+	 * Read-only view of this system's static config (brackets, income
+	 * categories, jurisdiction options) so UI surfaces can render dynamic
+	 * forms without importing system internals. Optional for backwards
+	 * compatibility; all built-in systems expose it.
+	 */
+	config?: TaxSystemConfig
 }

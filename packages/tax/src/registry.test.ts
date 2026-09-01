@@ -38,4 +38,17 @@ describe("registry", () => {
 		registerTaxSystem(custom)
 		expect(getTaxSystem("TH", 2027)).toBe(custom)
 	})
+
+	it("exposes static config on every built-in system", () => {
+		const builtins = [getTaxSystem("TH", 2026), getTaxSystem("US", 2026)]
+		for (const system of builtins) {
+			expect(system.config).toBeDefined()
+			expect(system.config?.country).toBe(system.country)
+			expect(system.config?.taxYear).toBe(system.taxYear)
+			expect(system.config?.brackets.length).toBeGreaterThan(0)
+			expect(system.config?.incomeCategories.length).toBeGreaterThan(0)
+			// Last bracket must be the open-ended one (Infinity).
+			expect(system.config?.brackets[system.config.brackets.length - 1]?.upTo).toBe(Infinity)
+		}
+	})
 })
