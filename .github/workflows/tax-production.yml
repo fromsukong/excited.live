@@ -16,7 +16,12 @@ jobs:
     if: github.event.inputs.confirm == 'PROD'
     runs-on: ubuntu-latest
     steps:
+      # Review-gate hardening: workflow_dispatch lets the operator pick any
+      # ref in the UI — pin the checkout to main so only main can be built
+      # and deployed to the production project, whatever ref was selected.
       - uses: actions/checkout@v7
+        with:
+          ref: main
       - uses: pnpm/action-setup@v6
         with:
           version: 10.12.0

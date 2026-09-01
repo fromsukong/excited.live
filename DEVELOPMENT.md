@@ -33,6 +33,8 @@ GitHub Actions (`.github/workflows/`), direct-upload pattern (Cloudflare does NO
 
 Required repo secrets: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` (shared by both pipelines).
 
+Note: the tax app has no backend yet (all computation is client-side), so its mock/live preview builds are currently identical; the `VITE_API_MODE` split exists for pipeline symmetry and matters once a backend lands.
+
 Pitfalls:
 - Must use wrangler@4 (v3 esbuild can't compile the SSR function — `with {type: json}` syntax)
 - The Pages Functions (`apps/webapp/functions/[[path]].ts`, `apps/tax-webapp/functions/[[path]].ts`) bundle `dist/server/server.js` — deploy jobs must run inside the app dir where both `functions/` and `dist/` exist

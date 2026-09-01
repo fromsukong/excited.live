@@ -51,6 +51,8 @@ The tax calculator app has its own pipeline in `.github/workflows/tax-*.yml`, de
 
 Build note: the app imports `@excited-live/tax` (resolves to `packages/tax/dist`), so CI builds via `pnpm exec turbo run build --filter=@excited-live/tax-webapp` — turbo builds the dependency chain first. A bare in-app `pnpm build` fails on a clean checkout.
 
+Note: the tax app currently computes everything client-side with no backend calls, so its `-mock` and `-live` previews are byte-identical builds (the `VITE_API_MODE` split is inherited from the main pipeline and matters once a backend is wired).
+
 See [DEVELOPMENT.md](./DEVELOPMENT.md) for the full guide and deployment pitfalls.
 
 ## For AI coding agents

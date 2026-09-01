@@ -3,6 +3,14 @@ name: Cleanup Tax PR Previews
 on:
   pull_request:
     types: [closed]
+    # Only run when the PR actually touched the tax app/engine — otherwise
+    # every closed PR would trigger a pointless run + "cleaned up" comment.
+    paths:
+      - "apps/tax-webapp/**"
+      - "packages/tax/**"
+      - "pnpm-lock.yaml"
+      - "turbo.json"
+      - ".github/workflows/tax-*.yml"
 
 jobs:
   cleanup:
