@@ -1,6 +1,6 @@
-name: PR Unit Tests
+name: PR Checks
 
-# Runs unit tests ONLY for packages/apps affected by a PR's changes.
+# Lint (whole repo) + unit tests ONLY for packages/apps affected by a PR.
 #
 # Affected = changed in this PR plus everything that depends on them
 # (turbo's dependency graph, `--filter=...[base-sha]`). No hardcoded path
@@ -72,6 +72,30 @@ jobs:
                 );
               });
             '
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 10.12.0
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # Whole-repo lint (flat eslint.config.mjs). Not affected-filtered:
+      # lint is cheap and config/lockfile changes touch every file.
+      # --max-warnings=0 keeps the warning budget at zero so new warnings
+      # can't accumulate as invisible debt.
+      - run: pnpm lint --max-warnings=0
 
   test:
     name: ${{ matrix.task }}

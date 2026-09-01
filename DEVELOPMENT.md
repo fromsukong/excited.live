@@ -49,7 +49,7 @@ below are a quick summary.
 
 - Work on a branch, open a PR. Never push straight to main.
 - Before starting a task: `git pull --ff-only` on main, branch from it.
-- Verify your work: build must pass (`pnpm build`) and typecheck (`pnpm typecheck`) before opening the PR.
+- Verify your work: `pnpm build`, `pnpm typecheck`, and `pnpm lint` must pass before opening the PR (CI enforces lint with zero warnings).
 - Keep the tax engine pure (no network, no DOM) — it lives in `packages/tax` and is shared.
 - SSR: routes run server-side first; don't touch `window`/`document` at module top level.
 - New user-facing text is bilingual: `{ en, th }`, EN-first. (The web UI is EN-only today; this rule applies to everything added from now on.)

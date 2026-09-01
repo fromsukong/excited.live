@@ -109,7 +109,7 @@ export function localeFromAcceptLanguage(header: string | null | undefined): Loc
 	}
 	if (candidates.length === 0) return undefined;
 	candidates.sort((a, b) => b.quality - a.quality || a.order - b.order);
-	return candidates[0].locale;
+	return candidates[0]?.locale;
 }
 
 /** Cookie that carries the visitor's chosen locale across requests. */

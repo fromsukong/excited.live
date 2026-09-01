@@ -87,11 +87,12 @@ describe("thai2026System basic computation", () => {
 		expect(result.marginalRate).toBe(0.05)
 		const touched = result.brackets.filter((bracket) => bracket.taxableInBracket > 0)
 		const last = touched[touched.length - 1]
-		expect(last.rate).toBe(0.05)
-		expect(last.from).toBe(150_000)
-		expect(last.to).toBe(300_000)
-		expect(last.taxableInBracket).toBe(150_000)
-		expect(last.tax).toBe(7_500)
+		expect(last).toBeDefined()
+		expect(last?.rate).toBe(0.05)
+		expect(last?.from).toBe(150_000)
+		expect(last?.to).toBe(300_000)
+		expect(last?.taxableInBracket).toBe(150_000)
+		expect(last?.tax).toBe(7_500)
 	})
 })
 

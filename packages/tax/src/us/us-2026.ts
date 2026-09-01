@@ -28,6 +28,7 @@ import type {
 	TaxSystem,
 	TaxSystemConfig,
 } from "../types"
+import { deepFreeze } from "../deep-freeze"
 
 const CURRENCY = "USD"
 const TAX_YEAR = 2026
@@ -98,12 +99,14 @@ interface FilingStatusOption {
 	standardDeduction: number
 }
 
+const SINGLE_STATUS: FilingStatusOption = {
+	code: "single",
+	label: { en: "Single", th: "โสด" },
+	standardDeduction: 15_000, // PLACEHOLDER 2025 stand-in
+}
+
 const FILING_STATUSES: FilingStatusOption[] = [
-	{
-		code: "single",
-		label: { en: "Single", th: "โสด" },
-		standardDeduction: 15_000, // PLACEHOLDER 2025 stand-in
-	},
+	SINGLE_STATUS,
 	{
 		code: "married_joint",
 		label: { en: "Married filing jointly", th: "สมรสยื่นภาษีร่วมกัน" },
@@ -178,7 +181,7 @@ function compute(input: TaxInput): UsTaxResult {
 	// An unknown status (reported by validate()) falls back to single here.
 	const statusCode = input.filingStatus ?? "single"
 	const statusOption =
-		FILING_STATUSES.find((status) => status.code === statusCode) ?? FILING_STATUSES[0]
+		FILING_STATUSES.find((status) => status.code === statusCode) ?? SINGLE_STATUS
 	if (input.filingStatus !== undefined && statusOption.code !== input.filingStatus) {
 		errors.push(`Unknown filing status: ${input.filingStatus}`)
 	}
@@ -350,21 +353,23 @@ export const us2026System: UsTaxSystem = {
 		en: "PLACEHOLDER US federal income tax system for 2026. Architecture skeleton only: 2025 standards stand in for the 2026 schedule, which is subject to pending legislation (TCJA sunset). Not for real use.",
 		th: "ระบบภาษีเงินได้บุคคลธรรมดาสหรัฐอเมริกา ปี 2026 (ค่าเริ่มต้น) โครงร่างสถาปัตยกรรมเท่านั้น: ใช้มาตรฐานปี 2025 แทนตารางปี 2026 ซึ่งขึ้นอยู่กับกฎหมายที่ยังไม่ผ่าน (TCJA sunset) ยังไม่พร้อมใช้งานจริง",
 	},
-	config: {
+	// Deep-frozen: exposed views share nested objects with the module-level
+	// data compute() reads — freezing keeps them tamper-proof.
+	config: deepFreeze({
 		country: "US",
 		taxYear: TAX_YEAR,
 		currency: CURRENCY,
 		// System-level brackets = the SINGLE status brackets (PLACEHOLDER).
 		// Status-specific brackets live in config.options.bracketsByStatus;
-		// compute() picks by input.filingStatus, defaulting to "single".
-		// Copies: consumers must not be able to mutate the arrays compute() reads.
+		// compute() reads BRACKETS_BY_STATUS directly (also frozen via the
+		// deep copy exposed here — FILING_STATUSES entries are shared).
 		brackets: SINGLE_BRACKETS.map((bracket) => ({ ...bracket })),
 		incomeCategories: INCOME_CATEGORIES.map((category) => ({ ...category })),
 		options: {
 			filingStatuses: FILING_STATUSES,
 			bracketsByStatus: BRACKETS_BY_STATUS,
 		},
-	},
+	}),
 	validate,
 	compute,
 	assumptions,

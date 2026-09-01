@@ -18,6 +18,7 @@ import type {
 	TaxResult,
 	TaxSystem,
 } from "../types"
+import { deepFreeze } from "../deep-freeze"
 
 const CURRENCY = "THB"
 const TAX_YEAR = 2026
@@ -321,12 +322,13 @@ export const thai2026System: TaxSystem = {
 	validate,
 	compute,
 	assumptions,
-	config: {
+	// Deep-frozen: exposed views share nested objects with the module-level
+	// data compute() reads — freezing keeps them tamper-proof.
+	config: deepFreeze({
 		country: "TH",
 		taxYear: TAX_YEAR,
 		currency: CURRENCY,
-		// Copies: consumers must not be able to mutate the arrays compute() reads.
 		brackets: BRACKETS.map((bracket) => ({ ...bracket })),
 		incomeCategories: INCOME_CATEGORIES.map((category) => ({ ...category })),
-	},
+	}),
 }

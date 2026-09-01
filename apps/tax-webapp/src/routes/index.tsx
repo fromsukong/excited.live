@@ -11,7 +11,6 @@ import {
 } from '@excited-live/tax'
 import { Badge } from '@astryxdesign/core/Badge'
 import { Banner } from '@astryxdesign/core/Banner'
-import { Button } from '@astryxdesign/core/Button'
 import { Card } from '@astryxdesign/core/Card'
 import { NumberInput } from '@astryxdesign/core/NumberInput'
 import { SegmentedControl, SegmentedControlItem } from '@astryxdesign/core/SegmentedControl'
@@ -254,7 +253,8 @@ function zeroResult(system: TaxSystem, warnings: string[]): TaxResult {
     effectiveRate: 0,
     balance: 0,
     brackets: (system.config?.brackets ?? []).map((bracket, index) => {
-      const from = index === 0 ? 0 : system.config!.brackets[index - 1].upTo
+      const prev = index === 0 ? undefined : system.config?.brackets[index - 1]
+      const from = index === 0 ? 0 : (prev?.upTo ?? 0)
       return { index, from, to: bracket.upTo, rate: bracket.rate, taxableInBracket: 0, tax: 0 }
     }),
     warnings,
@@ -295,7 +295,6 @@ function TaxContent({
   isPlaceholder,
 }: TaxContentProps) {
   const currency = result.currency
-  const brackets = system.config?.brackets ?? []
   const categories = system.config?.incomeCategories ?? []
   const filingStatuses =
     (system.config?.options?.filingStatuses as { code: string; label: { en: string; th: string } }[] | undefined) ??
@@ -631,7 +630,6 @@ function TaxContent({
                       bracket={bracket}
                       currency={currency}
                       locale={locale}
-                      copy={copy}
                     />
                   ))}
                 </tbody>
@@ -694,12 +692,10 @@ function BracketRow({
   bracket,
   currency,
   locale,
-  copy,
 }: {
   bracket: BracketBreakdown
   currency: string
   locale: Locale
-  copy: (typeof COPY)['en'] | (typeof COPY)['th']
 }) {
   const empty = bracket.taxableInBracket === 0
   return (
