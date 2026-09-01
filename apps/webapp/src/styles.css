@@ -75,7 +75,7 @@ button {
 }
 
 .brand-lockup__mark {
-  display: inline-flex;
+  display: block !important;
   align-items: center;
   justify-content: center;
   color: var(--color-text-primary);
@@ -106,6 +106,10 @@ button {
   font-weight: 600;
 }
 
+.market-status > span {
+  font-size: 15px !important;
+}
+
 .theme-button {
   width: 28px;
   min-width: 28px;
@@ -121,6 +125,7 @@ button {
   width: 100%;
   max-width: 1736px;
   height: auto;
+  display: block !important;
   overflow: hidden;
   padding: 28px 0 24px;
   margin: 0 auto;
@@ -166,21 +171,27 @@ button {
 
 .panel-heading__date {
   color: var(--copy-soft);
-  font-size: 16px;
+  font-size: 16px !important;
   line-height: 1.4;
 }
 
 .panel-heading h1 {
   margin: 0;
   color: var(--copy);
-  font-size: 21px;
-  font-weight: 700;
-  line-height: 1.2;
+  font-size: 21px !important;
+  font-weight: 700 !important;
+  line-height: 1.2 !important;
   letter-spacing: -0.02em;
 }
 
 .panel-heading h1 span {
   color: var(--copy-soft);
+}
+
+.panel-heading h1 > span {
+  font-size: inherit !important;
+  line-height: inherit !important;
+  font-weight: inherit !important;
 }
 
 .chart-canvas {
@@ -230,7 +241,7 @@ button {
   position: absolute;
   right: -2px;
   color: var(--copy-soft);
-  font-size: 11px;
+  font-size: 11px !important;
   font-weight: 700;
   letter-spacing: -0.02em;
 }
@@ -276,7 +287,7 @@ button {
 }
 
 .metric-indicator {
-  display: inline-block;
+  display: inline-block !important;
   width: 2px;
   height: 20px;
   border-radius: 2px;
@@ -393,8 +404,8 @@ button {
 .financial-row__label,
 .financial-row__value {
   min-width: 0;
-  font-size: 15px;
-  line-height: 1.25;
+  font-size: 15px !important;
+  line-height: 1.25 !important;
 }
 
 .financial-row__label {
@@ -460,7 +471,7 @@ button {
 
 .plan-summary-card__timestamp {
   color: var(--copy-muted);
-  font-size: 13px;
+  font-size: 13px !important;
   white-space: nowrap;
 }
 
@@ -475,21 +486,21 @@ button {
 .actions-card__heading h2 {
   margin: 0;
   color: var(--copy);
-  font-weight: 700;
+  font-weight: 700 !important;
   letter-spacing: -0.03em;
 }
 
 .plan-summary-card__body h2 {
-  font-size: 28px;
-  line-height: 1.15;
+  font-size: 28px !important;
+  line-height: 1.15 !important;
 }
 
 .plan-summary-card__body p {
   max-width: 660px;
   margin: 0;
   color: var(--copy-soft);
-  font-size: 16px;
-  line-height: 1.55;
+  font-size: 16px !important;
+  line-height: 1.55 !important;
 }
 
 .plan-summary-card__footer {
@@ -513,8 +524,8 @@ button {
 }
 
 .plan-summary-card__footer > span {
+  font-size: 13px !important;
   color: var(--copy-muted);
-  font-size: 13px;
 }
 
 .actions-card {
@@ -538,24 +549,24 @@ button {
 }
 
 .actions-card__eyebrow {
-  display: block;
+  display: block !important;
   margin-bottom: 7px;
   color: var(--copy-muted);
-  font-size: 13px;
+  font-size: 13px !important;
   font-weight: 700;
   letter-spacing: 0.02em;
   text-transform: uppercase;
 }
 
 .actions-card__heading h2 {
-  font-size: 23px;
+  font-size: 23px !important;
   line-height: 1.2;
 }
 
 .actions-card__count {
   flex: 0 0 auto;
   color: var(--copy-muted);
-  font-size: 13px;
+  font-size: 13px !important;
 }
 
 .plan-actions-list {
@@ -586,7 +597,7 @@ button {
 
 .plan-action__icon,
 .export-action__icon {
-  display: inline-flex;
+  display: inline-flex !important;
   align-items: center;
   justify-content: center;
   width: 34px;
@@ -608,20 +619,20 @@ button {
 
 .plan-action__label {
   color: var(--copy);
-  font-size: 15px;
+  font-size: 15px !important;
   font-weight: 700;
 }
 
 .plan-action__description {
   overflow: hidden;
   color: var(--copy-muted);
-  font-size: 13px;
+  font-size: 13px !important;
   white-space: nowrap;
   text-overflow: ellipsis;
 }
 
 .plan-action__arrow {
-  display: inline-flex;
+  display: inline-flex !important;
   color: var(--copy-muted);
 }
 
@@ -656,6 +667,11 @@ button {
 
 .export-action:hover {
   color: var(--copy);
+}
+
+.export-action > span {
+  font-size: 14px !important;
+  font-weight: 600 !important;
 }
 
 @media (max-width: 1840px) {
@@ -694,7 +710,7 @@ button {
 
 @media (max-width: 1020px) {
   .dashboard-shell {
-    display: block;
+    display: block !important;
     height: auto;
     min-height: 100vh;
     overflow: visible;
@@ -715,8 +731,8 @@ button {
   }
 
   .dashboard-grid {
-    display: flex;
-    flex-direction: column;
+    display: flex !important;
+    flex-direction: column !important;
     height: auto;
   }
 
@@ -775,9 +791,17 @@ button {
     font-size: 20px;
   }
 
+  .brand-lockup > span {
+    font-size: 20px !important;
+  }
+
   .market-status {
     gap: 4px;
     font-size: 0;
+  }
+
+  .market-status > span {
+    font-size: 0 !important;
   }
 
   .market-status::before {
@@ -798,11 +822,11 @@ button {
   }
 
   .panel-heading__date {
-    font-size: 14px;
+    font-size: 14px !important;
   }
 
   .panel-heading h1 {
-    font-size: 19px;
+    font-size: 19px !important;
   }
 
   .chart-canvas {
@@ -819,7 +843,7 @@ button {
   }
 
   .chart-toolbar {
-    display: grid;
+    display: grid !important;
     grid-template-columns: minmax(0, 1fr) auto;
     gap: 8px 10px;
     margin-top: 0;
@@ -869,7 +893,7 @@ button {
 
   .financial-row__label,
   .financial-row__value {
-    font-size: 13px;
+    font-size: 13px !important;
   }
 
   .financial-row.is-selected,
@@ -888,12 +912,12 @@ button {
   }
 
   .plan-summary-card__body h2 {
-    font-size: 23px;
+    font-size: 23px !important;
   }
 
   .plan-summary-card__body p {
-    font-size: 15px;
-    line-height: 1.5;
+    font-size: 15px !important;
+    line-height: 1.5 !important;
   }
 
   .plan-summary-card__meta {
@@ -901,7 +925,7 @@ button {
   }
 
   .plan-summary-card__timestamp {
-    font-size: 11px;
+    font-size: 11px !important;
     text-align: right;
   }
 
@@ -911,7 +935,7 @@ button {
   }
 
   .plan-summary-card__footer > span {
-    font-size: 11px;
+    font-size: 11px !important;
   }
 
   .actions-card,
@@ -928,16 +952,16 @@ button {
   }
 
   .actions-card__heading h2 {
-    font-size: 19px;
+    font-size: 19px !important;
   }
 
   .actions-card__eyebrow {
     margin-bottom: 5px;
-    font-size: 11px;
+    font-size: 11px !important;
   }
 
   .actions-card__count {
-    font-size: 11px;
+    font-size: 11px !important;
   }
 
   .plan-action {
@@ -954,16 +978,20 @@ button {
   }
 
   .plan-action__label {
-    font-size: 14px;
+    font-size: 14px !important;
   }
 
   .plan-action__description {
-    font-size: 12px;
+    font-size: 12px !important;
   }
 
   .export-action {
     padding-top: 18px;
     font-size: 13px;
+  }
+
+  .export-action > span {
+    font-size: 13px !important;
   }
 
   .export-action__icon {
