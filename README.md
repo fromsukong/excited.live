@@ -41,6 +41,16 @@ GitHub Actions builds the app and uploads directly to Cloudflare Pages (Cloudfla
 
 Preview and prelive URLs are where you review changes; production only updates when someone runs the manual workflow.
 
+### Tax webapp (`apps/tax-webapp`)
+
+The tax calculator app has its own pipeline in `.github/workflows/tax-*.yml`, deployed to separate Pages projects with the same 3-tier model:
+
+1. PR open/update (paths: `apps/tax-webapp/**`, `packages/tax/**`) → two preview deploys: `<branch>-mock` and `<branch>-live` on `*.excited-live-tax.pages.dev`
+2. Merge to `main` → automatically deployed to the prelive project: **https://excited-live-tax-prelive.pages.dev**
+3. Production → manual trigger only: GitHub → Actions → Tax Deploy Production → Run workflow → type PROD to confirm (deploys to project `excited-live-tax`)
+
+Build note: the app imports `@excited-live/tax` (resolves to `packages/tax/dist`), so CI builds via `pnpm exec turbo run build --filter=@excited-live/tax-webapp` — turbo builds the dependency chain first. A bare in-app `pnpm build` fails on a clean checkout.
+
 See [DEVELOPMENT.md](./DEVELOPMENT.md) for the full guide and deployment pitfalls.
 
 ## For AI coding agents
