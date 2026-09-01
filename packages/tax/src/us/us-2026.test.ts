@@ -38,7 +38,9 @@ describe("us2026System (PLACEHOLDER)", () => {
 		expect(us2026System.assumptions.length).toBeGreaterThanOrEqual(3)
 		// system brackets = SINGLE status brackets
 		expect(us2026System.config.brackets[0]).toMatchObject({ upTo: 11_925, rate: 0.1 })
-		// config exposes a snapshot (deep-equal, not the same array instance compute reads)
+		// config.brackets deep-equals the single-status brackets. Since the
+		// config deep-freeze, this is the SAME frozen instance as
+		// options.bracketsByStatus.single (compute() reads that shared array).
 		expect(us2026System.config.brackets).toStrictEqual(
 			us2026System.config.options.bracketsByStatus.single,
 		)

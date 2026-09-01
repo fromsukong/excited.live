@@ -55,8 +55,10 @@ describe.each(["TH", "US"] as const)("config purity (%s)", (country) => {
 		const before = system.compute(SAMPLE_INPUT)
 		const brackets = system.config?.brackets ?? []
 		// Tamper attempts are type-honest casts: freezing is runtime-only and
-		// invisible to the type system. Strict mode makes frozen writes throw;
-		// the guard also tolerates non-strict output where they silently no-op.
+		// invisible to the type system. The assertion below holds via EITHER
+		// protection mechanism: (a) a frozen write throws (US shares the
+		// instances compute() reads), or (b) the write lands on a copy the
+		// engine never reads (TH config holds copies). Both = output unchanged.
 		const attempts: Array<() => void> = [
 			() => {
 				const first = brackets[0]

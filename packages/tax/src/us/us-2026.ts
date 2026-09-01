@@ -353,16 +353,19 @@ export const us2026System: UsTaxSystem = {
 		en: "PLACEHOLDER US federal income tax system for 2026. Architecture skeleton only: 2025 standards stand in for the 2026 schedule, which is subject to pending legislation (TCJA sunset). Not for real use.",
 		th: "ระบบภาษีเงินได้บุคคลธรรมดาสหรัฐอเมริกา ปี 2026 (ค่าเริ่มต้น) โครงร่างสถาปัตยกรรมเท่านั้น: ใช้มาตรฐานปี 2025 แทนตารางปี 2026 ซึ่งขึ้นอยู่กับกฎหมายที่ยังไม่ผ่าน (TCJA sunset) ยังไม่พร้อมใช้งานจริง",
 	},
-	// Deep-frozen: exposed views share nested objects with the module-level
-	// data compute() reads — freezing keeps them tamper-proof.
+	// Deep-frozen for the API contract. Protection mechanics differ by piece:
+	// options.bracketsByStatus / options.filingStatuses hold the SAME
+	// instances compute() reads, so freezing them in place IS the corruption
+	// guard; config.brackets is a defensive copy of SINGLE_BRACKETS (the
+	// engine reads BRACKETS_BY_STATUS, which is covered via the shared
+	// options entries).
 	config: deepFreeze({
 		country: "US",
 		taxYear: TAX_YEAR,
 		currency: CURRENCY,
 		// System-level brackets = the SINGLE status brackets (PLACEHOLDER).
 		// Status-specific brackets live in config.options.bracketsByStatus;
-		// compute() reads BRACKETS_BY_STATUS directly (also frozen via the
-		// deep copy exposed here — FILING_STATUSES entries are shared).
+		// compute() reads BRACKETS_BY_STATUS directly.
 		brackets: SINGLE_BRACKETS.map((bracket) => ({ ...bracket })),
 		incomeCategories: INCOME_CATEGORIES.map((category) => ({ ...category })),
 		options: {
