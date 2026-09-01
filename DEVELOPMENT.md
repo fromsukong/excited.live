@@ -21,18 +21,25 @@ Build-time switch via `VITE_API_MODE`:
 
 ## Deploy
 
-GitHub Actions (`.github/workflows/deploy.yml`), direct-upload pattern (Cloudflare does NOT build — no build-count limit):
+GitHub Actions (`.github/workflows/`), direct-upload pattern (Cloudflare does NOT build — no build-count limit).
 
-- PR open/update → two preview deploys on project `excited-live`: `<sanitized-branch>-mock` and `<sanitized-branch>-live` aliases (`*.excited-live.pages.dev`). Branch names are sanitized first (lowercase, non-alphanumeric → `-`, dashes trimmed, max 23 chars so the suffix always fits Cloudflare's 28-char alias limit) — see the sanitize step in `.github/workflows/preview.yml`
-- Merge/push to `main` → auto-deploy to **prelive** project (`excited-live-prelive`, URL: excited-live-prelive.pages.dev → eventually prelive.excited.live)
+**Main webapp** (`apps/webapp` → Pages project `excited-live`):
+
+- PR open/update → `preview.yml` → two preview deploys on project `excited-live`: `<sanitized-branch>-mock` and `<sanitized-branch>-live` aliases (`*.excited-live.pages.dev`). Branch names are sanitized first (lowercase, non-alphanumeric → `-`, dashes trimmed, max 23 chars so the suffix always fits Cloudflare's 28-char alias limit) — see the sanitize step in `.github/workflows/preview.yml`
+- Merge/push to `main` → `prelive.yml` → auto-deploy to **prelive** project (`excited-live-prelive`, URL: excited-live-prelive.pages.dev → eventually prelive.excited.live)
 - **Production** (`excited-live` project → excited.live) deploys ONLY via manual trigger: Actions → Deploy Production → Run workflow (requires typing PROD to confirm) (workflow_dispatch)
 
-Required repo secrets: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`.
+**Tax webapp** (`apps/tax-webapp` → Pages projects `excited-live-tax` + `excited-live-tax-prelive`): same 3-tier model via `tax-preview.yml` / `tax-prelive.yml` / `tax-production.yml` (paths-filtered to `apps/tax-webapp/**` and `packages/tax/**`, preview aliases on `*.excited-live-tax.pages.dev`). Tax previews are cleaned up by `tax-pr-cleanup.yml` and advertised in the PR body by `tax-pr-description.yml` — same shape as the main-app `pr-cleanup.yml` / `pr-description.yml`. The tax app imports `@excited-live/tax` (resolves to `packages/tax/dist`), so its CI builds with `pnpm exec turbo run build --filter=@excited-live/tax-webapp` (turbo builds the dependency chain first) instead of a bare in-app `pnpm build`.
+
+Required repo secrets: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` (shared by both pipelines).
+
+Note: the tax app has no backend yet (all computation is client-side), so its mock/live preview builds are currently identical; the `VITE_API_MODE` split exists for pipeline symmetry and matters once a backend lands.
 
 Pitfalls:
 - Must use wrangler@4 (v3 esbuild can't compile the SSR function — `with {type: json}` syntax)
-- The Pages Function (`apps/webapp/functions/[[path]].ts`) bundles `dist/server/server.js` — deploy jobs must run inside `apps/webapp` where both `functions/` and `dist/` exist
-- CF project needs `nodejs_compat` compatibility flag (set on both projects already)
+- The Pages Functions (`apps/webapp/functions/[[path]].ts`, `apps/tax-webapp/functions/[[path]].ts`) bundle `dist/server/server.js` — deploy jobs must run inside the app dir where both `functions/` and `dist/` exist
+- CF projects need `nodejs_compat` compatibility flag (set on all four projects: `excited-live`, `excited-live-prelive`, `excited-live-tax`, `excited-live-tax-prelive`)
+- The branch-name sanitization algorithm now lives in FOUR copies that must stay in sync (preview.yml, tax-preview.yml, pr-cleanup.yml, tax-pr-cleanup.yml) plus the JS copy in each pr-description workflow — if you change one, change all
 
 ## Conventions for agents (Hermes)
 
