@@ -29,7 +29,7 @@ jobs:
         working-directory: apps/webapp
         env:
           VITE_API_MODE: live
-        run: pnpm build
+        run: pnpm --filter @excited-live/webapp^... build && pnpm build
       - name: Deploy production
         working-directory: apps/webapp
         env:

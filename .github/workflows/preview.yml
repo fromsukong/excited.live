@@ -23,7 +23,7 @@ jobs:
         working-directory: apps/webapp
         env:
           VITE_API_MODE: mock
-        run: pnpm build
+        run: pnpm --filter @excited-live/webapp^... build && pnpm build
       - name: Deploy mock preview
         working-directory: apps/webapp
         env:
@@ -70,7 +70,7 @@ jobs:
         working-directory: apps/webapp
         env:
           VITE_API_MODE: live
-        run: pnpm build
+        run: pnpm --filter @excited-live/webapp^... build && pnpm build
       - name: Deploy live preview
         working-directory: apps/webapp
         env:
