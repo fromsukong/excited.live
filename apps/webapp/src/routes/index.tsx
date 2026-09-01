@@ -1,56 +1,58 @@
-import { useState, type ComponentType, type ReactNode, type SVGProps } from 'react'
-import { Badge } from '@astryxdesign/core/Badge'
-import { Button } from '@astryxdesign/core/Button'
-import { Card } from '@astryxdesign/core/Card'
-import { IconButton } from '@astryxdesign/core/IconButton'
-import { Theme } from '@astryxdesign/core/theme'
-import { neutralTheme } from '@astryxdesign/theme-neutral/built'
-import { createFileRoute } from '@tanstack/react-router'
+import { useState, type ComponentType, type ReactNode, type SVGProps } from "react"
+import { Badge } from "@astryxdesign/core/Badge"
+import { Button } from "@astryxdesign/core/Button"
+import { Card } from "@astryxdesign/core/Card"
+import { IconButton } from "@astryxdesign/core/IconButton"
+import { Theme } from "@astryxdesign/core/theme"
+import { neutralTheme } from "@astryxdesign/theme-neutral/built"
+import { createFileRoute } from "@tanstack/react-router"
+import { useLocale } from "../lib/locale-context"
+import type { Dictionary } from "@excited-live/i18n"
 
-export const Route = createFileRoute('/')({
+export const Route = createFileRoute("/")({
   component: Home,
 })
 
 type IconComponent = ComponentType<SVGProps<SVGSVGElement>>
-type Period = '1M' | '3M' | 'YTD' | '1Y' | '2Y'
-type Metric = 'Net worth' | 'Cash flow'
+type Period = "1M" | "3M" | "YTD" | "1Y" | "2Y"
+type MetricKey = "metric.netWorth" | "metric.cashFlow"
 
 interface FinancialMetric {
-  label: string
+  key: keyof Dictionary
   value: string
 }
 
 interface PlanAction {
-  label: string
-  description: string
+  labelKey: keyof Dictionary
+  descKey: keyof Dictionary
   Icon: IconComponent
 }
 
-const periods: Period[] = ['1M', '3M', 'YTD', '1Y', '2Y']
+const periods: Period[] = ["1M", "3M", "YTD", "1Y", "2Y"]
 
 const financialMetrics: FinancialMetric[] = [
-  { label: 'Net Worth', value: 'THB 178,619,297' },
-  { label: 'Change in Net Worth', value: 'THB 10,251,288' },
-  { label: 'Liquid Net Worth', value: 'THB 171,565,977' },
-  { label: 'Withdrawals', value: 'THB 755,985' },
-  { label: 'Withdrawal Rate', value: '0.47%' },
-  { label: 'Income', value: 'THB 737,645' },
-  { label: 'Taxable Income', value: 'THB 737,645' },
-  { label: 'Taxes', value: 'THB 198,049' },
-  { label: 'Effective Tax Rate', value: '15.00%' },
-  { label: 'Spending', value: 'THB 646,632' },
-  { label: 'Expenses', value: 'THB 682,225' },
-  { label: 'Savings Rate', value: '0.00%' },
-  { label: 'Tax Balance', value: 'THB 36,893' },
+  { key: "metric.netWorthValue", value: "THB 178,619,297" },
+  { key: "metric.changeInNetWorth", value: "THB 10,251,288" },
+  { key: "metric.liquidNetWorth", value: "THB 171,565,977" },
+  { key: "metric.withdrawals", value: "THB 755,985" },
+  { key: "metric.withdrawalRate", value: "0.47%" },
+  { key: "metric.income", value: "THB 737,645" },
+  { key: "metric.taxableIncome", value: "THB 737,645" },
+  { key: "metric.taxes", value: "THB 198,049" },
+  { key: "metric.effectiveTaxRate", value: "15.00%" },
+  { key: "metric.spending", value: "THB 646,632" },
+  { key: "metric.expenses", value: "THB 682,225" },
+  { key: "metric.savingsRate", value: "0.00%" },
+  { key: "metric.taxBalance", value: "THB 36,893" },
 ]
 
 const planActions: PlanAction[] = [
-  { label: 'Update plan', description: 'Refresh assumptions and projections', Icon: SettingsIcon },
-  { label: 'Add income', description: 'Record a new source of cash flow', Icon: ChartIcon },
-  { label: 'Review spending', description: 'Reconcile your latest expenses', Icon: CalendarIcon },
-  { label: 'Update tax details', description: 'Check taxable income and balance', Icon: PresentationIcon },
-  { label: 'Adjust savings goal', description: 'Change the next milestone', Icon: CompassIcon },
-  { label: 'Manage accounts', description: 'Connect or edit linked accounts', Icon: LinkIcon },
+  { labelKey: "action.updatePlan", descKey: "action.updatePlan.desc", Icon: SettingsIcon },
+  { labelKey: "action.addIncome", descKey: "action.addIncome.desc", Icon: ChartIcon },
+  { labelKey: "action.reviewSpending", descKey: "action.reviewSpending.desc", Icon: CalendarIcon },
+  { labelKey: "action.updateTaxDetails", descKey: "action.updateTaxDetails.desc", Icon: PresentationIcon },
+  { labelKey: "action.adjustSavingsGoal", descKey: "action.adjustSavingsGoal.desc", Icon: CompassIcon },
+  { labelKey: "action.manageAccounts", descKey: "action.manageAccounts.desc", Icon: LinkIcon },
 ]
 
 function SvgIcon({
@@ -162,7 +164,7 @@ function SettingsIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <SvgIcon {...props}>
       <circle cx="12" cy="12" r="2.5" />
-      <path d="m19.1 15 .1.1a1.7 1.7 0 0 1-2.4 2.4l-.1-.1a1.7 1.7 0 0 0-2.9 1.2v.2a1.7 1.7 0 0 1-3.4 0v-.2a1.7 1.7 0 0 0-2.9-1.2l-.1.1A1.7 1.7 0 0 1 5 15l.1-.1a1.7 1.7 0 0 0-1.2-2.9h-.2a1.7 1.7 0 0 1 0-3.4h.2a1.7 1.7 0 0 0 1.2-2.9L5 5.6A1.7 1.7 0 0 1 7.4 3.2l.1.1a1.7 1.7 0 0 0 2.9-1.2v-.2a1.7 1.7 0 0 1 3.4 0v.2a1.7 1.7 0 0 0 2.9 1.2l.1-.1a1.7 1.7 0 0 1 2.4 2.4l-.1.1a1.7 1.7 0 0 0 1.2 2.9h.2a1.7 1.7 0 0 1 0 3.4h-.2a1.7 1.7 0 0 0-1.2 2.9Z" />
+      <path d="m19.1 15 .1.1a1.7 1.7 0 0 1-2.4 2.4l-.1-.1a1.7 1.7 0 0 0-2.9 1.2v.2a1.7 1.7 0 0 1-3.4 0v-.2a1.7 1.7 0 0 0-2.9-1.2l-.1.1A1.7 1.7 0 0 1 5 15l.1-.1a1.7 1.7 0 0 0-1.2-2.9h-.2a1.7 1.7 0 0 1 0-3.4h.2a1.7 1.7 0 0 0 1.2-2.9l-.1-.1a1.7 1.7 0 0 1 2.4-2.4l.1.1a1.7 1.7 0 0 0 2.9-1.2v-.2a1.7 1.7 0 0 1 3.4 0v.2a1.7 1.7 0 0 0 2.9 1.2l.1-.1a1.7 1.7 0 0 1 2.4 2.4l-.1.1a1.7 1.7 0 0 0 1.2 2.9h.2a1.7 1.7 0 0 1 0 3.4h-.2a1.7 1.7 0 0 0-1.2 2.9Z" />
     </SvgIcon>
   )
 }
@@ -184,14 +186,16 @@ function FinancialMetricRow({
   isSelected: boolean
   onSelect: () => void
 }) {
+  const { t } = useLocale()
+
   return (
     <button
-      className={`financial-row ${isSelected ? 'is-selected' : ''}`}
+      className={`financial-row ${isSelected ? "is-selected" : ""}`}
       type="button"
       aria-pressed={isSelected}
       onClick={onSelect}
     >
-      <span className="financial-row__label">{metric.label}</span>
+      <span className="financial-row__label">{t(metric.key)}</span>
       <span className="financial-row__value">{metric.value}</span>
     </button>
   )
@@ -206,29 +210,30 @@ function PlanActionRow({
   isSelected: boolean
   onSelect: () => void
 }) {
+  const { t } = useLocale()
   const ActionIcon = action.Icon
 
   return (
     <button
-      className={`plan-action ${isSelected ? 'is-selected' : ''}`}
+      className={`plan-action ${isSelected ? "is-selected" : ""}`}
       type="button"
       aria-pressed={isSelected}
       onClick={onSelect}
     >
       <span className="plan-action__icon"><ActionIcon aria-hidden="true" width={18} height={18} /></span>
       <span className="plan-action__copy">
-        <span className="plan-action__label">{action.label}</span>
-        <span className="plan-action__description">{action.description}</span>
+        <span className="plan-action__label">{t(action.labelKey)}</span>
+        <span className="plan-action__description">{t(action.descKey)}</span>
       </span>
       <span className="plan-action__arrow" aria-hidden="true"><ArrowRightIcon width={17} height={17} /></span>
     </button>
   )
 }
 
-function MarketChart({ metric }: { metric: Metric }) {
+function MarketChart({ metric, ariaLabel }: { metric: MetricKey; ariaLabel: string }) {
   return (
     <div className="chart-canvas">
-      <svg className="market-chart" viewBox="0 0 720 340" preserveAspectRatio="none" role="img" aria-label={`${metric} performance chart`}>
+      <svg className="market-chart" viewBox="0 0 720 340" preserveAspectRatio="none" role="img" aria-label={ariaLabel}>
         <line className="chart-guide chart-guide--top" x1="0" y1="70" x2="720" y2="70" />
         <line className="chart-guide chart-guide--middle" x1="0" y1="250" x2="720" y2="250" />
         <line className="chart-guide chart-guide--bottom" x1="0" y1="294" x2="720" y2="294" />
@@ -241,38 +246,47 @@ function MarketChart({ metric }: { metric: Metric }) {
           d="M0 289 L12 286 L24 290 L36 286 L48 288 L60 285 L72 287 L84 284 L96 287 L108 278 L120 283 L132 280 L144 285 L156 285 L168 284 L180 285 L192 281 L204 285 L216 284 L228 285 L240 285 L252 283 L264 284 L276 280 L288 282 L300 281 L312 279 L324 283 L336 280 L348 281 L360 279 L372 277 L384 279 L396 275 L408 280 L420 276 L432 275 L444 281 L456 273 L468 277 L480 271 L492 276 L504 272 L516 279 L528 275 L540 278 L552 269 L564 279 L576 277 L588 274 L600 276 L612 273 L624 277 L636 272 L648 275 L660 274 L672 267 L684 277 L696 273 L708 276 L720 274"
         />
       </svg>
-      <span className="chart-value chart-value--top">{metric === 'Net worth' ? '+6.10%' : '+3.42%'}</span>
-      <span className="chart-value chart-value--bottom">{metric === 'Net worth' ? 'THB 178.6M' : 'THB 737.6K'}</span>
+      <span className="chart-value chart-value--top">{metric === "metric.netWorth" ? "+6.10%" : "+3.42%"}</span>
+      <span className="chart-value chart-value--bottom">{metric === "metric.netWorth" ? "THB 178.6M" : "THB 737.6K"}</span>
     </div>
   )
 }
 
 function Home() {
-  const [period, setPeriod] = useState<Period>('1Y')
-  const [metric, setMetric] = useState<Metric>('Net worth')
-  const [selectedMetric, setSelectedMetric] = useState('Taxable Income')
+  const { t, locale, setLocale } = useLocale()
+  const [period, setPeriod] = useState<Period>("1Y")
+  const [metric, setMetric] = useState<MetricKey>("metric.netWorth")
+  const [selectedMetricKey, setSelectedMetricKey] = useState<keyof Dictionary>("metric.taxableIncome")
   const [accountsConnected, setAccountsConnected] = useState(false)
-  const [selectedAction, setSelectedAction] = useState('Update plan')
+  const [selectedActionKey, setSelectedActionKey] = useState<keyof Dictionary>("action.updatePlan")
   const [planUpdated, setPlanUpdated] = useState(false)
   const [isDarkMode, setIsDarkMode] = useState(true)
 
-  const selectAction = (label: string) => {
-    setSelectedAction(label)
+  const selectAction = (key: keyof Dictionary) => {
+    setSelectedActionKey(key)
     setPlanUpdated(false)
   }
 
   return (
-    <Theme theme={neutralTheme} mode={isDarkMode ? 'dark' : 'light'}>
+    <Theme theme={neutralTheme} mode={isDarkMode ? "dark" : "light"}>
       <div className="dashboard-shell">
         <header className="topbar">
           <div className="brand-lockup">
             <span className="brand-lockup__mark"><FeyMark size={23} /></span>
-            <span>Hello, Sam</span>
+            <span>{t("nav.hello")}</span>
           </div>
           <div className="market-status">
-            <span>Your plan is synced</span>
+            <span>{t("nav.synced")}</span>
+            <button
+              type="button"
+              className={`locale-button ${locale === "th" ? "is-active" : ""}`}
+              aria-label={t("locale.toggle")}
+              onClick={() => setLocale(locale === "en" ? "th" : "en")}
+            >
+              {locale === "en" ? t("locale.th") : t("locale.en")}
+            </button>
             <IconButton
-              label={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+              label={isDarkMode ? t("theme.toLight") : t("theme.toDark")}
               icon={isDarkMode ? <MoonIcon /> : <SunIcon />}
               variant="ghost"
               size="sm"
@@ -287,43 +301,46 @@ function Home() {
             <Card className="chart-panel" variant="transparent" padding={0}>
               <div className="chart-panel__inner">
                 <div className="panel-heading">
-                  <span className="panel-heading__date">Plan snapshot · Tuesday, February 25</span>
-                  <h1>Your plan is <span>on track</span></h1>
+                  <span className="panel-heading__date">{t("plan.snapshotDate")}</span>
+                  <h1>{t("plan.heading.prefix")} <span>{t("plan.heading.status")}</span></h1>
                 </div>
 
-                <MarketChart metric={metric} />
+                <MarketChart
+                  metric={metric}
+                  ariaLabel={t(metric === "metric.netWorth" ? "chart.aria.netWorth" : "chart.aria.cashFlow")}
+                />
 
                 <div className="chart-toolbar">
-                  <div className="metric-switch" role="group" aria-label="Chart metric">
+                  <div className="metric-switch" role="group" aria-label={t("a11y.chartMetric")}>
                     <button
-                      className={`metric-switch__item ${metric === 'Net worth' ? 'is-active' : ''}`}
+                      className={`metric-switch__item ${metric === "metric.netWorth" ? "is-active" : ""}`}
                       type="button"
-                      onClick={() => setMetric('Net worth')}
+                      onClick={() => setMetric("metric.netWorth")}
                     >
                       <span className="metric-indicator metric-indicator--white" aria-hidden="true" />
-                      Net worth
+                      {t("metric.netWorth")}
                     </button>
                     <button
-                      className={`metric-switch__item ${metric === 'Cash flow' ? 'is-active' : ''}`}
+                      className={`metric-switch__item ${metric === "metric.cashFlow" ? "is-active" : ""}`}
                       type="button"
-                      onClick={() => setMetric('Cash flow')}
+                      onClick={() => setMetric("metric.cashFlow")}
                     >
                       <span className="metric-indicator metric-indicator--purple" aria-hidden="true" />
-                      Cash flow
+                      {t("metric.cashFlow")}
                     </button>
                   </div>
                   <Button
-                    label={accountsConnected ? 'Accounts connected' : 'Connect accounts'}
+                    label={accountsConnected ? t("accounts.connected") : t("accounts.connect")}
                     variant="ghost"
                     size="sm"
                     icon={<LinkIcon />}
-                    className={`portfolio-button ${accountsConnected ? 'is-connected' : ''}`}
+                    className={`portfolio-button ${accountsConnected ? "is-connected" : ""}`}
                     onClick={() => setAccountsConnected((current) => !current)}
                   />
-                  <div className="period-switch" role="group" aria-label="Chart period">
+                  <div className="period-switch" role="group" aria-label={t("a11y.chartPeriod")}>
                     {periods.map((item) => (
                       <button
-                        className={`period-switch__item ${period === item ? 'is-active' : ''}`}
+                        className={`period-switch__item ${period === item ? "is-active" : ""}`}
                         type="button"
                         key={item}
                         aria-pressed={period === item}
@@ -335,43 +352,43 @@ function Home() {
                   </div>
                 </div>
 
-                <div className="financial-list" aria-label="Financial snapshot">
+                <div className="financial-list" aria-label={t("a11y.financialSnapshot")}>
                   {financialMetrics.map((item) => (
                     <FinancialMetricRow
-                      key={item.label}
+                      key={item.key}
                       metric={item}
-                      isSelected={selectedMetric === item.label}
-                      onSelect={() => setSelectedMetric(item.label)}
+                      isSelected={selectedMetricKey === item.key}
+                      onSelect={() => setSelectedMetricKey(item.key)}
                     />
                   ))}
                 </div>
               </div>
             </Card>
 
-            <section className="plan-column" aria-label="Plan actions">
+            <section className="plan-column" aria-label={t("a11y.planActions")}>
               <Card className="plan-summary-card" variant="transparent" padding={0}>
                 <div className="plan-summary-card__inner">
                   <div className="plan-summary-card__meta">
-                    <Badge label={planUpdated ? 'Plan updated' : 'Plan actions'} variant="neutral" icon={<FeyMark size={14} />} className="plan-badge" />
-                    <span className="plan-summary-card__timestamp">{planUpdated ? 'Saved just now' : 'Last synced today'}</span>
+                    <Badge label={planUpdated ? t("plan.updated") : t("plan.actions")} variant="neutral" icon={<FeyMark size={14} />} className="plan-badge" />
+                    <span className="plan-summary-card__timestamp">{planUpdated ? t("plan.savedJustNow") : t("plan.lastSyncedToday")}</span>
                   </div>
                   <div className="plan-summary-card__body">
-                    <h2>Keep your plan current</h2>
-                    <p>Update the details behind your forecast, reconcile new activity, and keep every number ready for your next decision.</p>
+                    <h2>{t("plan.keepCurrent")}</h2>
+                    <p>{t("plan.summaryBody")}</p>
                   </div>
                   <div className="plan-summary-card__footer">
                     <Button
-                      label={planUpdated ? 'Plan updated' : 'Update plan'}
+                      label={planUpdated ? t("plan.updated") : t("action.updatePlan")}
                       variant="primary"
                       size="md"
                       icon={<SettingsIcon />}
                       className="plan-primary-button"
                       onClick={() => {
-                        setSelectedAction('Update plan')
+                        setSelectedActionKey("action.updatePlan")
                         setPlanUpdated(true)
                       }}
                     />
-                    <span>{selectedAction} selected</span>
+                    <span>{t("plan.selected", { action: t(selectedActionKey) })}</span>
                   </div>
                 </div>
               </Card>
@@ -380,24 +397,24 @@ function Home() {
                 <div className="actions-card__inner">
                   <div className="actions-card__heading">
                     <div>
-                      <span className="actions-card__eyebrow">Quick actions</span>
-                      <h2>What would you like to update?</h2>
+                      <span className="actions-card__eyebrow">{t("actions.eyebrow")}</span>
+                      <h2>{t("actions.heading")}</h2>
                     </div>
-                    <span className="actions-card__count">6 tools</span>
+                    <span className="actions-card__count">{t("actions.count")}</span>
                   </div>
                   <div className="plan-actions-list">
                     {planActions.map((action) => (
                       <PlanActionRow
-                        key={action.label}
+                        key={action.labelKey}
                         action={action}
-                        isSelected={selectedAction === action.label}
-                        onSelect={() => selectAction(action.label)}
+                        isSelected={selectedActionKey === action.labelKey}
+                        onSelect={() => selectAction(action.labelKey)}
                       />
                     ))}
                   </div>
-                  <button className="export-action" type="button" onClick={() => selectAction('Export snapshot')}>
+                  <button className="export-action" type="button" onClick={() => selectAction("action.exportSnapshot")}>
                     <span className="export-action__icon"><BookmarkIcon aria-hidden="true" width={17} height={17} /></span>
-                    <span>Export plan snapshot</span>
+                    <span>{t("action.exportSnapshot")}</span>
                     <ArrowRightIcon aria-hidden="true" width={17} height={17} />
                   </button>
                 </div>
