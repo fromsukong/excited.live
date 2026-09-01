@@ -6,6 +6,7 @@ const { compute, validate } = us2026System
 
 const DEFAULT_ALLOWANCES: TaxInput["allowances"] = {
 	personal: 0,
+	parents: 0,
 	spouse: 0,
 	children: 0,
 	disabled: 0,
@@ -125,7 +126,7 @@ describe("us2026System (PLACEHOLDER)", () => {
 			makeInput({
 				filingStatus: "single",
 				incomes: [{ categoryCode: "wages", amount: 30_000 }],
-				allowances: { personal: 1, spouse: 0, children: 0, disabled: 0 },
+				allowances: { personal: 1, spouse: 0, children: 0, parents: 0, disabled: 0 },
 				deductions: {
 					insurance: 5_000,
 					mortgageInterest: 0,

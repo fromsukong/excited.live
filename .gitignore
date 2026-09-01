@@ -6,5 +6,6 @@ dist/
 *.log
 .DS_Store
 .verify/
+.wrangler/
 apps/webapp/.worker2/
 apps/webapp/.worker/

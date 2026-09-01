@@ -28,7 +28,7 @@ import { thai2026System } from "./thai-2026"
 function input(overrides: Partial<TaxInput> = {}): TaxInput {
 	const base: TaxInput = {
 		incomes: [],
-		allowances: { personal: 1, spouse: 0, children: 0, disabled: 0 },
+		allowances: { personal: 1, spouse: 0, children: 0, parents: 0, disabled: 0 },
 		deductions: {
 			insurance: 0,
 			mortgageInterest: 0,
@@ -82,7 +82,7 @@ describe("thai2026System golden scenarios (independent recompute)", () => {
 		const result = thai2026System.compute(
 			input({
 				incomes: [{ categoryCode: "freelance", amount: 600_000 }],
-				allowances: { personal: 1, spouse: 1, children: 1, disabled: 0 },
+				allowances: { personal: 1, spouse: 1, children: 1, parents: 0, disabled: 0 },
 				deductions: { insurance: 25_000, mortgageInterest: 0, donations: 20_000, retirementSavings: { ssf: 0, rmf: 100_000, provident: 0 } },
 			}),
 		)
@@ -128,7 +128,7 @@ describe("thai2026System golden scenarios (independent recompute)", () => {
 		const result = thai2026System.compute(
 			input({
 				incomes: [employment(2_000_000)],
-				allowances: { personal: 1, spouse: 1, children: 0, disabled: 0 },
+				allowances: { personal: 1, spouse: 1, children: 0, parents: 0, disabled: 0 },
 				deductions: { insurance: 100_000, mortgageInterest: 0, donations: 0, retirementSavings: { ssf: 180_000, rmf: 0, provident: 240_000 } },
 			}),
 		)
@@ -303,7 +303,7 @@ describe("thai2026System allowances and structural edges (independent recompute)
 		// employment 280k → expense min(50%·280k=140k, 100k cap) = 100k
 		// assessable 180k; allowances 60+60+30+30 = 180k → taxable 0
 		const result = thai2026System.compute(
-			input({ incomes: [employment(280_000)], allowances: { personal: 1, spouse: 1, children: 2, disabled: 0 } }),
+			input({ incomes: [employment(280_000)], allowances: { personal: 1, spouse: 1, children: 2, parents: 0, disabled: 0 } }),
 		)
 		expect(result.assessableIncome).toBe(180_000)
 		expect(result.allowancesTotal).toBe(180_000)
@@ -431,14 +431,14 @@ describe("thai2026System validate hardening", () => {
 
 	it("rejects negative allowance counts", () => {
 		const problems = thai2026System.validate(
-			input({ allowances: { personal: 1, spouse: -1, children: 0, disabled: 0 } }),
+			input({ allowances: { personal: 1, spouse: -1, children: 0, parents: 0, disabled: 0 } }),
 		)
 		expect(problems.length).toBeGreaterThan(0)
 	})
 
 	it("rejects non-integer allowance counts", () => {
 		const problems = thai2026System.validate(
-			input({ allowances: { personal: 1, spouse: 0, children: 1.5, disabled: 0 } }),
+			input({ allowances: { personal: 1, spouse: 0, children: 1.5, parents: 0, disabled: 0 } }),
 		)
 		expect(problems.length).toBeGreaterThan(0)
 	})

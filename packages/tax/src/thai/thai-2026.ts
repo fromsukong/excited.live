@@ -10,7 +10,9 @@
  */
 
 import type {
+	AllowanceDef,
 	BracketBreakdown,
+	DeductionLine,
 	IncomeCategory,
 	LocalizedLabel,
 	TaxBracket,
@@ -69,10 +71,14 @@ const INCOME_CATEGORIES: IncomeCategory[] = [
 	},
 ]
 
-/** Household allowances per person (THB). */
+/**
+ * Household allowances per person (THB): personal/spouse 60,000; children 30,000;
+ * parents (own + spouse's, age 60+, income ≤ 30k) 30,000; disabled dependents 60,000.
+ */
 const ALLOWANCE_PERSONAL = 60_000
 const ALLOWANCE_SPOUSE = 60_000
 const ALLOWANCE_CHILDREN = 30_000
+const ALLOWANCE_PARENTS = 30_000
 const ALLOWANCE_DISABLED = 60_000
 
 /** Itemized deduction caps (THB). */
@@ -125,12 +131,45 @@ function compute(input: TaxInput): TaxResult {
 
 	const assessableIncome = round2(grossIncome - expenseDeductions)
 
-	// Itemized deductions (Thai: ค่าลดหย่อน).
+	// Itemized deductions (Thai: ค่าลดหย่อน). Every line records
+	// entered (pre-cap) vs applied (post-cap) so UIs can surface savings
+	// and cap-bite without duplicating cap logic.
+	const deductionLines: DeductionLine[] = []
+
+	const pushLine = (code: string, label: LocalizedLabel, entered: number, applied: number): void => {
+		deductionLines.push({
+			code,
+			label,
+			entered: round2(entered),
+			applied: round2(applied),
+			capped: round2(entered) > round2(applied),
+		})
+	}
+
 	const insuranceEff = round2(Math.min(input.deductions.insurance, CAP_INSURANCE))
+	pushLine(
+		"insurance",
+		{ en: "Insurance premiums", th: "เบี้ยประกันภัย" },
+		input.deductions.insurance,
+		insuranceEff,
+	)
+
 	const mortgageEff = round2(Math.min(input.deductions.mortgageInterest, CAP_MORTGAGE_INTEREST))
+	pushLine(
+		"mortgageInterest",
+		{ en: "Mortgage interest", th: "ดอกเบี้ยบ้าน" },
+		input.deductions.mortgageInterest,
+		mortgageEff,
+	)
 
 	const donationsCap = round2(CAP_DONATIONS_RATE * assessableIncome)
 	const donationsEff = round2(Math.min(input.deductions.donations, donationsCap))
+	pushLine(
+		"donations",
+		{ en: "Donations", th: "เงินบริจาค" },
+		input.deductions.donations,
+		donationsEff,
+	)
 	if (input.deductions.donations > donationsCap) {
 		warnings.push(`Donations capped at ${donationsCap} (input ${input.deductions.donations})`)
 	}
@@ -152,6 +191,20 @@ function compute(input: TaxInput): TaxResult {
 	}
 	const retirementEff = round2(Math.min(retirementCombined, CAP_RETIREMENT_COMBINED))
 
+	// One aggregate retirement line: the combined cap is what actually bites
+	// across the three funds, so savings attribution per fund would be
+	// order-dependent guesswork inside the group.
+	pushLine(
+		"retirement",
+		{ en: "SSF / RMF / Provident", th: "SSF / RMF / กองทุนสำรองเลี้ยงชีพ" },
+		round2(
+			input.deductions.retirementSavings.ssf +
+				input.deductions.retirementSavings.rmf +
+				input.deductions.retirementSavings.provident,
+		),
+		retirementEff,
+	)
+
 	const itemizedDeductions = round2(
 		insuranceEff + mortgageEff + donationsEff + retirementEff,
 	)
@@ -161,6 +214,7 @@ function compute(input: TaxInput): TaxResult {
 		input.allowances.personal * ALLOWANCE_PERSONAL +
 			input.allowances.spouse * ALLOWANCE_SPOUSE +
 			input.allowances.children * ALLOWANCE_CHILDREN +
+			input.allowances.parents * ALLOWANCE_PARENTS +
 			input.allowances.disabled * ALLOWANCE_DISABLED,
 	)
 
@@ -240,6 +294,7 @@ function compute(input: TaxInput): TaxResult {
 		balance,
 		brackets,
 		warnings,
+		deductionLines,
 	}
 }
 
@@ -265,6 +320,7 @@ function validate(input: TaxInput): string[] {
 	checkNonNegativeFinite(allowances.personal, "allowances.personal count")
 	checkNonNegativeFinite(allowances.spouse, "allowances.spouse count")
 	checkNonNegativeFinite(allowances.children, "allowances.children count")
+	checkNonNegativeFinite(allowances.parents, "allowances.parents count")
 	checkNonNegativeFinite(allowances.disabled, "allowances.disabled count")
 	const checkNonNegativeInteger = (value: number, label: string): void => {
 		if (!Number.isInteger(value)) {
@@ -274,6 +330,7 @@ function validate(input: TaxInput): string[] {
 	checkNonNegativeInteger(allowances.personal, "allowances.personal count")
 	checkNonNegativeInteger(allowances.spouse, "allowances.spouse count")
 	checkNonNegativeInteger(allowances.children, "allowances.children count")
+	checkNonNegativeInteger(allowances.parents, "allowances.parents count")
 	checkNonNegativeInteger(allowances.disabled, "allowances.disabled count")
 
 	const deductions = input.deductions
@@ -316,12 +373,59 @@ const assumptions: LocalizedLabel[] = [
 	},
 ]
 
+/** Family allowance definitions (Thai Revenue Department, PND91). */
+const ALLOWANCE_DEFS: AllowanceDef[] = [
+	{
+		code: "personal",
+		label: { en: "Taxpayer", th: "ผู้มีเงินได้" },
+		amountPerPerson: ALLOWANCE_PERSONAL,
+		condition: { en: "The taxpayer themself", th: "ตัวผู้มีเงินได้เอง" },
+	},
+	{
+		code: "spouse",
+		label: { en: "Spouse", th: "คู่สมรส" },
+		amountPerPerson: ALLOWANCE_SPOUSE,
+		condition: {
+			en: "Spouse with little or no income, filing separately",
+			th: "คู่สมรสไม่มีเงินได้หรือมีน้อย และยื่นแยกกัน",
+		},
+	},
+	{
+		code: "children",
+		label: { en: "Children", th: "บุตร" },
+		amountPerPerson: ALLOWANCE_CHILDREN,
+		condition: {
+			en: "Each child (incl. adopted, max 3 for adoption)",
+			th: "บุตรแต่ละคน (รวมบุตรบุญธรรม ได้ไม่เกิน 3 คน)",
+		},
+	},
+	{
+		code: "parents",
+		label: { en: "Parents", th: "บิดามารดา" },
+		amountPerPerson: ALLOWANCE_PARENTS,
+		condition: {
+			en: "Own and spouse's parents, age 60+, income ≤ 30,000 THB/year (max 4)",
+			th: "บิดามารดาของตนและคู่สมรส อายุ 60 ปีขึ้นไป เงินได้ไม่เกิน 30,000 บาท/ปี (สูงสุด 4 คน)",
+		},
+	},
+	{
+		code: "disabled",
+		label: { en: "Disabled dependents", th: "ผู้พิการ" },
+		amountPerPerson: ALLOWANCE_DISABLED,
+		condition: {
+			en: "Dependent disabled persons, income ≤ 30,000 THB/year",
+			th: "บุคคลพิการที่อุปการะเลี้ยงดู เงินได้ไม่เกิน 30,000 บาท/ปี",
+		},
+	},
+]
+
 export const thai2026System: TaxSystem = {
 	country: "TH",
 	taxYear: TAX_YEAR,
 	validate,
 	compute,
 	assumptions,
+	allowanceDefs: ALLOWANCE_DEFS,
 	// Deep-frozen as the API contract (consumers must never mutate config).
 	// Note: TH config holds defensive COPIES of the module-level
 	// BRACKETS/INCOME_CATEGORIES that compute() reads, so the engine data is

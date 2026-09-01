@@ -5,7 +5,7 @@ import { deepFreeze } from "./deep-freeze"
 
 const SAMPLE_INPUT: TaxInput = {
 	incomes: [{ categoryCode: "employment", amount: 900_000 }],
-	allowances: { personal: 1, spouse: 0, children: 0, disabled: 0 },
+	allowances: { personal: 1, spouse: 0, children: 0, parents: 0, disabled: 0 },
 	deductions: {
 		insurance: 0,
 		mortgageInterest: 0,
