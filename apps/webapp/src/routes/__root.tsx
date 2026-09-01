@@ -1,4 +1,5 @@
 import { Outlet, createRootRoute, HeadContent, Scripts, useRouteContext } from "@tanstack/react-router"
+import { AppDocument } from "@excited-live/design-system"
 import type { ReactNode } from "react"
 import { DEFAULT_LOCALE, localeFromCookie, type Locale } from "@excited-live/i18n"
 import { getTranslator } from "../lib/dictionaries"
@@ -47,14 +48,8 @@ function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
 	const { locale } = useLocale()
 
 	return (
-		<html lang={locale} data-theme="dark">
-			<head>
-				<HeadContent />
-			</head>
-			<body>
-				{children}
-				<Scripts />
-			</body>
-		</html>
+		<AppDocument lang={locale} theme="dark" head={<HeadContent />} scripts={<Scripts />}>
+			{children}
+		</AppDocument>
 	)
 }
