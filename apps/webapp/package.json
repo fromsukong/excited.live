@@ -8,6 +8,7 @@
 		"build": "vite build",
 		"start": "node .output/server/index.mjs",
 		"lint": "eslint .",
+		"test": "vitest run",
 		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
@@ -27,6 +28,7 @@
 		"@types/react-dom": "^19.2.0",
 		"@vitejs/plugin-react": "^6.1.0",
 		"typescript": "^5.8.3",
-		"vite": "^8.2.2"
+		"vite": "^8.2.2",
+		"vitest": "^3.2.0"
 	}
 }

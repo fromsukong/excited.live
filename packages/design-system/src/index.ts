@@ -1,6 +1,6 @@
 export { AppDocument, type AppDocumentProps } from "./AppDocument";
 export { PlainButton, type PlainButtonProps } from "./PlainButton";
-export { Svg, SvgLine, SvgPath, type SvgProps, type SvgLineProps, type SvgPathProps } from "./Svg";
+export { Svg, SvgLine, SvgPath, SvgCircle, type SvgProps, type SvgLineProps, type SvgPathProps, type SvgCircleProps } from "./Svg";
 export {
 	SvgIcon,
 	FeyMark,
@@ -22,6 +22,9 @@ export { Card, type CardProps } from "@astryxdesign/core/Card";
 export { Grid, type GridProps } from "@astryxdesign/core/Grid";
 export { Heading, type HeadingLevel, type HeadingProps } from "@astryxdesign/core/Heading";
 export { IconButton, type IconButtonProps } from "@astryxdesign/core/IconButton";
+export { NumberInput, type NumberInputProps } from "@astryxdesign/core/NumberInput";
+export { Section, type SectionProps } from "@astryxdesign/core/Section";
+export { SegmentedControl, SegmentedControlItem, type SegmentedControlProps, type SegmentedControlItemProps } from "@astryxdesign/core/SegmentedControl";
 export { Stack, type StackProps } from "@astryxdesign/core/Stack";
 export { Text, type TextProps } from "@astryxdesign/core/Text";
 export { Theme } from "@astryxdesign/core/theme";

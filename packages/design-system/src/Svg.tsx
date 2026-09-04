@@ -16,3 +16,9 @@ export function SvgLine(rest: SvgLineProps) {
 export function SvgPath(rest: SvgPathProps) {
 	return <path {...rest} />;
 }
+
+export type SvgCircleProps = SVGProps<SVGCircleElement>;
+
+export function SvgCircle(rest: SvgCircleProps) {
+	return <circle {...rest} />;
+}
