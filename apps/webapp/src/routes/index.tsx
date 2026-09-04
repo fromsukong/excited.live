@@ -37,7 +37,7 @@ export const Route = createFileRoute("/")({
 	component: HomePage,
 })
 
-export default function HomePage() {
+function HomePage() {
 	const { locale, setLocale, t } = useLocale()
 	const [inputs, setInputs] = useState<PlanInputs>(() => defaultPlanInputs())
 	// Sync initial value so SSR ships real numbers; updates flow async so the
