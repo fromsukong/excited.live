@@ -35,6 +35,7 @@ pnpm install
 pnpm dev        # webapp on http://localhost:3000
 pnpm build      # all packages + app (turbo, cached)
 pnpm typecheck  # tsc across the workspace
+pnpm lint       # eslint across the repo (flat config at the root)
 ```
 
 CI runs Node 22; pnpm 10 is pinned via the `packageManager` field.
@@ -42,9 +43,10 @@ CI runs Node 22; pnpm 10 is pinned via the `packageManager` field.
 ## Definition of done (before you open a PR)
 
 - `pnpm build` and `pnpm typecheck` pass from the repo root.
-- New engine logic has tests, co-located as `*.test.ts` next to the source.
-  A root `pnpm test` task is being introduced; if it does not exist yet, say
-  so in your PR instead of wiring a test runner ad hoc.
+- `pnpm lint` passes — CI enforces zero warnings (`--max-warnings=0`), so a
+  local warning will block the PR.
+- New engine logic has tests, co-located as `*.test.ts` next to the source
+  (run from the root with `pnpm test`).
 - Your branch contains ONLY your commits. This clone is shared: run
   `git log origin/main..HEAD` before every push and remove strays.
 - The PR description follows `.github/pull_request_template.md`.

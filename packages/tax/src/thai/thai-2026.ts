@@ -18,6 +18,7 @@ import type {
 	TaxResult,
 	TaxSystem,
 } from "../types"
+import { deepFreeze } from "../deep-freeze"
 
 const CURRENCY = "THB"
 const TAX_YEAR = 2026
@@ -321,12 +322,17 @@ export const thai2026System: TaxSystem = {
 	validate,
 	compute,
 	assumptions,
-	config: {
+	// Deep-frozen as the API contract (consumers must never mutate config).
+	// Note: TH config holds defensive COPIES of the module-level
+	// BRACKETS/INCOME_CATEGORIES that compute() reads, so the engine data is
+	// unreachable from the public surface regardless; freezing additionally
+	// guards the copies themselves and matches the US system's pattern for
+	// when TH config starts exposing shared instances.
+	config: deepFreeze({
 		country: "TH",
 		taxYear: TAX_YEAR,
 		currency: CURRENCY,
-		// Copies: consumers must not be able to mutate the arrays compute() reads.
 		brackets: BRACKETS.map((bracket) => ({ ...bracket })),
 		incomeCategories: INCOME_CATEGORIES.map((category) => ({ ...category })),
-	},
+	}),
 }

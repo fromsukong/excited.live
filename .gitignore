@@ -8,4 +8,3 @@ dist/
 .verify/
 apps/webapp/.worker2/
 apps/webapp/.worker/
-.verify/
