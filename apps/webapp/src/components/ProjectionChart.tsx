@@ -6,7 +6,14 @@
  * Pure SVG (via design-system primitives), no chart library.
  */
 import { useMemo } from "react"
-import { Svg, SvgCircle, SvgLine, SvgPath } from "@excited-live/design-system"
+import {
+	Svg,
+	SvgCircle,
+	SvgDefs,
+	SvgGradientStop,
+	SvgLine,
+	SvgPath,
+} from "@excited-live/design-system"
 
 export interface ProjectionChartProps {
 	/** One point per projected year, ascending. */
@@ -73,8 +80,10 @@ export function ProjectionChart({
 	}
 
 	function handleKeyDown(event: React.KeyboardEvent<SVGSVGElement>) {
+		// No active year yet: arrows enter the chart at the nearest end
+		// (Left → first year, Right → last year) instead of jumping blindly.
 		const currentIndex = activeYear == null
-			? points.length - 1
+			? (event.key === "ArrowLeft" ? 0 : points.length - 1)
 			: points.findIndex((point) => point.year === activeYear)
 		let next: number
 		if (event.key === "ArrowLeft") next = Math.max(0, currentIndex - 1)
@@ -100,12 +109,14 @@ export function ProjectionChart({
 			onKeyDown={handleKeyDown}
 			onBlur={() => onActiveYearChange(null)}
 		>
-			<defs>
+			{/* Gradient + grouping are SVG-native, so the design-system hosts them
+			    as primitives too (same pattern as SvgLine/SvgPath/SvgCircle). */}
+			<SvgDefs>
 				<linearGradient id="chart-area-fill" x1="0" y1="0" x2="0" y2="1">
-					<stop offset="0%" stopColor="var(--color-accent)" stopOpacity="0.25" />
-					<stop offset="100%" stopColor="var(--color-accent)" stopOpacity="0" />
+					<SvgGradientStop offset="0%" stopColor="var(--color-accent)" stopOpacity="0.25" />
+					<SvgGradientStop offset="100%" stopColor="var(--color-accent)" stopOpacity="0" />
 				</linearGradient>
-			</defs>
+			</SvgDefs>
 			<SvgPath className="chart-guide" d={`M0 ${PAD_TOP}H${WIDTH}`} />
 			<SvgPath className="chart-guide" d={`M0 ${HEIGHT / 2}H${WIDTH}`} />
 			{goalY != null ? (

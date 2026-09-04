@@ -22,3 +22,15 @@ export type SvgCircleProps = SVGProps<SVGCircleElement>;
 export function SvgCircle(rest: SvgCircleProps) {
 	return <circle {...rest} />;
 }
+
+export type SvgDefsProps = SVGProps<SVGDefsElement>;
+
+export function SvgDefs(rest: SvgDefsProps) {
+	return <defs {...rest} />;
+}
+
+export type SvgGradientStopProps = SVGProps<SVGStopElement>;
+
+export function SvgGradientStop(rest: SvgGradientStopProps) {
+	return <stop {...rest} />;
+}

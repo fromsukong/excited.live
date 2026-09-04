@@ -1,6 +1,6 @@
 export { AppDocument, type AppDocumentProps } from "./AppDocument";
 export { PlainButton, type PlainButtonProps } from "./PlainButton";
-export { Svg, SvgLine, SvgPath, SvgCircle, type SvgProps, type SvgLineProps, type SvgPathProps, type SvgCircleProps } from "./Svg";
+export { Svg, SvgLine, SvgPath, SvgCircle, SvgDefs, SvgGradientStop, type SvgProps, type SvgLineProps, type SvgPathProps, type SvgCircleProps, type SvgDefsProps, type SvgGradientStopProps } from "./Svg";
 export {
 	SvgIcon,
 	FeyMark,

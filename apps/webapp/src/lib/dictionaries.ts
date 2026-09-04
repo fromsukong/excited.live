@@ -25,7 +25,6 @@ export const strings: Dictionary = {
 	"metric.netWorth": { en: "Net worth", th: "มูลค่าสุทธิ" },
 	"metric.tax": { en: "Tax", th: "ภาษี" },
 	"metric.effectiveTaxRate": { en: "Effective tax rate", th: "อัตราภาษีเฉลี่ย" },
-	"metric.surplus": { en: "Yearly surplus", th: "เงินเหลือต่อปี" },
 
 	"chart.valueAt": { en: "Net worth", th: "มูลค่าสุทธิ" },
 	"chart.taxAt": { en: "Tax that year", th: "ภาษีปีนั้น" },
@@ -35,8 +34,6 @@ export const strings: Dictionary = {
 	"chart.empty": { en: "Adjust your plan to see the projection.", th: "ปรับแผนของคุณเพื่อดูการคาดการณ์" },
 
 	"a11y.chartMetric": { en: "Projection metric", th: "ตัวชี้วัดการคาดการณ์" },
-	"a11y.chartPeriod": { en: "Projection period", th: "ช่วงเวลาการคาดการณ์" },
-	"a11y.financialSnapshot": { en: "Financial snapshot", th: "ภาพรวมการเงิน" },
 	"a11y.planSections": { en: "Plan sections", th: "ส่วนของแผน" },
 	"a11y.inspection": { en: "Year details", th: "รายละเอียดรายปี" },
 

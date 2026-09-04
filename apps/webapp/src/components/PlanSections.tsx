@@ -297,7 +297,7 @@ function GoalSection({ inputs, onInputsChange, t }: PlanSectionProps) {
 						<SegmentedControlItem
 							key={years}
 							value={String(years)}
-							label={t("horizon.years").replace("{years}", String(years))}
+							label={t("horizon.years", { years: String(years) })}
 						/>
 					))}
 				</SegmentedControl>

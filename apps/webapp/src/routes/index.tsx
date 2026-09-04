@@ -35,11 +35,20 @@ const LOCALE_KEYS = ["en", "th"] as const
 
 export const Route = createFileRoute("/")({
 	component: HomePage,
+	// Runs on the server for the initial request and is serialized to the
+	// client, so SSR and hydration agree on the projection start year (a
+	// client-side `new Date()` could disagree across timezones/year rollover).
+	loader: () => ({ now: new Date().toISOString() }),
 })
 
 function HomePage() {
 	const { locale, setLocale, t } = useLocale()
-	const [inputs, setInputs] = useState<PlanInputs>(() => defaultPlanInputs())
+	// Loader-provided timestamp: same value on server and client →
+	// deterministic SSR (no timezone / year-rollover hydration mismatch).
+	const { now } = Route.useLoaderData() as { now: string }
+	const [inputs, setInputs] = useState<PlanInputs>(() =>
+		defaultPlanInputs(new Date(now)),
+	)
 	// Sync initial value so SSR ships real numbers; updates flow async so the
 	// later backend swap touches nothing here.
 	const [projection, setProjection] = useState<ProjectionResult>(() =>
@@ -49,13 +58,25 @@ function HomePage() {
 
 	// Async now so the real backend later changes NOTHING here:
 	// computeProjection stays the single call, it just stops resolving locally.
+	// AbortSignal + catch are wired now so the fetch swap is a one-file change.
 	useEffect(() => {
 		let cancelled = false
-		void computeProjection(inputs).then((result) => {
-			if (!cancelled) setProjection(result)
-		})
+		const controller = new AbortController()
+		void computeProjection(inputs, controller.signal)
+			.then((result) => {
+				if (!cancelled) setProjection(result)
+			})
+			.catch((error) => {
+				if (!cancelled && !(error instanceof DOMException && error.name === "AbortError")) {
+					console.error("[plan] projection failed", error)
+				}
+			})
+		// Inputs changed → any inspected year may no longer exist; reset to
+		// "no hover" so the strip falls back to the latest year instead of "—".
+		setActiveYear(null)
 		return () => {
 			cancelled = true
+			controller.abort()
 		}
 	}, [inputs])
 
@@ -168,10 +189,13 @@ function insightLine(
 ): string {
 	if (inputs.targetNetWorth <= 0) return t("insight.noGoal")
 	const goalYear = projection.yearGoalReached
-	if (goalYear == null) return t("insight.goalNotReached").replace("{amount}", formatCurrency(inputs.targetNetWorth, locale))
+	if (goalYear == null) {
+		return t("insight.goalNotReached", { amount: formatCurrency(inputs.targetNetWorth, locale) })
+	}
 	const yearsAway = goalYear - inputs.startYear
-	return t("insight.goalReached")
-		.replace("{amount}", formatCurrency(inputs.targetNetWorth, locale))
-		.replace("{year}", String(goalYear))
-		.replace("{years}", String(yearsAway))
+	return t("insight.goalReached", {
+		amount: formatCurrency(inputs.targetNetWorth, locale),
+		year: String(goalYear),
+		years: String(yearsAway),
+	})
 }
