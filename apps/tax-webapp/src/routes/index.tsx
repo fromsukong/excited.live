@@ -564,17 +564,17 @@ interface SavingsModel {
 
 function buildSavingsModel(base: TaxResult, withDeductions: TaxResult): SavingsModel {
   const totalSaved = Math.max(0, base.netTax - withDeductions.netTax)
-  const lines = withDeductions.deductionLines
-    .filter((line) => line.entered > 0 || line.applied > 0)
-    .map((line) => {
-      // Naive attribution: applied × the WITH-deductions marginal rate. The
-      // exact total is base.netTax − with.netTax; per-line savings may not
-      // sum exactly (moving brackets), so scale to match the exact total.
-      const naive = line.applied * withDeductions.marginalRate
-      const naiveTotal = withDeductions.deductionLines.reduce((acc, l) => acc + l.applied, 0) * withDeductions.marginalRate
-      const scaled = naiveTotal > 0 ? (naive / naiveTotal) * totalSaved : 0
-      return { line, saved: Math.min(scaled, totalSaved) }
-    })
+  const relevant = withDeductions.deductionLines.filter((line) => line.entered > 0 || line.applied > 0)
+  const naiveTotal =
+    relevant.reduce((acc, line) => acc + line.applied, 0) * withDeductions.marginalRate
+  const lines = relevant.map((line) => {
+    // Naive attribution: applied × the WITH-deductions marginal rate, scaled
+    // proportionally so per-line savings always sum EXACTLY to the headline
+    // total (base.netTax − with.netTax), which absorbs bracket movement.
+    const naive = line.applied * withDeductions.marginalRate
+    const scaled = naiveTotal > 0 ? (naive / naiveTotal) * totalSaved : 0
+    return { line, saved: scaled }
+  })
   return {
     baseNet: base.netTax,
     withNet: withDeductions.netTax,

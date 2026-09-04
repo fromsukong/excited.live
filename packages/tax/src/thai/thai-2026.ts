@@ -80,6 +80,8 @@ const ALLOWANCE_SPOUSE = 60_000
 const ALLOWANCE_CHILDREN = 30_000
 const ALLOWANCE_PARENTS = 30_000
 const ALLOWANCE_DISABLED = 60_000
+/** RD rule: parents allowance covers at most 4 people (own + spouse's parents). */
+const ALLOWANCE_PARENTS_MAX = 4
 
 /** Itemized deduction caps (THB). */
 const CAP_INSURANCE = 100_000
@@ -332,6 +334,10 @@ function validate(input: TaxInput): string[] {
 	checkNonNegativeInteger(allowances.children, "allowances.children count")
 	checkNonNegativeInteger(allowances.parents, "allowances.parents count")
 	checkNonNegativeInteger(allowances.disabled, "allowances.disabled count")
+	// RD rule: parents allowance covers at most 4 people (own + spouse's parents).
+	if (Number.isInteger(allowances.parents) && allowances.parents > ALLOWANCE_PARENTS_MAX) {
+		problems.push(`allowances.parents count must be at most ${ALLOWANCE_PARENTS_MAX} (own + spouse's parents)`)
+	}
 
 	const deductions = input.deductions
 	checkNonNegativeFinite(deductions.insurance, "deductions.insurance")
@@ -370,6 +376,10 @@ const assumptions: LocalizedLabel[] = [
 	{
 		en: "Donations cap set at 10% of assessable income",
 		th: "เงินบริจาคคิดเพดาน 10% ของรายได้หลังหักค่าใช้จ่าย",
+	},
+	{
+		en: "Parent allowance counts are taken at face value — eligibility (age 60+, income ≤ 30,000 THB, being supported) is not verified",
+		th: "จำนวนบิดามารดาที่กรอกถูกนับตามที่ระบุ — ระบบไม่ตรวจสอบเงื่อนไขสิทธิ (อายุ 60 ปีขึ้นไป รายได้ไม่เกิน 30,000 บาท และอยู่ในความอุปการะ)",
 	},
 ]
 

@@ -247,6 +247,11 @@ describe("thai2026System validate", () => {
 		expect(problems.length).toBeGreaterThan(0)
 	})
 
+	it("rejects parents count above the RD max of 4", () => {
+		const problems = thai2026System.validate(input({ allowances: { personal: 1, spouse: 0, children: 0, parents: 5, disabled: 0 } }))
+		expect(problems.some((problem) => problem.includes("at most 4"))).toBe(true)
+	})
+
 	it("accepts a valid input, ignoring filingStatus for TH", () => {
 		const problems = thai2026System.validate(
 			input({ incomes: [employment(500_000)], filingStatus: "single" }),
