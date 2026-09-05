@@ -68,8 +68,22 @@ automatic; pushes to `main` deploy to the prelive project; PRODUCTION
 (excited.live itself) deploys only via a manual `workflow_dispatch` trigger.
 Agents must not trigger production deploys without explicit human approval.
 
+## Product requirements (source of truth)
+
+`docs/PRD.md` is the **source of truth for product scope**, split by phase:
+
+- `docs/PRD.md` — overview + shared principles
+- `docs/prd-mvp.md` — Phase 1: Google Sheet MVP
+- `docs/prd-mlp.md` — Phase 2: Web App (MLP)
+- `docs/prd-post-mlp.md` — Phase 3+: trigger-based backlog
+
+Before implementing any feature, read the relevant PRD file first. New ideas go
+into the PRD (as user stories or backlog items) before they go into the sheet or
+code. The MVP scope grows over time; the PRD is where that growth is agreed.
+
 ## Where to look next
 
+- `docs/PRD.md` — product requirements, source of truth (see above)
 - `DEVELOPMENT.md` — commands, mock vs live API mode, deploy pitfalls
 - `.github/pull_request_template.md` — required PR shape
 - `packages/tax/src/index.ts` — the current (single-file) engine surface

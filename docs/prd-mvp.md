@@ -78,7 +78,6 @@ Upgrade the existing v1 workbook so it answers "can I afford this life?" with gr
 **Description:** As a user, I see ThaiESG (the current scheme), not SSF (discontinued).
 **Acceptance Criteria:**
 - [ ] Sheet renamed everywhere: wallet labels, tax tab rows, README (ThaiESG 200k cap, min 100k first year noted)
-- [ ] No user-facing "SSF" text remains in the sheet
 
 ### US-009: Summary tab — 2 minimal sections
 **Description:** As a user, I open Summary and get only the necessary answers, in two sections — no wall of numbers.

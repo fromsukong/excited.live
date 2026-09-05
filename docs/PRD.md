@@ -22,6 +22,7 @@ Motto: "(I am) excited to live". FromSukong content funnels attention to excited
 - P6: TH tax is the only user-facing engine. The US engine stays registered in code, hidden, for future expansion.
 - P7: ThaiESG only, everywhere user-facing (SSF is discontinued; code naming can lag, sheet + UI must not).
 - P8: Every MVP simplification is documented in the sheet README.
+- P9: The PRD is the source of truth for product scope. Before implementing anything, check the PRD first. The MVP will keep growing over time — new ideas go into the PRD (as user stories or backlog items) before they go into the sheet or code.
 
 ## Global non-goals (all phases)
 
