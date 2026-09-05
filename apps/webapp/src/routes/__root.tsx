@@ -56,7 +56,7 @@ function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
 	const { locale } = useLocale()
 
 	return (
-		<AppDocument lang={locale} theme="dark" head={<HeadContent />} scripts={<Scripts />}>
+		<AppDocument lang={locale} theme="light" head={<HeadContent />} scripts={<Scripts />}>
 			{children}
 		</AppDocument>
 	)

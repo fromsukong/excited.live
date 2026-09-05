@@ -11,14 +11,11 @@ import {
 	FeyMark,
 	Grid,
 	Heading,
-	IconButton,
 	LinkIcon,
-	MoonIcon,
 	PlainButton,
 	PresentationIcon,
 	SettingsIcon,
 	Stack,
-	SunIcon,
 	Svg,
 	SvgLine,
 	SvgPath,
@@ -157,7 +154,6 @@ function Home() {
 	const [accountsConnected, setAccountsConnected] = useState(false)
 	const [selectedActionKey, setSelectedActionKey] = useState<keyof Dictionary>("action.updatePlan")
 	const [planUpdated, setPlanUpdated] = useState(false)
-	const [isDarkMode, setIsDarkMode] = useState(true)
 
 	const selectAction = (key: keyof Dictionary) => {
 		setSelectedActionKey(key)
@@ -165,7 +161,7 @@ function Home() {
 	}
 
 	return (
-		<Theme theme={mastercardTheme} mode={isDarkMode ? "dark" : "light"}>
+		<Theme theme={mastercardTheme} mode="light">
 			<Stack className="dashboard-shell">
 				<Stack direction="horizontal" justify="between" vAlign="center" as="header" className="topbar">
 					<Stack direction="horizontal" vAlign="center" className="brand-lockup">
@@ -181,14 +177,6 @@ function Home() {
 						>
 							{locale === "en" ? t("locale.th") : t("locale.en")}
 						</PlainButton>
-						<IconButton
-							label={isDarkMode ? t("theme.toLight") : t("theme.toDark")}
-							icon={isDarkMode ? <MoonIcon /> : <SunIcon />}
-							variant="ghost"
-							size="sm"
-							className="theme-button"
-							onClick={() => setIsDarkMode((current) => !current)}
-						/>
 					</Stack>
 				</Stack>
 
