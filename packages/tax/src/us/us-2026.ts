@@ -194,6 +194,7 @@ function compute(input: TaxInput): UsTaxResult {
 		input.allowances.personal,
 		input.allowances.spouse,
 		input.allowances.children,
+		input.allowances.parents,
 		input.allowances.disabled,
 	]
 	if (allowanceCounts.some((count) => count > 0)) {
@@ -281,6 +282,7 @@ function compute(input: TaxInput): UsTaxResult {
 		brackets,
 		warnings,
 		errors,
+		deductionLines: [],
 	}
 }
 
@@ -313,6 +315,7 @@ function validate(input: TaxInput): string[] {
 	checkNonNegativeFinite(allowances.personal, "allowances.personal count")
 	checkNonNegativeFinite(allowances.spouse, "allowances.spouse count")
 	checkNonNegativeFinite(allowances.children, "allowances.children count")
+	checkNonNegativeFinite(allowances.parents, "allowances.parents count")
 	checkNonNegativeFinite(allowances.disabled, "allowances.disabled count")
 
 	const deductions = input.deductions

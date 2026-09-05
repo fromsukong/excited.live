@@ -59,6 +59,8 @@ export interface AllowanceInput {
 	personal: number
 	spouse: number
 	children: number
+	/** Parents + parents-in-law (Thai: บิดามารดา, 30,000 THB each). */
+	parents: number
 	/** Number of dependent disabled persons. */
 	disabled: number
 }
@@ -101,6 +103,32 @@ export interface BracketBreakdown {
 	tax: number
 }
 
+/** One itemized deduction line: what the user entered vs what the engine applied. */
+export interface DeductionLine {
+	/** Stable code, e.g. 'insurance'. */
+	code: string
+	label: LocalizedLabel
+	/** Amount the user entered (pre-cap). */
+	entered: number
+	/** Amount actually applied after caps (in currency units). */
+	applied: number
+	/** True when the cap reduced the entered amount. */
+	capped: boolean
+}
+
+/**
+ * Static allowance definition so UI surfaces can render family-allowance
+ * controls from config instead of hard-coding per country.
+ */
+export interface AllowanceDef {
+	code: keyof AllowanceInput
+	label: LocalizedLabel
+	/** Deduction per person, in currency units. */
+	amountPerPerson: number
+	/** Human-readable condition summary for helper text. */
+	condition: LocalizedLabel
+}
+
 export interface TaxResult {
 	country: TaxCountry
 	taxYear: number
@@ -114,7 +142,7 @@ export interface TaxResult {
 	expenseDeductions: number
 	/** Itemized deductions applied (insurance, mortgage, donations, retirement savings — each capped). */
 	itemizedDeductions: number
-	/** Allowances applied (personal + spouse + children + disabled, capped at remaining income). */
+	/** Allowances applied (personal + spouse + children + parents + disabled, capped at remaining income). */
 	allowancesTotal: number
 
 	/** Floor 0: assessable minus itemized deductions minus allowances. */
@@ -137,6 +165,13 @@ export interface TaxResult {
 	brackets: BracketBreakdown[]
 	/** Non-blocking notes (e.g. "donation input capped", "v1 simplification applied"). */
 	warnings: string[]
+	/**
+	 * Per-line view of the itemized deductions: entered vs applied (post-cap).
+	 * Lets UI surfaces show "you entered X, Y counted, you saved Z" without
+	 * duplicating cap logic. TH: insurance/mortgage/donations/retirement groups.
+	 * US placeholder: empty (itemized ignored by design).
+	 */
+	deductionLines: DeductionLine[]
 }
 
 export interface TaxSystem {
@@ -158,4 +193,10 @@ export interface TaxSystem {
 	 * compatibility; all built-in systems expose it.
 	 */
 	config?: TaxSystemConfig
+	/**
+	 * Family allowance definitions (per-person amounts + conditions) so UIs
+	 * can render household pickers generically. Optional for backwards
+	 * compatibility; all built-in systems expose it.
+	 */
+	allowanceDefs?: AllowanceDef[]
 }

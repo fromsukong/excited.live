@@ -6,7 +6,7 @@ import { thai2026System } from "./thai-2026"
 function input(overrides: Partial<TaxInput> = {}): TaxInput {
 	const base: TaxInput = {
 		incomes: [],
-		allowances: { personal: 1, spouse: 0, children: 0, disabled: 0 },
+		allowances: { personal: 1, spouse: 0, children: 0, parents: 0, disabled: 0 },
 		deductions: {
 			insurance: 0,
 			mortgageInterest: 0,
@@ -35,7 +35,7 @@ describe("thai2026System metadata", () => {
 describe("thai2026System basic computation", () => {
 	it("empty input (all zeros) yields all-zero results", () => {
 		const result = thai2026System.compute(
-			input({ allowances: { personal: 0, spouse: 0, children: 0, disabled: 0 } }),
+			input({ allowances: { personal: 0, spouse: 0, children: 0, parents: 0, disabled: 0 } }),
 		)
 		expect(result.grossIncome).toBe(0)
 		expect(result.assessableIncome).toBe(0)
@@ -145,7 +145,7 @@ describe("thai2026System balance and allowances", () => {
 
 	it("allowances: personal + spouse + 2 children", () => {
 		const result = thai2026System.compute(
-			input({ incomes: [employment(500_000)], allowances: { personal: 1, spouse: 1, children: 2, disabled: 0 } }),
+			input({ incomes: [employment(500_000)], allowances: { personal: 1, spouse: 1, children: 2, parents: 0, disabled: 0 } }),
 		)
 		expect(result.allowancesTotal).toBe(180_000)
 		expect(result.taxableIncome).toBe(220_000)
@@ -247,10 +247,119 @@ describe("thai2026System validate", () => {
 		expect(problems.length).toBeGreaterThan(0)
 	})
 
+	it("rejects parents count above the RD max of 4", () => {
+		const problems = thai2026System.validate(input({ allowances: { personal: 1, spouse: 0, children: 0, parents: 5, disabled: 0 } }))
+		expect(problems.some((problem) => problem.includes("at most 4"))).toBe(true)
+	})
+
 	it("accepts a valid input, ignoring filingStatus for TH", () => {
 		const problems = thai2026System.validate(
 			input({ incomes: [employment(500_000)], filingStatus: "single" }),
 		)
 		expect(problems).toEqual([])
+	})
+})
+describe("thai2026System parents allowance", () => {
+	it("parents count deducts 30,000 each (no parent allowance by default)", () => {
+		const base = thai2026System.compute(input({ incomes: [employment(900_000)] }))
+		const withParents = thai2026System.compute(
+			input({ incomes: [employment(900_000)], allowances: { personal: 1, spouse: 0, children: 0, parents: 2, disabled: 0 } }),
+		)
+		expect(withParents.allowancesTotal - base.allowancesTotal).toBe(60_000)
+		expect(withParents.taxableIncome).toBe(base.taxableIncome - 60_000)
+	})
+
+	it("validate rejects non-integer or negative parents", () => {
+		expect(thai2026System.validate(input({ allowances: { personal: 1, spouse: 0, children: 0, parents: -1, disabled: 0 } })).length).toBeGreaterThan(0)
+		expect(thai2026System.validate(input({ allowances: { personal: 1, spouse: 0, children: 0, parents: 1.5, disabled: 0 } })).length).toBeGreaterThan(0)
+		expect(thai2026System.validate(input({ allowances: { personal: 1, spouse: 0, children: 0, parents: 4, disabled: 0 } }))).toEqual([])
+	})
+})
+
+describe("thai2026System deductionLines", () => {
+	it("reports entered vs applied per line; no cap → entered === applied", () => {
+		const result = thai2026System.compute(
+			input({
+				incomes: [employment(900_000)],
+				deductions: {
+					insurance: 50_000,
+					mortgageInterest: 0,
+					donations: 10_000,
+					retirementSavings: { ssf: 30_000, rmf: 0, provident: 0 },
+				},
+			}),
+		)
+		const insurance = result.deductionLines.find((line) => line.code === "insurance")
+		expect(insurance).toMatchObject({ entered: 50_000, applied: 50_000, capped: false })
+		const donations = result.deductionLines.find((line) => line.code === "donations")
+		expect(donations).toMatchObject({ entered: 10_000, applied: 10_000, capped: false })
+	})
+
+	it("flags capped lines and applied reflects the cap", () => {
+		const result = thai2026System.compute(
+			input({
+				incomes: [employment(900_000)],
+				deductions: {
+					insurance: 150_000,
+					mortgageInterest: 0,
+					donations: 0,
+					retirementSavings: { ssf: 0, rmf: 0, provident: 0 },
+				},
+			}),
+		)
+		const insurance = result.deductionLines.find((line) => line.code === "insurance")
+		expect(insurance?.capped).toBe(true)
+		expect(insurance?.applied).toBe(100_000)
+		expect(insurance?.entered).toBe(150_000)
+	})
+
+	it("income-conditional caps bite: donations 10% of assessable", () => {
+		const result = thai2026System.compute(
+			input({
+				incomes: [employment(200_000)],
+				deductions: {
+					insurance: 0,
+					mortgageInterest: 0,
+					donations: 50_000,
+					retirementSavings: { ssf: 0, rmf: 0, provident: 0 },
+				},
+			}),
+		)
+		const donations = result.deductionLines.find((line) => line.code === "donations")
+		// assessable = 100,000 → cap = 10,000
+		expect(donations?.applied).toBe(10_000)
+		expect(donations?.capped).toBe(true)
+	})
+
+	it("aggregate retirement line: entered = raw sum, applied = combined-cap result", () => {
+		const result = thai2026System.compute(
+			input({
+				incomes: [employment(2_000_000)],
+				deductions: {
+					insurance: 0,
+					mortgageInterest: 0,
+					donations: 0,
+					retirementSavings: { ssf: 400_000, rmf: 400_000, provident: 300_000 },
+				},
+			}),
+		)
+		const retirement = result.deductionLines.find((line) => line.code === "retirement")
+		// Per-fund caps: ssf 400k→200k, rmf 400k (under 30%×1.9M), provident 300k (15%×2M)
+		// → applied sum 900k → combined cap 500k. Entered stays the raw 1.1M sum.
+		expect(retirement?.entered).toBe(1_100_000)
+		expect(retirement?.applied).toBe(500_000)
+		expect(retirement?.capped).toBe(true)
+	})
+
+	it("empty deductions → no lines reported", () => {
+		const result = thai2026System.compute(input({ incomes: [employment(900_000)] }))
+		expect(result.deductionLines.every((line) => line.entered === 0 && line.applied === 0)).toBe(true)
+	})
+
+	it("allowanceDefs exposes bilingual parents definition at 30,000", () => {
+		const def = thai2026System.allowanceDefs?.find((def) => def.code === "parents")
+		expect(def?.amountPerPerson).toBe(30_000)
+		expect(def?.label.en.length).toBeGreaterThan(0)
+		expect(def?.label.th.length).toBeGreaterThan(0)
 	})
 })
