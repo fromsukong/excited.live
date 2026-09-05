@@ -61,6 +61,13 @@ Read [AGENTS.md](./AGENTS.md) before making changes — it covers the repo rules
 (branch + PR flow, pure engine packages, bilingual `{ en, th }` strings), the
 definition of done, and git safety for shared clones.
 
+## Product requirements
+
+[docs/PRD.md](./docs/PRD.md) is the **source of truth for product scope** —
+split by phase: `prd-mvp.md` (Google Sheet MVP), `prd-mlp.md` (web app),
+`prd-post-mlp.md` (backlog). Check the PRD before implementing any feature;
+new ideas go into the PRD first.
+
 ## Contributing
 
 - Never push straight to `main`. Branch from updated main as `feat/*`, `fix/*`, or `docs/*` and open a PR.
