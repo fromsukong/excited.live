@@ -14,7 +14,9 @@
 	],
 	"scripts": {
 		"build": "tsup",
-		"typecheck": "tsc --noEmit"
+		"typecheck": "tsc --noEmit",
+		"theme:build": "astryx theme build src/mastercardTheme.ts -o src/mastercard-theme.css",
+		"theme:check": "astryx theme build src/mastercardTheme.ts -o src/mastercard-theme.css --check"
 	},
 	"peerDependencies": {
 		"@astryxdesign/core": "^0.5.0",
