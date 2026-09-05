@@ -17,7 +17,7 @@ import { Card } from '@astryxdesign/core/Card'
 import { SegmentedControl, SegmentedControlItem } from '@astryxdesign/core/SegmentedControl'
 import { Text } from '@astryxdesign/core/Text'
 import { Theme } from '@astryxdesign/core/theme'
-import { neutralTheme } from '@astryxdesign/theme-neutral/built'
+import { mastercardTheme } from '@excited-live/design-system'
 import { LocaleProvider, useLocale, type Locale } from '~/i18n'
 
 export const Route = createFileRoute('/')({
@@ -446,7 +446,7 @@ function TaxPage() {
   }, [system, engineInput])
 
   return (
-    <Theme theme={neutralTheme} mode="dark">
+    <Theme theme={mastercardTheme} mode="light">
       <TaxContent
         copy={copy}
         locale={locale}
