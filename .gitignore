@@ -9,3 +9,7 @@ dist/
 .wrangler/
 apps/webapp/.worker2/
 apps/webapp/.worker/
+# Environment files: real secrets must never be committed (see .env.example)
+.env
+.env.*
+!.env.example
