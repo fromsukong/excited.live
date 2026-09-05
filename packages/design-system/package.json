@@ -6,7 +6,8 @@
 	"module": "./src/index.ts",
 	"types": "./src/index.ts",
 	"exports": {
-		".": "./src/index.ts"
+		".": "./src/index.ts",
+		"./mastercard-theme.css": "./src/mastercard-theme.css"
 	},
 	"files": [
 		"dist"
@@ -17,12 +18,11 @@
 	},
 	"peerDependencies": {
 		"@astryxdesign/core": "^0.5.0",
-		"@astryxdesign/theme-neutral": "^0.5.0",
 		"react": "^19.2.0"
 	},
 	"devDependencies": {
+		"@astryxdesign/cli": "0.5.0",
 		"@astryxdesign/core": "^0.5.0",
-		"@astryxdesign/theme-neutral": "^0.5.0",
 		"@types/react": "^19.2.0",
 		"react": "^19.2.0",
 		"tsup": "^8.5.0",

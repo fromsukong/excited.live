@@ -6,7 +6,7 @@ import { getTranslator } from "../lib/dictionaries"
 import { LocaleProvider, useLocale } from "../lib/locale-context"
 import "@astryxdesign/core/reset.css"
 import "@astryxdesign/core/astryx.css"
-import "@astryxdesign/theme-neutral/theme.css"
+import "@excited-live/design-system/mastercard-theme.css"
 import "../styles.css"
 
 export const Route = createRootRoute({

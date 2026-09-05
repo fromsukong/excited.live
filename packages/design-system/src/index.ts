@@ -25,6 +25,4 @@ export { IconButton, type IconButtonProps } from "@astryxdesign/core/IconButton"
 export { Stack, type StackProps } from "@astryxdesign/core/Stack";
 export { Text, type TextProps } from "@astryxdesign/core/Text";
 export { Theme } from "@astryxdesign/core/theme";
-export { defineTheme } from "@astryxdesign/core/theme";
-export { neutralTheme } from "@astryxdesign/theme-neutral/built";
-export { mastercardTheme } from "./mastercardTheme";
+export { mastercardTheme } from "./mastercard";

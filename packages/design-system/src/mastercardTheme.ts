@@ -16,13 +16,15 @@ export const mastercardTheme = defineTheme({
 	name: "mastercard",
 	typography: {
 		// MarkForMC is proprietary; Sofia Sans is Mastercard's own open fallback.
+		// NOTE: family must be UNQUOTED — Astryx buildFontFamily() quotes
+		// families containing spaces itself; pre-quoting yields ""Sofia Sans"".
 		body: {
-			family: '"Sofia Sans"',
+			family: "Sofia Sans",
 			fallbacks: 'Arial, "Helvetica Neue", sans-serif',
 			weight: "450",
 		},
 		heading: {
-			family: '"Sofia Sans"',
+			family: "Sofia Sans",
 			fallbacks: 'Arial, "Helvetica Neue", sans-serif',
 			weight: "500",
 		},
