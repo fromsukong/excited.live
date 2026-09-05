@@ -2,10 +2,11 @@
 
 :root {
   color-scheme: dark;
-  font-family: "Inter", "Figtree", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: "Sofia Sans", Arial, "Helvetica Neue", sans-serif;
   --dashboard-bg: var(--color-background-body);
   --panel-bg: var(--color-background-card);
   --panel-border: var(--color-border);
+  --panel-radius: 40px;
   --copy: var(--color-text-primary);
   --copy-soft: var(--color-text-secondary);
   --copy-muted: var(--color-text-secondary);
@@ -145,7 +146,7 @@ button {
 .actions-card {
   overflow: hidden;
   border: 1px solid var(--panel-border);
-  border-radius: 9px;
+  border-radius: var(--panel-radius);
   box-shadow: none;
 }
 
@@ -170,16 +171,29 @@ button {
 }
 
 .panel-heading__date {
+  display: flex;
+  align-items: center;
+  gap: 7px;
   color: var(--copy-soft);
   font-size: 16px !important;
   line-height: 1.4;
+}
+
+/* Mastercard eyebrow: tiny signal-orange dot before the label */
+.panel-heading__date::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--color-icon-orange);
+  flex-shrink: 0;
 }
 
 .panel-heading h1 {
   margin: 0;
   color: var(--copy);
   font-size: 21px !important;
-  font-weight: 700 !important;
+  font-weight: 500 !important;
   line-height: 1.2 !important;
   letter-spacing: -0.02em;
 }
@@ -233,7 +247,7 @@ button {
 }
 
 .chart-line--secondary {
-  stroke: var(--color-text-secondary);
+  stroke: var(--color-icon-orange);
   stroke-width: 1;
 }
 
@@ -290,7 +304,7 @@ button {
   display: inline-block !important;
   width: 2px;
   height: 20px;
-  border-radius: 2px;
+  border-radius: 999px;
 }
 
 .metric-indicator--white {
@@ -298,7 +312,7 @@ button {
 }
 
 .metric-indicator--purple {
-  background: var(--copy-muted);
+  background: var(--color-icon-orange);
 }
 
 .portfolio-button {
@@ -306,7 +320,7 @@ button {
   height: 32px;
   min-height: 32px;
   padding: 0 10px;
-  border-radius: 17px;
+  border-radius: 999px;
   color: var(--copy-muted) !important;
   background: var(--color-neutral) !important;
   font-size: 14px;
@@ -334,7 +348,7 @@ button {
   min-width: 31px;
   height: 33px;
   padding: 0 8px;
-  border-radius: 10px;
+  border-radius: 999px;
   color: var(--copy-muted);
   font-size: 15px;
   font-weight: 600;
@@ -370,7 +384,7 @@ button {
   margin-top: 17px;
   padding: 0 8px;
   overflow-y: auto;
-  border-radius: 13px;
+  border-radius: 20px;
   background: var(--color-neutral);
   scrollbar-width: thin;
   scrollbar-color: var(--color-border) transparent;
@@ -397,7 +411,7 @@ button {
 .financial-row:hover,
 .financial-row.is-selected {
   border-bottom-color: transparent;
-  border-radius: 8px;
+  border-radius: 999px;
   background: var(--color-overlay-hover);
 }
 
@@ -429,7 +443,7 @@ button {
 .actions-card {
   overflow: hidden;
   border: 1px solid var(--panel-border);
-  border-radius: 9px;
+  border-radius: var(--panel-radius);
   box-shadow: none;
 }
 
@@ -458,7 +472,7 @@ button {
   height: 28px;
   padding: 0 11px 0 8px;
   border: 1px solid var(--color-border);
-  border-radius: 15px;
+  border-radius: 999px;
   color: var(--color-text-primary) !important;
   background: var(--color-background-body) !important;
   font-size: 14px;
@@ -591,7 +605,7 @@ button {
 
 .plan-action:hover,
 .plan-action.is-selected {
-  border-radius: 8px;
+  border-radius: 999px;
   background: var(--color-overlay-hover);
 }
 
@@ -602,12 +616,12 @@ button {
   justify-content: center;
   width: 34px;
   height: 34px;
-  border-radius: 10px;
-  background: var(--color-neutral);
+  border-radius: 999px;
+  background: var(--color-background-orange);
 }
 
 .plan-action__icon {
-  color: var(--copy-soft);
+  color: var(--color-icon-orange);
 }
 
 .plan-action__copy {
@@ -657,7 +671,7 @@ button {
 .export-action__icon {
   width: 30px;
   height: 30px;
-  border-radius: 8px;
+  border-radius: 999px;
   color: var(--copy-soft);
 }
 
@@ -974,7 +988,7 @@ button {
   .plan-action__icon {
     width: 31px;
     height: 31px;
-    border-radius: 9px;
+    border-radius: 999px;
   }
 
   .plan-action__label {

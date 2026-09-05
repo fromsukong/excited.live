@@ -24,7 +24,7 @@ import {
 	SvgPath,
 	Text,
 	Theme,
-	neutralTheme,
+	mastercardTheme,
 } from "@excited-live/design-system"
 import { createFileRoute } from "@tanstack/react-router"
 import { useLocale } from "../lib/locale-context"
@@ -165,7 +165,7 @@ function Home() {
 	}
 
 	return (
-		<Theme theme={neutralTheme} mode={isDarkMode ? "dark" : "light"}>
+		<Theme theme={mastercardTheme} mode={isDarkMode ? "dark" : "light"}>
 			<Stack className="dashboard-shell">
 				<Stack direction="horizontal" justify="between" vAlign="center" as="header" className="topbar">
 					<Stack direction="horizontal" vAlign="center" className="brand-lockup">

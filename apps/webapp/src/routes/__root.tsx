@@ -28,6 +28,14 @@ export const Route = createRootRoute({
 			{ name: "viewport", content: "width=device-width, initial-scale=1" },
 			{ title: getTranslator(match.context.locale).t("app.title") },
 		],
+		links: [
+			{ rel: "preconnect", href: "https://fonts.googleapis.com" },
+			{ rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+			{
+				rel: "stylesheet",
+				href: "https://fonts.googleapis.com/css2?family=Sofia+Sans:wght@400;450;500;600;700&display=swap",
+			},
+		],
 	}),
 	component: RootComponent,
 })
