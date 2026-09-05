@@ -6,7 +6,7 @@ import { getTranslator } from "../lib/dictionaries"
 import { LocaleProvider, useLocale } from "../lib/locale-context"
 import "@astryxdesign/core/reset.css"
 import "@astryxdesign/core/astryx.css"
-import "@astryxdesign/theme-neutral/theme.css"
+import "@excited-live/design-system/mastercard-theme.css"
 import "../styles.css"
 
 export const Route = createRootRoute({
@@ -28,6 +28,14 @@ export const Route = createRootRoute({
 			{ name: "viewport", content: "width=device-width, initial-scale=1" },
 			{ title: getTranslator(match.context.locale).t("app.title") },
 		],
+		links: [
+			{ rel: "preconnect", href: "https://fonts.googleapis.com" },
+			{ rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+			{
+				rel: "stylesheet",
+				href: "https://fonts.googleapis.com/css2?family=Sofia+Sans:wght@400;450;500;600;700&display=swap",
+			},
+		],
 	}),
 	component: RootComponent,
 })
@@ -48,7 +56,7 @@ function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
 	const { locale } = useLocale()
 
 	return (
-		<AppDocument lang={locale} theme="dark" head={<HeadContent />} scripts={<Scripts />}>
+		<AppDocument lang={locale} theme="light" head={<HeadContent />} scripts={<Scripts />}>
 			{children}
 		</AppDocument>
 	)
