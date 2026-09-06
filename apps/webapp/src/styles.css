@@ -45,10 +45,10 @@ button {
   justify-content: space-between;
   width: 100%;
   max-width: 1736px;
-  height: 96px;
-  min-height: 96px;
-  flex: 0 0 96px;
-  padding: 24px 2px 13px;
+  height: 60px;
+  min-height: 60px;
+  flex: 0 0 60px;
+  padding: 0 2px;
   margin: 0 auto;
 }
 
@@ -64,21 +64,34 @@ button {
 .brand-lockup {
   display: inline-flex;
   align-items: center;
-  gap: 14px;
+  gap: 10px;
   padding: 0;
   color: var(--copy);
-  font-size: 24px;
-  font-weight: 700;
-  letter-spacing: -0.035em;
   background: transparent;
   cursor: default;
+  text-decoration: none;
 }
 
 .brand-lockup__mark {
-  display: block !important;
-  align-items: center;
-  justify-content: center;
-  color: var(--color-text-primary);
+  display: block;
+  width: 30px;
+  height: 26px;
+}
+
+.brand-lockup__wordmark {
+  display: block;
+  height: 15px;
+  width: auto;
+}
+
+.brand-lockup__hello {
+  margin-left: 6px;
+  border-left: 1px solid color-mix(in srgb, var(--copy) 14%, transparent);
+  padding-left: 14px;
+}
+
+.brand-lockup__hello::before {
+  content: unset;
 }
 
 .market-status {
@@ -118,7 +131,7 @@ button {
   height: auto;
   display: block !important;
   overflow: hidden;
-  padding: 28px 0 24px;
+  padding: 14px 0 24px;
   margin: 0 auto;
 }
 
@@ -783,20 +796,28 @@ button {
 
 @media (max-width: 640px) {
   .topbar {
-    height: 74px;
-    min-height: 74px;
-    flex-basis: 74px;
-    padding-top: 18px;
-    padding-bottom: 8px;
+    height: 52px;
+    min-height: 52px;
+    flex-basis: 52px;
+    padding-top: 0;
+    padding-bottom: 0;
   }
 
   .brand-lockup {
-    gap: 10px;
-    font-size: 20px;
+    gap: 8px;
   }
 
-  .brand-lockup > span {
-    font-size: 20px !important;
+  .brand-lockup__mark {
+    width: 24px;
+    height: 21px;
+  }
+
+  .brand-lockup__wordmark {
+    height: 12px;
+  }
+
+  .brand-lockup__hello {
+    display: none !important;
   }
 
   .market-status {
