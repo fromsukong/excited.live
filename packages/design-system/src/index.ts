@@ -1,4 +1,5 @@
 export { AppDocument, type AppDocumentProps } from "./AppDocument";
+export { Img, type ImgProps } from "./Img";
 export { PlainButton, type PlainButtonProps } from "./PlainButton";
 export { Svg, SvgLine, SvgPath, type SvgProps, type SvgLineProps, type SvgPathProps } from "./Svg";
 export {

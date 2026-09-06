@@ -11,6 +11,7 @@ import {
 	FeyMark,
 	Grid,
 	Heading,
+	Img,
 	LinkIcon,
 	PlainButton,
 	PresentationIcon,
@@ -165,8 +166,9 @@ function Home() {
 			<Stack className="dashboard-shell">
 				<Stack direction="horizontal" justify="between" vAlign="center" as="header" className="topbar">
 					<Stack direction="horizontal" vAlign="center" className="brand-lockup">
-						<Text className="brand-lockup__mark"><FeyMark size={23} /></Text>
-						<Text size="2xl" weight="bold">{t("nav.hello")}</Text>
+						<Img className="brand-lockup__mark" src="/logo-mark.png" alt="" width={30} height={26} />
+						<Img className="brand-lockup__wordmark" src="/logo-wordmark.png" alt="excited.live" height={15} />
+						<Text size="lg" color="secondary" weight="semibold" className="brand-lockup__hello">{t("nav.hello")}</Text>
 					</Stack>
 					<Stack direction="horizontal" vAlign="center" className="market-status">
 						<Text color="secondary">{t("nav.synced")}</Text>

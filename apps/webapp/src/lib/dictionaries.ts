@@ -7,7 +7,11 @@
 import { createTranslator, type Dictionary, type Locale } from "@excited-live/i18n"
 
 export const strings: Dictionary = {
-	"app.title": { en: "Fey — Market intelligence", th: "Fey — ข่าวกรองตลาด" },
+	"app.title": { en: "excited.live — Plan the life you're excited to live", th: "excited.live — วางแผนชีวิตที่คุณตื่นเต้นจะใช้" },
+	"app.description": {
+		en: "Simulate your life plan — income, spending, tax and savings, projected in real numbers.",
+		th: "จำลองแผนชีวิตของคุณ รายรับ ค่าใช้จ่าย ภาษี และการออม คำนวณเป็นตัวเลขจริง",
+	},
 
 	"nav.hello": { en: "Hello, Sam", th: "สวัสดี Sam" },
 	"nav.synced": { en: "Your plan is synced", th: "แผนของคุณซิงค์แล้ว" },

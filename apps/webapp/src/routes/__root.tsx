@@ -27,8 +27,22 @@ export const Route = createRootRoute({
 			{ charSet: "utf-8" },
 			{ name: "viewport", content: "width=device-width, initial-scale=1" },
 			{ title: getTranslator(match.context.locale).t("app.title") },
+			{
+				name: "description",
+				content: getTranslator(match.context.locale).t("app.description"),
+			},
+			{ property: "og:title", content: "excited.live" },
+			{
+				property: "og:description",
+				content: getTranslator(match.context.locale).t("app.description"),
+			},
+			{ property: "og:type", content: "website" },
+			{ property: "og:image", content: "https://app.excited.live/og-image.png" },
+			{ name: "twitter:card", content: "summary_large_image" },
 		],
 		links: [
+			{ rel: "icon", type: "image/png", href: "/favicon-32.png", sizes: "32x32" },
+			{ rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
 			{ rel: "preconnect", href: "https://fonts.googleapis.com" },
 			{ rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
 			{
