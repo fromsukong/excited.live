@@ -1036,3 +1036,12 @@ button {
     transition: none;
   }
 }
+
+/* Plan editor below the dashboard grid (toggle via Edit plan). */
+.plan-editor {
+  margin-top: 24px;
+}
+
+.assumptions-note {
+  margin-top: 8px;
+}

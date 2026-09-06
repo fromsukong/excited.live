@@ -85,6 +85,9 @@ importers:
       '@excited-live/i18n':
         specifier: workspace:*
         version: link:../../packages/i18n
+      '@excited-live/sim':
+        specifier: workspace:*
+        version: link:../../packages/sim
       '@excited-live/tax':
         specifier: workspace:*
         version: link:../../packages/tax
@@ -148,6 +151,22 @@ importers:
         version: 5.9.3
 
   packages/i18n:
+    devDependencies:
+      tsup:
+        specifier: ^8.5.0
+        version: 8.5.1(jiti@2.7.0)(postcss@8.5.26)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.8.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.0
+        version: 3.2.7(@types/node@24.13.3)(jiti@2.7.0)(lightningcss@1.33.0)
+
+  packages/sim:
+    dependencies:
+      '@excited-live/tax':
+        specifier: workspace:*
+        version: link:../tax
     devDependencies:
       tsup:
         specifier: ^8.5.0

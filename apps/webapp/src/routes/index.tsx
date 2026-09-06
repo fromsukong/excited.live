@@ -1,4 +1,4 @@
-import { useState, type ComponentType, type SVGProps } from "react"
+import { useMemo, useState, type ComponentType, type SVGProps } from "react"
 import {
 	ArrowRightIcon,
 	Badge,
@@ -13,153 +13,234 @@ import {
 	Heading,
 	Img,
 	LinkIcon,
+	NumberInput,
 	PlainButton,
 	PresentationIcon,
+	SegmentedControl,
+	SegmentedControlItem,
 	SettingsIcon,
 	Stack,
-	Svg,
-	SvgLine,
-	SvgPath,
 	Text,
+	TextInput,
 	Theme,
 	mastercardTheme,
 } from "@excited-live/design-system"
 import { createFileRoute } from "@tanstack/react-router"
 import { useLocale } from "../lib/locale-context"
-import type { Dictionary } from "@excited-live/i18n"
+import {
+	computePlanSummary,
+	defaultPlan,
+	type PlanInput,
+	type PeriodRow,
+	type WalletId,
+} from "../lib/plan-service"
+import { ProjectionChart } from "../components/ProjectionChart"
+import { formatBaht, formatBahtMonthly, formatPercent } from "../lib/format"
 
 export const Route = createFileRoute("/")({
 	component: Home,
 })
 
 type IconComponent = ComponentType<SVGProps<SVGSVGElement>>
-type Period = "1M" | "3M" | "YTD" | "1Y" | "2Y"
+type HorizonKey = "10" | "20" | "30" | "40" | "all"
 type MetricKey = "metric.netWorth" | "metric.cashFlow"
 
 interface FinancialMetric {
-	key: keyof Dictionary
+	key: string
 	value: string
 }
 
-interface PlanAction {
-	labelKey: keyof Dictionary
-	descKey: keyof Dictionary
+interface PlanInfo {
+	labelKey: string
+	value: string
+	descKey: string
+	descVars?: Record<string, string | undefined>
 	Icon: IconComponent
 }
 
-const periods: Period[] = ["1M", "3M", "YTD", "1Y", "2Y"]
+const HORIZONS: readonly HorizonKey[] = ["10", "20", "30", "40", "all"]
 
-const financialMetrics: FinancialMetric[] = [
-	{ key: "metric.netWorthValue", value: "THB 178,619,297" },
-	{ key: "metric.changeInNetWorth", value: "THB 10,251,288" },
-	{ key: "metric.liquidNetWorth", value: "THB 171,565,977" },
-	{ key: "metric.withdrawals", value: "THB 755,985" },
-	{ key: "metric.withdrawalRate", value: "0.47%" },
-	{ key: "metric.income", value: "THB 737,645" },
-	{ key: "metric.taxableIncome", value: "THB 737,645" },
-	{ key: "metric.taxes", value: "THB 198,049" },
-	{ key: "metric.effectiveTaxRate", value: "15.00%" },
-	{ key: "metric.spending", value: "THB 646,632" },
-	{ key: "metric.expenses", value: "THB 682,225" },
-	{ key: "metric.savingsRate", value: "0.00%" },
-	{ key: "metric.taxBalance", value: "THB 36,893" },
-]
-
-const planActions: PlanAction[] = [
-	{ labelKey: "action.updatePlan", descKey: "action.updatePlan.desc", Icon: SettingsIcon },
-	{ labelKey: "action.addIncome", descKey: "action.addIncome.desc", Icon: ChartIcon },
-	{ labelKey: "action.reviewSpending", descKey: "action.reviewSpending.desc", Icon: CalendarIcon },
-	{ labelKey: "action.updateTaxDetails", descKey: "action.updateTaxDetails.desc", Icon: PresentationIcon },
-	{ labelKey: "action.adjustSavingsGoal", descKey: "action.adjustSavingsGoal.desc", Icon: CompassIcon },
-	{ labelKey: "action.manageAccounts", descKey: "action.manageAccounts.desc", Icon: LinkIcon },
-]
-
-function FinancialMetricRow({
-	metric,
-	isSelected,
-	onSelect,
-}: {
-	metric: FinancialMetric
-	isSelected: boolean
-	onSelect: () => void
-}) {
-	const { t } = useLocale()
-
-	return (
-		<PlainButton
-			className={`financial-row ${isSelected ? "is-selected" : ""}`}
-			aria-pressed={isSelected}
-			onClick={onSelect}
-		>
-			<Text weight="semibold" className="financial-row__label">{t(metric.key)}</Text>
-			<Text hasTabularNumbers className="financial-row__value">{metric.value}</Text>
-		</PlainButton>
-	)
-}
-
-function PlanActionRow({
-	action,
-	isSelected,
-	onSelect,
-}: {
-	action: PlanAction
-	isSelected: boolean
-	onSelect: () => void
-}) {
-	const { t } = useLocale()
-	const ActionIcon = action.Icon
-
-	return (
-		<PlainButton
-			className={`plan-action ${isSelected ? "is-selected" : ""}`}
-			aria-pressed={isSelected}
-			onClick={onSelect}
-		>
-			<Text className="plan-action__icon"><ActionIcon aria-hidden="true" width={18} height={18} /></Text>
-			<Stack className="plan-action__copy">
-				<Text weight="bold" className="plan-action__label">{t(action.labelKey)}</Text>
-				<Text color="secondary" className="plan-action__description">{t(action.descKey)}</Text>
-			</Stack>
-			<Text className="plan-action__arrow" aria-hidden="true"><ArrowRightIcon width={17} height={17} /></Text>
-		</PlainButton>
-	)
-}
-
-function MarketChart({ metric, ariaLabel }: { metric: MetricKey; ariaLabel: string }) {
-	return (
-		<Stack className="chart-canvas">
-			<Svg className="market-chart" viewBox="0 0 720 340" preserveAspectRatio="none" role="img" aria-label={ariaLabel}>
-				<SvgLine className="chart-guide chart-guide--top" x1="0" y1="70" x2="720" y2="70" />
-				<SvgLine className="chart-guide chart-guide--middle" x1="0" y1="250" x2="720" y2="250" />
-				<SvgLine className="chart-guide chart-guide--bottom" x1="0" y1="294" x2="720" y2="294" />
-				<SvgPath
-					className="chart-line chart-line--main"
-					d="M0 212 L8 208 L13 214 L19 202 L25 207 L31 198 L38 205 L44 190 L50 183 L56 193 L62 185 L68 188 L75 185 L82 197 L88 204 L95 235 L101 246 L108 233 L114 239 L121 218 L128 207 L134 210 L141 194 L148 202 L155 181 L161 174 L168 180 L175 164 L182 168 L189 155 L196 162 L203 149 L210 142 L217 130 L224 132 L231 118 L238 125 L245 111 L252 116 L259 109 L266 133 L273 146 L280 195 L287 184 L294 131 L301 124 L308 130 L315 111 L322 118 L329 108 L336 125 L343 104 L350 97 L357 109 L364 102 L371 91 L378 95 L385 84 L392 89 L399 74 L406 79 L413 68 L420 78 L427 64 L434 54 L441 60 L448 48 L455 54 L462 45 L469 48 L476 43 L483 49 L490 46 L497 31 L504 40 L511 60 L518 65 L525 50 L532 74 L539 67 L546 94 L553 82 L560 69 L567 86 L574 97 L581 91 L588 102 L595 86 L602 79 L609 62 L616 58 L623 40 L630 42 L637 28 L644 44 L651 31 L658 35 L665 45 L672 41 L679 34 L686 42 L693 20 L700 46 L707 34 L714 39 L720 30"
-				/>
-				<SvgPath
-					className="chart-line chart-line--secondary"
-					d="M0 289 L12 286 L24 290 L36 286 L48 288 L60 285 L72 287 L84 284 L96 287 L108 278 L120 283 L132 280 L144 285 L156 285 L168 284 L180 285 L192 281 L204 285 L216 284 L228 285 L240 285 L252 283 L264 284 L276 280 L288 282 L300 281 L312 279 L324 283 L336 280 L348 281 L360 279 L372 277 L384 279 L396 275 L408 280 L420 276 L432 275 L444 281 L456 273 L468 277 L480 271 L492 276 L504 272 L516 279 L528 275 L540 278 L552 269 L564 279 L576 277 L588 274 L600 276 L612 273 L624 277 L636 272 L648 275 L660 274 L672 267 L684 277 L696 273 L708 276 L720 274"
-				/>
-			</Svg>
-			<Text color="secondary" weight="bold" className="chart-value chart-value--top">{metric === "metric.netWorth" ? "+6.10%" : "+3.42%"}</Text>
-			<Text color="secondary" weight="bold" className="chart-value chart-value--bottom">{metric === "metric.netWorth" ? "THB 178.6M" : "THB 737.6K"}</Text>
-		</Stack>
-	)
-}
+const WALLETS: readonly WalletId[] = ["emergency", "goal", "nontax", "taxAdvantaged"]
 
 function Home() {
 	const { t, locale, setLocale } = useLocale()
-	const [period, setPeriod] = useState<Period>("1Y")
+	const [plan, setPlan] = useState<PlanInput>(() => defaultPlan())
+	const [horizon, setHorizon] = useState<HorizonKey>("30")
 	const [metric, setMetric] = useState<MetricKey>("metric.netWorth")
-	const [selectedMetricKey, setSelectedMetricKey] = useState<keyof Dictionary>("metric.taxableIncome")
-	const [accountsConnected, setAccountsConnected] = useState(false)
-	const [selectedActionKey, setSelectedActionKey] = useState<keyof Dictionary>("action.updatePlan")
-	const [planUpdated, setPlanUpdated] = useState(false)
+	const [selectedMetricKey, setSelectedMetricKey] = useState<string>("metric.netWorthValue")
+	const [editorOpen, setEditorOpen] = useState(false)
+	const [selectedInfoKey, setSelectedInfoKey] = useState<string | null>(null)
 
-	const selectAction = (key: keyof Dictionary) => {
-		setSelectedActionKey(key)
-		setPlanUpdated(false)
+	const summary = useMemo(() => {
+		try {
+			return { ok: true as const, data: computePlanSummary(plan) }
+		} catch (error) {
+			return { ok: false as const, error: error as Error }
+		}
+	}, [plan])
+
+	const shown = useMemo(() => {
+		if (!summary.ok) return null
+		const all = summary.data.result.years
+		if (horizon === "all") return all
+		const count = Math.min(Number(horizon), all.length)
+		return all.slice(0, count)
+	}, [summary, horizon])
+
+	const financialMetrics = useMemo<FinancialMetric[]>(() => {
+		if (!summary.ok) return []
+		const s = summary.data
+		const first = s.result.years[0]
+		if (!first) return []
+		const end = shown?.[shown.length - 1] ?? s.result.years[s.result.years.length - 1]
+		const startNet = s.result.years[0]?.netWorth ?? 0
+		const change = (end?.netWorth ?? 0) - startNet
+		const withdrawals = s.result.years.reduce((sum, y) => sum + y.withdrawal, 0)
+		const fundedYears = s.result.years.filter((y) => y.withdrawal > 0).length
+		const avgWithdrawal = fundedYears > 0 ? withdrawals / fundedYears : 0
+		return [
+			{ key: "metric.netWorthValue", value: formatBaht(end?.netWorth ?? 0) },
+			{ key: "metric.changeInNetWorth", value: formatBaht(change) },
+			{
+				key: "metric.liquidNetWorth",
+				value: formatBaht((end?.wallets.emergency ?? 0) + (end?.wallets.goal ?? 0)),
+			},
+			{ key: "metric.withdrawals", value: formatBaht(withdrawals) },
+			{
+				key: "metric.withdrawalRate",
+				value:
+					avgWithdrawal > 0
+						? formatPercent(avgWithdrawal / Math.max(end?.netWorth ?? 1, 1))
+						: "0%",
+			},
+			{ key: "metric.income", value: formatBaht(first.income) },
+			{ key: "metric.taxableIncome", value: formatBaht(first.taxResult.taxableIncome) },
+			{ key: "metric.taxes", value: formatBaht(first.tax) },
+			{ key: "metric.effectiveTaxRate", value: formatPercent(first.taxResult.effectiveRate) },
+			{ key: "metric.spending", value: formatBaht(first.expenses) },
+			{ key: "metric.expenses", value: formatBaht(first.expenses) },
+			{
+				key: "metric.savingsRate",
+				value: formatPercent(
+					first.income > 0
+						? Math.max(0, (first.income - first.tax - first.expenses) / first.income)
+						: 0,
+				),
+			},
+			{ key: "metric.taxBalance", value: formatBaht(first.taxResult.balance) },
+		]
+	}, [summary, shown])
+
+	const planInfos = useMemo<PlanInfo[]>(() => {
+		if (!summary.ok) return []
+		const s = summary.data
+		const v = s.retirement
+		const goalsOk = s.goals.filter((g) => g.onTrack).length
+		return [
+			{
+				labelKey: "info.retirement",
+				value: v.funded ? t("info.retirement.funded") : t("info.retirement.short"),
+				descKey: "info.retirement.desc",
+				descVars: {
+					verdict: v.funded
+						? t("info.retirement.left", {
+								amount: formatBaht(v.remainingAtEnd),
+								year: String(v.endYear),
+							})
+						: t("info.retirement.runsOut", { year: String(v.unmetYear ?? "") }),
+					detail: `retire ${v.retirementYear}`,
+				},
+				Icon: CompassIcon,
+			},
+			{
+				labelKey: "info.maxForever",
+				value: formatBahtMonthly(s.maxForeverMonthly * 12),
+				descKey: "info.maxForever.desc",
+				descVars: { amount: formatBaht(s.maxForeverMonthly) },
+				Icon: ChartIcon,
+			},
+			{
+				labelKey: "info.optimizer",
+				value: formatBaht(s.optimizer.recommended),
+				descKey: "info.optimizer.desc",
+				descVars: {
+					amount: formatBaht(s.optimizer.recommended),
+					tax: formatBaht(s.optimizer.taxSaved),
+				},
+				Icon: PresentationIcon,
+			},
+			{
+				labelKey: "info.paths",
+				value: formatBaht(s.pathCompare.fundValue),
+				descKey: "info.paths.desc",
+				descVars: {
+					fund: formatBaht(s.pathCompare.fundValue),
+					taxable: formatBaht(s.pathCompare.taxableValue),
+				},
+				Icon: LinkIcon,
+			},
+			{
+				labelKey: "info.runsOut",
+				value: s.runsOutYear === null ? t("info.runsOut.desc.never") : String(s.runsOutYear),
+				descKey: s.runsOutYear === null ? "info.runsOut.desc.never" : "info.runsOut.desc.year",
+				descVars: { year: String(s.runsOutYear ?? "") },
+				Icon: CalendarIcon,
+			},
+			{
+				labelKey: "info.goals",
+				value:
+					s.goals.length === 0
+						? t("info.goals.desc.none")
+						: t("info.goals.desc.ok", { count: String(goalsOk) }),
+				descKey: s.goals.length === 0 ? "info.goals.desc.none" : "info.goals.desc.short",
+				descVars: { ok: String(goalsOk), short: String(s.goals.length - goalsOk) },
+				Icon: BookmarkIcon,
+			},
+		]
+	}, [summary, t])
+
+	const patchRow = (kind: "incomes" | "expenses", id: string, patch: Partial<PeriodRow>) => {
+		setPlan((current) => ({
+			...current,
+			[kind]: current[kind].map((row) => (row.id === id ? { ...row, ...patch } : row)),
+		}))
 	}
+
+	const addRow = (kind: "incomes" | "expenses") => {
+		setPlan((current) => ({
+			...current,
+			[kind]: [
+				...current[kind],
+				{
+					id: `${kind}-${current[kind].length + 1}-${current[kind].length}`,
+					label: kind === "incomes" ? "New income" : "New expense",
+					startYear: current.startYear,
+					endYear: null,
+					amount: 0,
+					growthMode: "inflation",
+					growthRate: 0,
+				},
+			],
+		}))
+	}
+
+	const removeRow = (kind: "incomes" | "expenses", id: string) => {
+		setPlan((current) => ({
+			...current,
+			[kind]: current[kind].filter((row) => row.id !== id),
+		}))
+	}
+
+	const patchWallet = (
+		field: "savingsSplit" | "walletRates" | "startingWallets",
+		id: WalletId,
+		value: number,
+	) => {
+		setPlan((current) => ({ ...current, [field]: { ...current[field], [id]: value } }))
+	}
+
+	const onTrack =
+		summary.ok && summary.data.retirement.funded && summary.data.runsOutYear === null
 
 	return (
 		<Theme theme={mastercardTheme} mode="light">
@@ -187,14 +268,28 @@ function Home() {
 						<Card className="chart-panel" variant="transparent" padding={0}>
 							<Stack className="chart-panel__inner">
 								<Stack className="panel-heading">
-									<Text color="secondary" className="panel-heading__date">{t("plan.snapshotDate")}</Text>
-									<Heading level={1}>{t("plan.heading.prefix")} <Text color="secondary" weight="bold">{t("plan.heading.status")}</Text></Heading>
+									<Text color="secondary" className="panel-heading__date">
+										{t("plan.snapshotDate", { year: String(plan.startYear) })}
+									</Text>
+									<Heading level={1}>
+										{t("plan.heading.prefix")}{" "}
+										<Text color="secondary" weight="bold">
+											{onTrack ? t("plan.heading.status") : t("plan.heading.needsWork")}
+										</Text>
+									</Heading>
 								</Stack>
 
-								<MarketChart
-									metric={metric}
-									ariaLabel={t(metric === "metric.netWorth" ? "chart.aria.netWorth" : "chart.aria.cashFlow")}
-								/>
+								<Stack className="chart-canvas">
+									{summary.ok && shown ? (
+										<ProjectionChart
+											years={shown}
+											metric={metric === "metric.netWorth" ? "netWorth" : "cashFlow"}
+											ariaLabel={t(metric === "metric.netWorth" ? "chart.aria.netWorth" : "chart.aria.cashFlow")}
+										/>
+									) : (
+										<Text color="secondary">{summary.ok ? "" : summary.error.message}</Text>
+									)}
+								</Stack>
 
 								<Stack direction="horizontal" vAlign="center" className="chart-toolbar">
 									<Stack direction="horizontal" vAlign="center" role="group" aria-label={t("a11y.chartMetric")} className="metric-switch">
@@ -202,34 +297,34 @@ function Home() {
 											className={`metric-switch__item ${metric === "metric.netWorth" ? "is-active" : ""}`}
 											onClick={() => setMetric("metric.netWorth")}
 										>
-											<Text className="metric-indicator metric-indicator--white" aria-hidden="true">{''}</Text>
+											<Text className="metric-indicator metric-indicator--white" aria-hidden="true">{""}</Text>
 											{t("metric.netWorth")}
 										</PlainButton>
 										<PlainButton
 											className={`metric-switch__item ${metric === "metric.cashFlow" ? "is-active" : ""}`}
 											onClick={() => setMetric("metric.cashFlow")}
 										>
-											<Text className="metric-indicator metric-indicator--purple" aria-hidden="true">{''}</Text>
+											<Text className="metric-indicator metric-indicator--purple" aria-hidden="true">{""}</Text>
 											{t("metric.cashFlow")}
 										</PlainButton>
 									</Stack>
 									<Button
-										label={accountsConnected ? t("accounts.connected") : t("accounts.connect")}
+										label={editorOpen ? t("accounts.connected") : t("accounts.connect")}
 										variant="ghost"
 										size="sm"
-										icon={<LinkIcon />}
-										className={`portfolio-button ${accountsConnected ? "is-connected" : ""}`}
-										onClick={() => setAccountsConnected((current) => !current)}
+										icon={<SettingsIcon />}
+										className={`portfolio-button ${editorOpen ? "is-connected" : ""}`}
+										onClick={() => setEditorOpen((current) => !current)}
 									/>
 									<Stack direction="horizontal" vAlign="center" role="group" aria-label={t("a11y.chartPeriod")} className="period-switch">
-										{periods.map((item) => (
+										{HORIZONS.map((item) => (
 											<PlainButton
-												className={`period-switch__item ${period === item ? "is-active" : ""}`}
+												className={`period-switch__item ${horizon === item ? "is-active" : ""}`}
 												key={item}
-												aria-pressed={period === item}
-												onClick={() => setPeriod(item)}
+												aria-pressed={horizon === item}
+												onClick={() => setHorizon(item)}
 											>
-												{item}
+												{item === "all" ? t("period.all") : `${item}Y`}
 											</PlainButton>
 										))}
 									</Stack>
@@ -252,8 +347,8 @@ function Home() {
 							<Card className="plan-summary-card" variant="transparent" padding={0}>
 								<Stack className="plan-summary-card__inner">
 									<Stack direction="horizontal" justify="between" vAlign="center" className="plan-summary-card__meta">
-										<Badge label={planUpdated ? t("plan.updated") : t("plan.actions")} variant="neutral" icon={<FeyMark size={14} />} className="plan-badge" />
-										<Text color="secondary" className="plan-summary-card__timestamp">{planUpdated ? t("plan.savedJustNow") : t("plan.lastSyncedToday")}</Text>
+										<Badge label={t("plan.actions")} variant="neutral" icon={<FeyMark size={14} />} className="plan-badge" />
+										<Text color="secondary" className="plan-summary-card__timestamp">{t("plan.lastSyncedToday")}</Text>
 									</Stack>
 									<Stack className="plan-summary-card__body">
 										<Heading level={2}>{t("plan.keepCurrent")}</Heading>
@@ -261,17 +356,14 @@ function Home() {
 									</Stack>
 									<Stack direction="horizontal" justify="start" vAlign="center" className="plan-summary-card__footer">
 										<Button
-											label={planUpdated ? t("plan.updated") : t("action.updatePlan")}
+											label={t("plan.primaryEdit")}
 											variant="primary"
 											size="md"
 											icon={<SettingsIcon />}
 											className="plan-primary-button"
-											onClick={() => {
-												setSelectedActionKey("action.updatePlan")
-												setPlanUpdated(true)
-											}}
+											onClick={() => setEditorOpen(true)}
 										/>
-										<Text color="secondary">{t("plan.selected", { action: t(selectedActionKey) })}</Text>
+										<Text color="secondary">{t("plan.selected", { row: selectedInfoKey ? t(selectedInfoKey) : t("plan.primaryEdit") })}</Text>
 									</Stack>
 								</Stack>
 							</Card>
@@ -280,33 +372,339 @@ function Home() {
 								<Stack className="actions-card__inner">
 									<Stack direction="horizontal" justify="between" vAlign="start" className="actions-card__heading">
 										<Stack>
-											<Text color="secondary" weight="bold" className="actions-card__eyebrow">{t("actions.eyebrow")}</Text>
-											<Heading level={2}>{t("actions.heading")}</Heading>
+											<Text color="secondary" weight="bold" className="actions-card__eyebrow">{t("info.eyebrow")}</Text>
+											<Heading level={2}>{t("info.heading")}</Heading>
 										</Stack>
-										<Text color="secondary" className="actions-card__count">{t("actions.count")}</Text>
+										<Text color="secondary" className="actions-card__count">{t("info.count")}</Text>
 									</Stack>
 									<Stack className="plan-actions-list">
-										{planActions.map((action) => (
-											<PlanActionRow
-												key={action.labelKey}
-												action={action}
-												isSelected={selectedActionKey === action.labelKey}
-												onSelect={() => selectAction(action.labelKey)}
+										{planInfos.map((info) => (
+											<PlanInfoRow
+												key={info.labelKey}
+												info={info}
+												isSelected={selectedInfoKey === info.labelKey}
+												onSelect={() => setSelectedInfoKey(info.labelKey)}
 											/>
 										))}
 									</Stack>
-									<PlainButton className="export-action" onClick={() => selectAction("action.exportSnapshot")}>
+									<PlainButton className="export-action" onClick={() => setSelectedInfoKey("info.export")}>
 										<Text className="export-action__icon"><BookmarkIcon aria-hidden="true" width={17} height={17} /></Text>
-										<Text className="export-action__label">{t("action.exportSnapshot")}</Text>
+										<Text className="export-action__label">{t("info.export")}</Text>
 										<ArrowRightIcon aria-hidden="true" width={17} height={17} />
 									</PlainButton>
+									<Text size="sm" color="secondary" className="assumptions-note">{t("info.export.desc")}</Text>
 								</Stack>
 							</Card>
 						</Stack>
 					</Grid>
-				</Stack>
 
+					{editorOpen ? (
+						<PlanEditor
+							plan={plan}
+							setPlan={setPlan}
+							patchRow={patchRow}
+							addRow={addRow}
+							removeRow={removeRow}
+							patchWallet={patchWallet}
+							onClose={() => setEditorOpen(false)}
+							t={t}
+						/>
+					) : null}
+				</Stack>
 			</Stack>
 		</Theme>
+	)
+}
+
+function FinancialMetricRow({
+	metric,
+	isSelected,
+	onSelect,
+}: {
+	metric: FinancialMetric
+	isSelected: boolean
+	onSelect: () => void
+}) {
+	const { t } = useLocale()
+
+	return (
+		<PlainButton
+			className={`financial-row ${isSelected ? "is-selected" : ""}`}
+			aria-pressed={isSelected}
+			onClick={onSelect}
+		>
+			<Text weight="semibold" className="financial-row__label">{t(metric.key)}</Text>
+			<Text hasTabularNumbers className="financial-row__value">{metric.value}</Text>
+		</PlainButton>
+	)
+}
+
+function PlanInfoRow({
+	info,
+	isSelected,
+	onSelect,
+}: {
+	info: PlanInfo
+	isSelected: boolean
+	onSelect: () => void
+}) {
+	const { t } = useLocale()
+	const InfoIcon = info.Icon
+
+	return (
+		<PlainButton
+			className={`plan-action ${isSelected ? "is-selected" : ""}`}
+			aria-pressed={isSelected}
+			onClick={onSelect}
+		>
+			<Text className="plan-action__icon"><InfoIcon aria-hidden="true" width={18} height={18} /></Text>
+			<Stack className="plan-action__copy">
+				<Text weight="bold" className="plan-action__label">{t(info.labelKey)}</Text>
+				<Text color="secondary" className="plan-action__description">
+					{t(info.descKey, (info.descVars ?? {}) as Record<string, string>)} · <Text weight="bold">{info.value}</Text>
+				</Text>
+			</Stack>
+			<Text className="plan-action__arrow" aria-hidden="true"><ArrowRightIcon width={17} height={17} /></Text>
+		</PlainButton>
+	)
+}
+
+/** Full-width plan editor below the dashboard grid (toggle via Edit plan). */
+function PlanEditor({
+	plan,
+	setPlan,
+	patchRow,
+	addRow,
+	removeRow,
+	patchWallet,
+	onClose,
+	t,
+}: {
+	plan: PlanInput
+	setPlan: (updater: (current: PlanInput) => PlanInput) => void
+	patchRow: (kind: "incomes" | "expenses", id: string, patch: Partial<PeriodRow>) => void
+	addRow: (kind: "incomes" | "expenses") => void
+	removeRow: (kind: "incomes" | "expenses", id: string) => void
+	patchWallet: (field: "savingsSplit" | "walletRates" | "startingWallets", id: WalletId, value: number) => void
+	onClose: () => void
+	t: (key: string, vars?: Record<string, string>) => string
+}) {
+	return (
+		<Card padding={3} className="plan-editor">
+			<Stack gap={3}>
+				<Stack direction="horizontal" justify="between" align="center">
+					<Stack gap={0.5}>
+						<Heading level={2}>{t("editor.heading")}</Heading>
+						<Text color="secondary">{t("editor.desc")}</Text>
+					</Stack>
+					<Button label={t("accounts.connected")} variant="secondary" size="sm" onClick={onClose} />
+				</Stack>
+
+				<Grid columns={4} gap={2}>
+					<NumberInput
+						label={t("input.startYear")}
+						value={plan.startYear}
+						onChange={(value) => setPlan((c) => ({ ...c, startYear: Math.round(value) }))}
+						isIntegerOnly
+						min={2000}
+						max={2100}
+					/>
+					<NumberInput
+						label={t("input.birthYear")}
+						value={plan.birthYear}
+						onChange={(value) => setPlan((c) => ({ ...c, birthYear: Math.round(value) }))}
+						isIntegerOnly
+						min={1920}
+						max={2015}
+					/>
+					<NumberInput
+						label={t("input.inflation")}
+						value={plan.inflation * 100}
+						onChange={(value) => setPlan((c) => ({ ...c, inflation: value / 100 }))}
+						min={0}
+						max={20}
+						step={0.5}
+						units="%"
+					/>
+					<NumberInput
+						label={t("input.efMonths")}
+						value={plan.efMonths}
+						onChange={(value) => setPlan((c) => ({ ...c, efMonths: value }))}
+						min={0}
+						max={24}
+						step={1}
+					/>
+					<NumberInput
+						label={t("input.retirementYear")}
+						value={plan.retirementYear ?? null}
+						onChange={(value) =>
+							setPlan((c) => ({ ...c, retirementYear: value === null ? null : Math.round(value) }))
+						}
+						isIntegerOnly
+						min={1990}
+						max={2100}
+					/>
+					<NumberInput
+						label={t("input.retirementMonthly")}
+						value={plan.retirementMonthlyToday}
+						onChange={(value) => setPlan((c) => ({ ...c, retirementMonthlyToday: value }))}
+						min={0}
+						step={1000}
+						units="฿"
+					/>
+					<NumberInput
+						label={t("input.horizon")}
+						value={plan.horizonYears}
+						onChange={(value) => setPlan((c) => ({ ...c, horizonYears: Math.round(value) }))}
+						isIntegerOnly
+						min={1}
+						max={60}
+					/>
+				</Grid>
+
+				<PeriodEditor rows={plan.incomes} heading={t("incomes.heading")} onPatch={(id, patch) => patchRow("incomes", id, patch)} onAdd={() => addRow("incomes")} onRemove={(id) => removeRow("incomes", id)} t={t} />
+				<PeriodEditor rows={plan.expenses} heading={t("expenses.heading")} showDeductible onPatch={(id, patch) => patchRow("expenses", id, patch)} onAdd={() => addRow("expenses")} onRemove={(id) => removeRow("expenses", id)} t={t} />
+
+				<Grid columns={3} gap={3}>
+					{(
+						[
+							["wallets.split", "savingsSplit", "%", 0, 100, 5, true],
+							["wallets.rates", "walletRates", "%", 0, 30, 0.5, true],
+							["wallets.starting", "startingWallets", "฿", 0, 100_000_000, 10_000, false],
+						] as const
+					).map(([labelKey, field, units, min, max, step, percentMode]) => (
+						<Stack key={field} gap={1}>
+							<Text color="secondary">{t(labelKey)}</Text>
+							{WALLETS.map((id) => (
+								<Stack key={id} direction="horizontal" align="center" gap={1.5}>
+									<Text size="sm" xstyle={{ width: 140 } as never}>{t(`wallet.${id}`)}</Text>
+									<NumberInput
+										label={t(`wallet.${id}`)}
+										isLabelHidden
+										value={percentMode ? plan[field][id] * 100 : plan[field][id]}
+										onChange={(value) => patchWallet(field, id, percentMode ? value / 100 : value)}
+										min={min}
+										max={max}
+										step={step}
+										units={units}
+									/>
+								</Stack>
+							))}
+						</Stack>
+					))}
+				</Grid>
+			</Stack>
+		</Card>
+	)
+}
+
+/** Editable period-row editor (income or expenses). */
+function PeriodEditor({
+	rows,
+	heading,
+	showDeductible,
+	onPatch,
+	onAdd,
+	onRemove,
+	t,
+}: {
+	rows: PeriodRow[]
+	heading: string
+	showDeductible?: boolean
+	onPatch: (id: string, patch: Partial<PeriodRow>) => void
+	onAdd: () => void
+	onRemove: (id: string) => void
+	t: (key: string, vars?: Record<string, string>) => string
+}) {
+	return (
+		<Stack gap={2}>
+			<Stack direction="horizontal" justify="between" align="center">
+				<Heading level={3}>{heading}</Heading>
+				<Button variant="secondary" size="sm" label={t("row.add")} onClick={onAdd} />
+			</Stack>
+			{rows.map((row) => (
+				<Card key={row.id} padding={2} variant="muted">
+					<Grid columns={showDeductible ? 6 : 5} gap={1.5}>
+						<TextInput
+							label={t("row.label")}
+							value={row.label}
+							onChange={(value) => onPatch(row.id, { label: value })}
+						/>
+						<NumberInput
+							label={t("row.amount")}
+							value={row.amount}
+							onChange={(value) => onPatch(row.id, { amount: value })}
+							min={0}
+							step={10_000}
+							units="฿"
+						/>
+						<NumberInput
+							label={t("row.startYear")}
+							value={row.startYear}
+							onChange={(value) => onPatch(row.id, { startYear: Math.round(value) })}
+							isIntegerOnly
+							min={2000}
+							max={2100}
+						/>
+						<NumberInput
+							label={t("row.endYear")}
+							value={row.endYear}
+							onChange={(value) =>
+								onPatch(row.id, { endYear: value === null ? null : Math.round(value) })
+							}
+							isIntegerOnly
+							min={2000}
+							max={2100}
+							placeholder="∞"
+						/>
+						<Stack gap={1}>
+							<SegmentedControl
+								value={row.growthMode}
+								onChange={(value) => onPatch(row.id, { growthMode: value as PeriodRow["growthMode"] })}
+								label={t("row.growth")}
+								layout="fill"
+								size="sm"
+							>
+								<SegmentedControlItem value="inflation" label={t("growth.inflation")} />
+								<SegmentedControlItem value="fixed" label={t("growth.fixed")} />
+								<SegmentedControlItem value="override" label={t("growth.override")} />
+							</SegmentedControl>
+							{row.growthMode === "override" ? (
+								<NumberInput
+									label={t("row.growthRate")}
+									value={row.growthRate * 100}
+									onChange={(value) => onPatch(row.id, { growthRate: value / 100 })}
+									min={-10}
+									max={50}
+									step={0.5}
+									units="%"
+								/>
+							) : null}
+						</Stack>
+						{showDeductible ? (
+							<Stack gap={1}>
+								<SegmentedControl
+									value={row.deductible ?? "none"}
+									onChange={(value) =>
+										onPatch(row.id, {
+											deductible: value === "mortgageInterest" ? "mortgageInterest" : "none",
+										})
+									}
+									label={t("row.deductible")}
+									layout="fill"
+									size="sm"
+								>
+									<SegmentedControlItem value="none" label={t("deductible.none")} />
+									<SegmentedControlItem value="mortgageInterest" label={t("deductible.mortgageInterest")} />
+								</SegmentedControl>
+								<PlainButton onClick={() => onRemove(row.id)}>{t("row.remove")}</PlainButton>
+							</Stack>
+						) : (
+							<PlainButton onClick={() => onRemove(row.id)}>{t("row.remove")}</PlainButton>
+						)}
+					</Grid>
+				</Card>
+			))}
+		</Stack>
 	)
 }

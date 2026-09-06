@@ -1,8 +1,6 @@
 /**
  * User-facing UI strings — one source of truth, bilingual { en, th } (EN first).
- * Values are LocalizedLabels, so the same dictionary serves every locale;
- * `thOverrides` exists for cases where Thai needs different copy, not just a
- * translated field. Keys are stable IDs; selection state uses keys, never text.
+ * Keys are stable IDs; selection state uses keys, never text.
  */
 import { createTranslator, type Dictionary, type Locale } from "@excited-live/i18n"
 
@@ -13,94 +11,86 @@ export const strings: Dictionary = {
 		th: "จำลองแผนชีวิตของคุณ รายรับ ค่าใช้จ่าย ภาษี และการออม คำนวณเป็นตัวเลขจริง",
 	},
 
-	"nav.hello": { en: "Hello, Sam", th: "สวัสดี Sam" },
-	"nav.synced": { en: "Your plan is synced", th: "แผนของคุณซิงค์แล้ว" },
-	"theme.toLight": { en: "Switch to light mode", th: "สลับเป็นโหมดสว่าง" },
-	"theme.toDark": { en: "Switch to dark mode", th: "สลับเป็นโหมดมืด" },
+	"nav.hello": { en: "Your plan, live", th: "แผนของคุณ สด ๆ" },
+	"nav.synced": { en: "Numbers update as you type", th: "ตัวเลขอัปเดตทันทีที่แก้" },
 	"locale.toggle": { en: "Switch language", th: "เปลี่ยนภาษา" },
 	"locale.en": { en: "EN", th: "EN" },
 	"locale.th": { en: "ไทย", th: "ไทย" },
 
-	"plan.snapshotDate": {
-		en: "Plan snapshot · Tuesday, February 25",
-		th: "ภาพรวมแผน · วันอังคารที่ 25 กุมภาพันธ์",
+	// Sections
+	"section.inputs": { en: "Your plan", th: "แผนของคุณ" },
+	"section.inputs.desc": {
+		en: "Every number below is editable — the chart and summary update instantly.",
+		th: "ตัวเลขทุกช่องแก้ได้ กราฟและสรุปจะอัปเดตทันที",
 	},
-	"plan.heading.prefix": { en: "Your plan is", th: "แผนของคุณ" },
-	"plan.heading.status": { en: "on track", th: "กำลังไปได้ดี" },
+	"section.chart": { en: "Net worth over time", th: "มูลค่าสุทธิตลอดเวลา" },
+	"section.summaryLong": { en: "Long term", th: "ระยะยาว" },
+	"section.summaryThisYear": { en: "This year", th: "ปีนี้" },
 
-	"metric.netWorth": { en: "Net worth", th: "มูลค่าสุทธิ" },
-	"metric.cashFlow": { en: "Cash flow", th: "กระแสเงินสด" },
-	"chart.aria.netWorth": { en: "Net worth performance chart", th: "แผนภูมิมูลค่าสุทธิ" },
-	"chart.aria.cashFlow": { en: "Cash flow performance chart", th: "แผนภูมิกระแสเงินสด" },
+	// Global inputs
+	"input.startYear": { en: "Start year", th: "ปีเริ่มต้น" },
+	"input.birthYear": { en: "Birth year", th: "ปีเกิด" },
+	"input.inflation": { en: "Inflation", th: "เงินเฟ้อ" },
+	"input.efMonths": { en: "Emergency fund (months)", th: "เงินสำรองฉุกเฉิน (เดือน)" },
+	"input.retirementYear": { en: "Retirement year", th: "ปีเกษียณ" },
+	"input.retirementMonthly": { en: "Retirement spend (monthly, today's money)", th: "ค่าใช้จ่ายหลังเกษียณ (ต่อเดือน)" },
+	"input.horizon": { en: "Years to project", th: "จำนวนปีที่คำนวณ" },
 
-	"accounts.connect": { en: "Connect accounts", th: "เชื่อมต่อบัญชี" },
-	"accounts.connected": { en: "Accounts connected", th: "บัญชีเชื่อมต่อแล้ว" },
+	// Rows
+	"incomes.heading": { en: "Income", th: "รายได้" },
+	"expenses.heading": { en: "Expenses", th: "ค่าใช้จ่าย" },
+	"row.label": { en: "Name", th: "ชื่อ" },
+	"row.amount": { en: "Per year (฿)", th: "ต่อปี (บาท)" },
+	"row.startYear": { en: "Start", th: "เริ่ม" },
+	"row.endYear": { en: "End (blank = forever)", th: "จบ (ว่าง = ตลอดไป)" },
+	"row.growth": { en: "Growth", th: "เติบโต" },
+	"growth.inflation": { en: "Inflation", th: "ตามเงินเฟ้อ" },
+	"growth.fixed": { en: "Fixed", th: "คงที่" },
+	"growth.override": { en: "Custom %", th: "กำหนดเอง %" },
+	"row.growthRate": { en: "Growth %", th: "อัตราเติบโต %" },
+	"row.deductible": { en: "Deductible", th: "ลดหย่อนภาษี" },
+	"deductible.none": { en: "No", th: "ไม่" },
+	"deductible.mortgageInterest": { en: "Mortgage", th: "ดอกเบี้ยบ้าน" },
+	"row.add": { en: "Add row", th: "เพิ่มแถว" },
+	"row.remove": { en: "Remove", th: "ลบ" },
 
-	"a11y.chartMetric": { en: "Chart metric", th: "ตัวชี้วัดของแผนภูมิ" },
-	"a11y.chartPeriod": { en: "Chart period", th: "ช่วงเวลาของแผนภูมิ" },
-	"a11y.financialSnapshot": { en: "Financial snapshot", th: "ภาพรวมการเงิน" },
-	"a11y.planActions": { en: "Plan actions", th: "การจัดการแผน" },
+	// Wallets
+	"wallets.split": { en: "Savings split", th: "สัดส่วนการออม" },
+	"wallets.rates": { en: "Return rates", th: "อัตราผลตอบแทน" },
+	"wallets.starting": { en: "Starting balances", th: "ยอดเริ่มต้น" },
+	"wallet.emergency": { en: "Emergency fund", th: "เงินสำรองฉุกเฉิน" },
+	"wallet.goal": { en: "Goal savings", th: "เงินออมเป้าหมาย" },
+	"wallet.nontax": { en: "Investments", th: "การลงทุน" },
+	"wallet.taxAdvantaged": { en: "ThaiESG / RMF", th: "ThaiESG / RMF" },
 
-	"metric.netWorthValue": { en: "Net Worth", th: "มูลค่าสุทธิ" },
-	"metric.changeInNetWorth": { en: "Change in Net Worth", th: "การเปลี่ยนแปลงมูลค่าสุทธิ" },
-	"metric.liquidNetWorth": { en: "Liquid Net Worth", th: "มูลค่าสุทธิสภาพคล่อง" },
-	"metric.withdrawals": { en: "Withdrawals", th: "เงินถอน" },
-	"metric.withdrawalRate": { en: "Withdrawal Rate", th: "อัตราการถอน" },
-	"metric.income": { en: "Income", th: "รายได้" },
-	"metric.taxableIncome": { en: "Taxable Income", th: "รายได้สุทธิที่ต้องเสียภาษี" },
-	"metric.taxes": { en: "Taxes", th: "ภาษี" },
-	"metric.effectiveTaxRate": { en: "Effective Tax Rate", th: "อัตราภาษีเฉลี่ย" },
-	"metric.spending": { en: "Spending", th: "การใช้จ่าย" },
-	"metric.expenses": { en: "Expenses", th: "ค่าใช้จ่าย" },
-	"metric.savingsRate": { en: "Savings Rate", th: "อัตราการออม" },
-	"metric.taxBalance": { en: "Tax Balance", th: "ยอดภาษีคงค้าง" },
+	// Summary — long term
+	"summary.runsOut": { en: "Money runs out", th: "เงินหมดปี" },
+	"summary.runsOut.never": { en: "Never — money lasts the whole plan", th: "ไม่หมด — เงินพอตลอดแผน" },
+	"summary.retirement.funded": { en: "Retirement funded", th: "เกษียณได้" },
+	"summary.retirement.short": { en: "Retirement short", th: "เกษียณไม่พอ" },
+	"summary.retirement.left": { en: "left at {year}", th: "เหลือ {year}" },
+	"summary.retirement.runsOutAt": { en: "runs out {year}", th: "เงินหมด {year}" },
+	"summary.maxForever": { en: "Max forever spend", th: "ใช้ได้ตลอดไปสูงสุด" },
+	"summary.goals": { en: "Goal checks", th: "ตรวจเป้าหมาย" },
+	"summary.goals.none": { en: "No goals yet", th: "ยังไม่มีเป้าหมาย" },
+	"summary.goal.onTrack": { en: "on track", th: "กำลังไปได้ดี" },
+	"summary.goal.short": { en: "short {amount} in {year}", th: "ขาด {amount} ในปี {year}" },
 
-	"action.updatePlan": { en: "Update plan", th: "อัปเดตแผน" },
-	"action.updatePlan.desc": {
-		en: "Refresh assumptions and projections",
-		th: "รีเฟรชสมมติฐานและการคาดการณ์",
-	},
-	"action.addIncome": { en: "Add income", th: "เพิ่มรายได้" },
-	"action.addIncome.desc": {
-		en: "Record a new source of cash flow",
-		th: "บันทึกแหล่งกระแสเงินสดใหม่",
-	},
-	"action.reviewSpending": { en: "Review spending", th: "ทบทวนการใช้จ่าย" },
-	"action.reviewSpending.desc": {
-		en: "Reconcile your latest expenses",
-		th: "กระทบยอดค่าใช้จ่ายล่าสุดของคุณ",
-	},
-	"action.updateTaxDetails": { en: "Update tax details", th: "อัปเดตข้อมูลภาษี" },
-	"action.updateTaxDetails.desc": {
-		en: "Check taxable income and balance",
-		th: "ตรวจสอบรายได้สุทธิและยอดภาษี",
-	},
-	"action.adjustSavingsGoal": { en: "Adjust savings goal", th: "ปรับเป้าหมายการออม" },
-	"action.adjustSavingsGoal.desc": {
-		en: "Change the next milestone",
-		th: "เปลี่ยนหมุดหมายถัดไป",
-	},
-	"action.manageAccounts": { en: "Manage accounts", th: "จัดการบัญชี" },
-	"action.manageAccounts.desc": {
-		en: "Connect or edit linked accounts",
-		th: "เชื่อมต่อหรือแก้ไขบัญชีที่ผูกไว้",
-	},
+	// Summary — this year
+	"summary.optimizer.recommended": { en: "Recommended ThaiESG / RMF", th: "แนะนำลง ThaiESG / RMF" },
+	"summary.optimizer.taxSaved": { en: "Tax saved this year", th: "ประหยัดภาษีปีนี้" },
+	"summary.optimizer.cutoffNote": { en: "Stops when extra baht saves less than 15% in tax", th: "หยุดเมื่อบาทที่ลงเพิ่ม ประหยัดภาษีน้อยกว่า 15%" },
+	"summary.paths.fund": { en: "in ThaiESG / RMF becomes", th: "ใน ThaiESG / RMF จะกลายเป็น" },
+	"summary.paths.taxable": { en: "in taxable S&P 500 becomes", th: "ใน S&P 500 (เสียภาษี) จะกลายเป็น" },
+	"summary.paths.gap": { en: "advantage", th: "ได้เปรียบ" },
 
-	"plan.updated": { en: "Plan updated", th: "อัปเดตแผนแล้ว" },
-	"plan.actions": { en: "Plan actions", th: "การจัดการแผน" },
-	"plan.savedJustNow": { en: "Saved just now", th: "บันทึกเมื่อสักครู่" },
-	"plan.lastSyncedToday": { en: "Last synced today", th: "ซิงค์ล่าสุดวันนี้" },
-	"plan.keepCurrent": { en: "Keep your plan current", th: "ทำให้แผนของคุณเป็นปัจจุบันเสมอ" },
-	"plan.summaryBody": {
-		en: "Update the details behind your forecast, reconcile new activity, and keep every number ready for your next decision.",
-		th: "อัปเดตรายละเอียดเบื้องหลังการคาดการณ์ กระทบยอดกิจกรรมใหม่ และทำให้ทุกตัวเลขพร้อมสำหรับการตัดสินใจครั้งถัดไปของคุณ",
+	// Footer
+	"footer.disclaimer": {
+		en: "Assumptions: TH 2026 tax, nominal averages, ThaiESG/RMF redemption tax-free. Prove-of-concept demo.",
+		th: "สมมติฐาน: ภาษีไทย 2569 ค่าเฉลี่ยระยะยาว ถอน ThaiESG/RMF ไม่เสียภาษี ตัวอย่างเพื่อทดลอง",
 	},
-	"plan.selected": { en: "{action} selected", th: "เลือก {action} อยู่" },
-
-	"actions.eyebrow": { en: "Quick actions", th: "การทำงานด่วน" },
-	"actions.heading": { en: "What would you like to update?", th: "คุณอยากอัปเดตอะไร?" },
-	"actions.count": { en: "6 tools", th: "6 เครื่องมือ" },
-	"action.exportSnapshot": { en: "Export plan snapshot", th: "ส่งออกภาพรวมแผน" },
+	"a11y.locale": { en: "Language", th: "ภาษา" },
+	"a11y.netWorthChart": { en: "Net worth projection chart", th: "แผนภูมิมูลค่าสุทธิ" },
 }
 
 /** Optional per-locale overrides on top of `strings` (none needed yet). */
