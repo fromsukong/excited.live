@@ -1,7 +1,31 @@
 export { AppDocument, type AppDocumentProps } from "./AppDocument";
 export { Img, type ImgProps } from "./Img";
 export { PlainButton, type PlainButtonProps } from "./PlainButton";
-export { Svg, SvgLine, SvgPath, type SvgProps, type SvgLineProps, type SvgPathProps } from "./Svg";
+export {
+	Svg,
+	SvgLine,
+	SvgPath,
+	SvgCircle,
+	SvgDefs,
+	SvgGradientStop,
+	SvgRect,
+	type SvgProps,
+	type SvgLineProps,
+	type SvgPathProps,
+	type SvgCircleProps,
+	type SvgDefsProps,
+	type SvgGradientStopProps,
+	type SvgRectProps,
+} from "./Svg";
+export { NumberInput, type NumberInputProps } from "@astryxdesign/core/NumberInput";
+export { TextInput, type TextInputProps } from "@astryxdesign/core/TextInput";
+export { Selector, type SelectorProps } from "@astryxdesign/core/Selector";
+export {
+	SegmentedControl,
+	SegmentedControlItem,
+	type SegmentedControlProps,
+	type SegmentedControlItemProps,
+} from "@astryxdesign/core/SegmentedControl";
 export {
 	SvgIcon,
 	FeyMark,

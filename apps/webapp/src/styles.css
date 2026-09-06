@@ -214,9 +214,10 @@ button {
 .chart-canvas {
   position: relative;
   width: 100%;
-  flex: 0 0 350px;
-  height: 350px;
-  margin-top: 18px;
+  flex: 0 0 auto;
+  height: auto;
+  margin-top: 14px;
+  margin-bottom: 0;
 }
 
 .market-chart {
@@ -1036,3 +1037,72 @@ button {
     transition: none;
   }
 }
+
+/* Plan editor below the dashboard grid (toggle via Edit plan). */
+.plan-editor {
+  margin-top: 24px;
+}
+
+.assumptions-note {
+  margin-top: 8px;
+}
+
+/* Left panel tabs: By the numbers / What the plan says (same look as the
+   metric switch, placed under the chart toolbar). */
+.left-tab-switch {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.left-tab-switch__item {
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--copy-muted);
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+
+.left-tab-switch__item:hover {
+  color: var(--copy);
+}
+
+.left-tab-switch__item.is-active {
+  color: var(--copy);
+  background: var(--panel-bg);
+  border-color: var(--panel-border);
+}
+
+/* The answers list inside the tab reuses plan-action rows without hover. */
+.plan-actions-list .plan-action--static {
+  cursor: default;
+}
+
+/* Static (non-clickable) rows in the "What the plan says" tab — identical
+   metrics to .financial-row but no hover/selected affordance. */
+.financial-row--static {
+  cursor: default;
+}
+
+/* Right column: one card per input section. */
+.plan-inputs {
+  width: 100%;
+  min-width: 0;
+}
+
+.input-section {
+  width: 100%;
+  min-width: 0;
+}
+
+/* Period row cards inside Income/Expenses sections. */
+.input-section .astryx-card {
+  min-width: 0;
+}
+
+/* The right column scrolls as one list of cards (desktop keeps the old
+   independent-scroll behavior via .plan-column). */
