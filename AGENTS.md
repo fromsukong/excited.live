@@ -65,7 +65,8 @@ CI runs Node 22; pnpm 10 is pinned via the `packageManager` field.
 
 See DEVELOPMENT.md for the full picture. Short version: PR previews are
 automatic; pushes to `main` deploy to the prelive project; PRODUCTION
-(excited.live itself) deploys only via a manual `workflow_dispatch` trigger.
+(https://app.excited.live custom domain — the apex `excited.live` is reserved
+for the marketing site) deploys only via a manual `workflow_dispatch` trigger.
 Agents must not trigger production deploys without explicit human approval.
 
 ## Product requirements (source of truth)
