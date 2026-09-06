@@ -167,6 +167,8 @@ export const strings: Dictionary = {
 	"a11y.planInputs": { en: "Plan inputs", th: "ตัวเลขของแผน" },
 	"tab.financials": { en: "By the numbers", th: "ตัวเลข" },
 	"tab.answers": { en: "What the plan says", th: "สิ่งที่แผนบอก" },
+	"wallets.heading": { en: "Wallets", th: "กระเป๋าเงิน" },
+	"row.until": { en: "Until", th: "ถึง" },
 	"a11y.netWorthChart": { en: "Net worth projection chart", th: "แผนภูมิมูลค่าสุทธิ" },
 }
 

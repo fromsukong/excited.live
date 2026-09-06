@@ -214,9 +214,10 @@ button {
 .chart-canvas {
   position: relative;
   width: 100%;
-  flex: 0 0 350px;
-  height: 350px;
-  margin-top: 18px;
+  flex: 0 0 auto;
+  height: auto;
+  margin-top: 14px;
+  margin-bottom: 0;
 }
 
 .market-chart {
@@ -1080,3 +1081,28 @@ button {
 .plan-actions-list .plan-action--static {
   cursor: default;
 }
+
+/* Static (non-clickable) rows in the "What the plan says" tab — identical
+   metrics to .financial-row but no hover/selected affordance. */
+.financial-row--static {
+  cursor: default;
+}
+
+/* Right column: one card per input section. */
+.plan-inputs {
+  width: 100%;
+  min-width: 0;
+}
+
+.input-section {
+  width: 100%;
+  min-width: 0;
+}
+
+/* Period row cards inside Income/Expenses sections. */
+.input-section .astryx-card {
+  min-width: 0;
+}
+
+/* The right column scrolls as one list of cards (desktop keeps the old
+   independent-scroll behavior via .plan-column). */

@@ -14,6 +14,7 @@ import {
 	PlainButton,
 	PresentationIcon,
 	SegmentedControl,
+	Selector,
 	SegmentedControlItem,
 	Stack,
 	Text,
@@ -65,6 +66,7 @@ function Home() {
 	const [metric, setMetric] = useState<MetricKey>("metric.netWorth")
 	const [selectedMetricKey, setSelectedMetricKey] = useState<string>("metric.netWorthValue")
 	const [leftTab, setLeftTab] = useState<"financials" | "answers">("financials")
+	const [hoverYear, setHoverYear] = useState<number | null>(null)
 
 	const summary = useMemo(() => {
 		try {
@@ -87,12 +89,25 @@ function Home() {
 		const s = summary.data
 		const first = s.result.years[0]
 		if (!first) return []
-		const end = shown?.[shown.length - 1] ?? s.result.years[s.result.years.length - 1]
-		const startNet = s.result.years[0]?.netWorth ?? 0
-		const change = (end?.netWorth ?? 0) - startNet
-		const withdrawals = s.result.years.reduce((sum, y) => sum + y.withdrawal, 0)
-		const fundedYears = s.result.years.filter((y) => y.withdrawal > 0).length
-		const avgWithdrawal = fundedYears > 0 ? withdrawals / fundedYears : 0
+		// Hover-link: when the pointer is on a chart year, the rows reflect
+		// that year; otherwise they show the whole active period.
+		const hovered =
+			hoverYear !== null
+				? (s.result.years.find((y) => y.year === hoverYear) ?? null)
+				: null
+		const end = hovered ?? shown?.[shown.length - 1] ?? s.result.years[s.result.years.length - 1]
+		const startNet = hovered
+			? (s.result.years[0]?.netWorth ?? 0)
+			: (s.result.years[0]?.netWorth ?? 0)
+		const change = hovered
+			? hovered.netWorth - (s.result.years[0]?.netWorth ?? 0)
+			: (end?.netWorth ?? 0) - startNet
+		const withdrawals = hovered
+			? hovered.withdrawal
+			: s.result.years.reduce((sum, y) => sum + y.withdrawal, 0)
+		const withdrawalBase = hovered ? 1 : s.result.years.filter((y) => y.withdrawal > 0).length
+		const avgWithdrawal = withdrawalBase > 0 ? withdrawals / withdrawalBase : 0
+		const rateYear = hovered ?? first
 		return [
 			{ key: "metric.netWorthValue", value: formatBaht(end?.netWorth ?? 0) },
 			{ key: "metric.changeInNetWorth", value: formatBaht(change) },
@@ -108,23 +123,23 @@ function Home() {
 						? formatPercent(avgWithdrawal / Math.max(end?.netWorth ?? 1, 1))
 						: "0%",
 			},
-			{ key: "metric.income", value: formatBaht(first.income) },
-			{ key: "metric.taxableIncome", value: formatBaht(first.taxResult.taxableIncome) },
-			{ key: "metric.taxes", value: formatBaht(first.tax) },
-			{ key: "metric.effectiveTaxRate", value: formatPercent(first.taxResult.effectiveRate) },
-			{ key: "metric.spending", value: formatBaht(first.expenses) },
-			{ key: "metric.expenses", value: formatBaht(first.expenses) },
+			{ key: "metric.income", value: formatBaht(rateYear.income) },
+			{ key: "metric.taxableIncome", value: formatBaht(rateYear.taxResult.taxableIncome) },
+			{ key: "metric.taxes", value: formatBaht(rateYear.tax) },
+			{ key: "metric.effectiveTaxRate", value: formatPercent(rateYear.taxResult.effectiveRate) },
+			{ key: "metric.spending", value: formatBaht(rateYear.expenses) },
+			{ key: "metric.expenses", value: formatBaht(rateYear.expenses) },
 			{
 				key: "metric.savingsRate",
 				value: formatPercent(
-					first.income > 0
-						? Math.max(0, (first.income - first.tax - first.expenses) / first.income)
+					rateYear.income > 0
+						? Math.max(0, (rateYear.income - rateYear.tax - rateYear.expenses) / rateYear.income)
 						: 0,
 				),
 			},
-			{ key: "metric.taxBalance", value: formatBaht(first.taxResult.balance) },
+			{ key: "metric.taxBalance", value: formatBaht(rateYear.taxResult.balance) },
 		]
-	}, [summary, shown])
+	}, [summary, shown, hoverYear])
 
 	const planInfos = useMemo<PlanInfo[]>(() => {
 		if (!summary.ok) return []
@@ -280,6 +295,7 @@ function Home() {
 											years={shown}
 											metric={metric === "metric.netWorth" ? "netWorth" : "cashFlow"}
 											ariaLabel={t(metric === "metric.netWorth" ? "chart.aria.netWorth" : "chart.aria.cashFlow")}
+											onActiveYearChange={setHoverYear}
 										/>
 									) : (
 										<Text color="secondary">{summary.ok ? "" : summary.error.message}</Text>
@@ -399,22 +415,17 @@ function Home() {
 
 function PlanInfoRow({ info }: { info: PlanInfo }) {
 	const { t } = useLocale()
-	const InfoIcon = info.Icon
 
 	return (
 		<Stack
 			direction="horizontal"
 			align="center"
+			justify="between"
 			gap={2}
-			className="plan-action plan-action--static"
+			className="financial-row financial-row--static"
 		>
-			<Text className="plan-action__icon"><InfoIcon aria-hidden="true" width={18} height={18} /></Text>
-			<Stack className="plan-action__copy">
-				<Text weight="bold" className="plan-action__label">{t(info.labelKey)}</Text>
-				<Text color="secondary" className="plan-action__description">
-					{t(info.descKey, (info.descVars ?? {}) as Record<string, string>)} · <Text weight="bold">{info.value}</Text>
-				</Text>
-			</Stack>
+			<Text weight="semibold" className="financial-row__label">{t(info.labelKey)}</Text>
+			<Text hasTabularNumbers className="financial-row__value">{info.value}</Text>
 		</Stack>
 	)
 }
@@ -438,62 +449,59 @@ function PlanInputs({
 	t: (key: string, vars?: Record<string, string>) => string
 }) {
 	return (
-		<Card padding={3} className="plan-editor">
-			<Stack gap={3}>
-				<Stack gap={0.5}>
-					<Heading level={2}>{t("editor.heading")}</Heading>
-					<Text color="secondary">{t("editor.desc")}</Text>
-				</Stack>
-
-				<Grid columns={4} gap={2}>
-					<NumberInput
-						label={t("input.startYear")}
-						value={plan.startYear}
-						onChange={(value) => setPlan((c) => ({ ...c, startYear: Math.round(value) }))}
-						isIntegerOnly
-						min={2000}
-						max={2100}
-					/>
-					<NumberInput
-						label={t("input.birthYear")}
-						value={plan.birthYear}
-						onChange={(value) => setPlan((c) => ({ ...c, birthYear: Math.round(value) }))}
-						isIntegerOnly
-						min={1920}
-						max={2015}
-					/>
-					<NumberInput
-						label={t("input.inflation")}
-						value={plan.inflation * 100}
-						onChange={(value) => setPlan((c) => ({ ...c, inflation: value / 100 }))}
-						min={0}
-						max={20}
-						step={0.5}
-						units="%"
-					/>
-					<NumberInput
-						label={t("input.efMonths")}
-						value={plan.efMonths}
-						onChange={(value) => setPlan((c) => ({ ...c, efMonths: value }))}
-						min={0}
-						max={24}
-						step={1}
-					/>
-					<NumberInput
-						label={t("input.retirementYear")}
-						value={plan.retirementYear ?? null}
-						onChange={(value) =>
-							setPlan((c) => ({ ...c, retirementYear: value === null ? null : Math.round(value) }))
-						}
-						isIntegerOnly
-						min={1990}
-						max={2100}
-					/>
-					<NumberInput
-						label={t("input.retirementMonthly")}
-						value={plan.retirementMonthlyToday}
-						onChange={(value) => setPlan((c) => ({ ...c, retirementMonthlyToday: value }))}
-						min={0}
+		<Stack gap={3} className="plan-inputs">
+			<Card padding={3} className="input-section">
+				<Stack gap={2}>
+					<Heading level={3}>{t("section.inputs")}</Heading>
+					<Grid columns={4} gap={2}>
+						<NumberInput
+							label={t("input.startYear")}
+							value={plan.startYear}
+							onChange={(value) => setPlan((c) => ({ ...c, startYear: Math.round(value) }))}
+							isIntegerOnly
+							min={2000}
+							max={2100}
+						/>
+						<NumberInput
+							label={t("input.birthYear")}
+							value={plan.birthYear}
+							onChange={(value) => setPlan((c) => ({ ...c, birthYear: Math.round(value) }))}
+							isIntegerOnly
+							min={1920}
+							max={2015}
+						/>
+						<NumberInput
+							label={t("input.inflation")}
+							value={plan.inflation * 100}
+							onChange={(value) => setPlan((c) => ({ ...c, inflation: value / 100 }))}
+							min={0}
+							max={20}
+							step={0.5}
+							units="%"
+						/>
+						<NumberInput
+							label={t("input.efMonths")}
+							value={plan.efMonths}
+							onChange={(value) => setPlan((c) => ({ ...c, efMonths: value }))}
+							min={0}
+							max={24}
+							step={1}
+						/>
+						<NumberInput
+							label={t("input.retirementYear")}
+							value={plan.retirementYear ?? null}
+							onChange={(value) =>
+								setPlan((c) => ({ ...c, retirementYear: value === null ? null : Math.round(value) }))
+							}
+							isIntegerOnly
+							min={1990}
+							max={2100}
+						/>
+						<NumberInput
+							label={t("input.retirementMonthly")}
+							value={plan.retirementMonthlyToday}
+							onChange={(value) => setPlan((c) => ({ ...c, retirementMonthlyToday: value }))}
+							min={0}
 						step={1000}
 						units="฿"
 					/>
@@ -506,11 +514,21 @@ function PlanInputs({
 						max={60}
 					/>
 				</Grid>
+					</Stack>
+			</Card>
 
+			<Card padding={3} className="input-section">
 				<PeriodEditor rows={plan.incomes} heading={t("incomes.heading")} onPatch={(id, patch) => patchRow("incomes", id, patch)} onAdd={() => addRow("incomes")} onRemove={(id) => removeRow("incomes", id)} t={t} />
-				<PeriodEditor rows={plan.expenses} heading={t("expenses.heading")} showDeductible onPatch={(id, patch) => patchRow("expenses", id, patch)} onAdd={() => addRow("expenses")} onRemove={(id) => removeRow("expenses", id)} t={t} />
+			</Card>
 
-				<Grid columns={3} gap={3}>
+			<Card padding={3} className="input-section">
+				<PeriodEditor rows={plan.expenses} heading={t("expenses.heading")} showDeductible onPatch={(id, patch) => patchRow("expenses", id, patch)} onAdd={() => addRow("expenses")} onRemove={(id) => removeRow("expenses", id)} t={t} />
+			</Card>
+
+			<Card padding={3} className="input-section">
+				<Stack gap={2}>
+					<Heading level={3}>{t("wallets.heading")}</Heading>
+					<Grid columns={3} gap={3}>
 					{(
 						[
 							["wallets.split", "savingsSplit", "%", 0, 100, 5, true],
@@ -538,16 +556,90 @@ function PlanInputs({
 										units={units}
 									/>
 								</Stack>
-							))}
-						</Stack>
-					))}
-				</Grid>
+								))}
+							</Stack>
+								))}
+							</Grid>
+							</Stack>
+							</Card>
+							</Stack>
+							)
+							}
+
+/** Editable period-row editor (income or expenses). */
+const MONTHS_EN = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+const MONTHS_TH = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."]
+
+/**
+ * Month + year picker for a period row boundary. Month = Astryx Selector
+ * dropdown; year = compact integer input. `allowForever` adds an ∞ option
+ * that clears the end year (row runs forever).
+ */
+function MonthYearPicker({
+	label,
+	year,
+	month,
+	onChange,
+	allowForever = false,
+	t,
+}: {
+	label: string
+	year: number | null
+	month: number
+	onChange: (year: number | null, month: number) => void
+	allowForever?: boolean
+	t: (key: string, vars?: Record<string, string>) => string
+}) {
+	const { locale } = useLocale()
+	const monthNames = locale === "th" ? MONTHS_TH : MONTHS_EN
+	const forever = allowForever && year === null
+	const monthOptions = monthNames.map((name, index) => `${index}:${name}`)
+	return (
+		<Stack gap={0.5}>
+			<Text size="sm" color="secondary">{label}</Text>
+			<Stack direction="horizontal" align="center" gap={1}>
+				{allowForever ? (
+					<SegmentedControl
+						value={forever ? "forever" : "until"}
+						onChange={(value) => onChange(value === "forever" ? null : new Date().getFullYear() + 1, month)}
+						label={label}
+						size="sm"
+					>
+						<SegmentedControlItem value="until" label={t("row.until")} />
+						<SegmentedControlItem value="forever" label="∞" />
+					</SegmentedControl>
+				) : null}
+				{!forever ? (
+					<>
+						<NumberInput
+							label={`${label} year`}
+							isLabelHidden
+							value={year ?? undefined}
+							onChange={(value) => onChange(value === null ? null : Math.round(value), month)}
+							isIntegerOnly
+							min={2000}
+							max={2100}
+							width={88}
+						/>
+						<Selector
+							label={`${label} month`}
+							isLabelHidden
+							value={`${month}:${monthNames[month]}`}
+							onChange={(value) => {
+								const parsed = Number.parseInt(value.split(":")[0] ?? "0", 10)
+								onChange(year, Number.isFinite(parsed) ? parsed : 0)
+							}}
+							options={monthOptions}
+							width={110}
+						/>
+					</>
+				) : null}
 			</Stack>
-		</Card>
+		</Stack>
 	)
 }
 
-/** Editable period-row editor (income or expenses). */
+/** Editable period-row editor (income or expenses) — row list. */
 function PeriodEditor({
 	rows,
 	heading,
@@ -587,24 +679,24 @@ function PeriodEditor({
 							step={10_000}
 							units="฿"
 						/>
-						<NumberInput
+						<MonthYearPicker
 							label={t("row.startYear")}
-							value={row.startYear}
-							onChange={(value) => onPatch(row.id, { startYear: Math.round(value) })}
-							isIntegerOnly
-							min={2000}
-							max={2100}
-						/>
-						<NumberInput
-							label={t("row.endYear")}
-							value={row.endYear}
-							onChange={(value) =>
-								onPatch(row.id, { endYear: value === null ? null : Math.round(value) })
+							year={row.startYear}
+							month={row.startMonth}
+							onChange={(year, month) =>
+								onPatch(row.id, { startYear: year ?? row.startYear, startMonth: month })
 							}
-							isIntegerOnly
-							min={2000}
-							max={2100}
-							placeholder="∞"
+							t={t}
+						/>
+						<MonthYearPicker
+							label={t("row.endYear")}
+							year={row.endYear}
+							month={row.endMonth}
+							allowForever
+							onChange={(year, month) =>
+								onPatch(row.id, { endYear: year, endMonth: month })
+							}
+							t={t}
 						/>
 						<Stack gap={1}>
 							<SegmentedControl

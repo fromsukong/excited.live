@@ -89,7 +89,8 @@ export const DEFAULT_WALLETS: readonly WalletDef[] = [
 
 /**
  * One income or expense line (sheet "Income"/"Expenses" period rows).
- * Active in years [startYear, endYear]; endYear null = runs forever.
+ * Active from startYear-startMonth through endYear-endMonth inclusive;
+ * endYear null = runs forever.
  */
 export interface PeriodRow {
 	/** Stable key for React lists; UI-generated (row-1, row-2, …). */
@@ -97,8 +98,12 @@ export interface PeriodRow {
 	label: string
 	/** First calendar year the row applies. */
 	startYear: number
+	/** First month (0 = Jan … 11 = Dec) of the active window. */
+	startMonth: number
 	/** Last calendar year, or null for open-ended rows. */
 	endYear: number | null
+	/** Last month (0 = Jan … 11 = Dec) of the active window (endYear set). */
+	endMonth: number
 	/** Yearly amount in the FIRST active year, THB. */
 	amount: number
 	/**
@@ -152,6 +157,27 @@ export interface SimulationYear {
 	unmet: boolean
 	/** Tax engine breakdown for the year (also drives the optimizer). */
 	taxResult: TaxResult
+}
+
+/** One projected month (engine's native granularity). */
+export interface SimulationMonth {
+	/** Absolute month index from the plan start (0-based). */
+	index: number
+	year: number
+	/** 0 = Jan … 11 = Dec. */
+	month: number
+	/** Age at the end of this month. */
+	age: number
+	income: number
+	expenses: number
+	/** Tax booked this month (annual liability ÷ 12; true liability in month 11). */
+	tax: number
+	netCash: number
+	contribution: number
+	withdrawal: number
+	wallets: Record<WalletId, number>
+	netWorth: number
+	unmet: boolean
 }
 
 export interface GoalRow {
@@ -214,8 +240,13 @@ export interface SimulationResult {
 	taxSystem: { country: "TH"; taxYear: 2026 }
 	startYear: number
 	endYear: number
+	/** Yearly rollup (aggregates of the monthly loop; one entry per year). */
 	years: SimulationYear[]
-	/** First year spending could not be fully funded, or null. */
+	/** The native monthly projection — every month of the horizon. */
+	months: SimulationMonth[]
+	/** First unmet month index, or null. */
+	unmetMonthIndex: number | null
+	/** First year with an unmet month, or null. */
 	unmetYear: number | null
 	/** Total tax paid across the horizon, THB. */
 	totalTax: number
@@ -233,25 +264,76 @@ const clampRate = (value: number): number =>
 
 const round2 = (value: number): number => Math.round(value * 100) / 100
 
-/** Amount of a period row in a given year (growth compounds inside the row). */
+/**
+ * Amount of a period row in a given year (growth compounds inside the row).
+ * Partial edge years count only the active months; growth steps on the
+ * row's start-month anniversary, so a row starting in July grows each July.
+ */
 export function rowAmountInYear(
 	row: PeriodRow,
 	year: number,
 	inflation = 0,
 ): number {
 	if (year < row.startYear) return 0
-	if (row.endYear !== null && year > row.endYear) return 0
-	const yearsIn = year - row.startYear
-	return (
-		clampNonNegative(row.amount) *
-		Math.pow(1 + rowGrowthRate(row, inflation), yearsIn)
-	)
+	const endYear = row.endYear
+	if (endYear !== null && year > endYear) return 0
+	const rate = rowGrowthRate(row, inflation)
+	// Anniversary-step index: full 12-month periods since the row started.
+	const anniversaryYearsIn = year - row.startYear
+	const grown = clampNonNegative(row.amount) * Math.pow(1 + rate, anniversaryYearsIn)
+
+	// Fraction of THIS year the row is active.
+	let monthsActive = 12
+	if (year === row.startYear) monthsActive -= clampMonth(row.startMonth)
+	if (endYear !== null && year === endYear) monthsActive -= (11 - clampMonth(row.endMonth))
+	if (row.startYear === endYear && year === endYear) {
+		monthsActive = clampMonth(row.endMonth) - clampMonth(row.startMonth) + 1
+	}
+	if (monthsActive <= 0) return 0
+	return (grown * monthsActive) / 12
 }
+
+const clampMonth = (month: number): number =>
+	Number.isFinite(month) ? Math.min(Math.max(Math.round(month), 0), 11) : 0
 
 function sumRows(rows: PeriodRow[], year: number, inflation: number): number {
 	return round2(
 		rows.reduce((sum, row) => sum + rowAmountInYear(row, year, inflation), 0),
 	)
+}
+
+/** Absolute month index of a row's start (Jan of startYear = index 0). */
+function rowStartIndex(row: PeriodRow, startYear: number): number {
+	return (row.startYear - startYear) * 12 + clampMonth(row.startMonth)
+}
+
+/**
+ * The row's share for one absolute month (0-based from plan start).
+ * Grows on the row's start-month anniversary; 0 outside the window.
+ */
+function monthShare(
+	rows: PeriodRow[],
+	monthIndex: number,
+	inflation: number,
+	startYear = 0,
+): number {
+	let total = 0
+	for (const row of rows) {
+		const begin = rowStartIndex(row, startYear)
+		if (monthIndex < begin) continue
+		const endYear = row.endYear
+		if (endYear !== null) {
+			const end = (endYear - startYear) * 12 + clampMonth(row.endMonth)
+			if (monthIndex > end) continue
+		}
+		// Years since the row's start anniversary (fractional within year 1).
+		const yearsIn = (monthIndex - begin) / 12
+		const grown =
+			clampNonNegative(row.amount) *
+			Math.pow(1 + rowGrowthRate(row, inflation), Math.floor(yearsIn))
+		total += grown / 12
+	}
+	return total
 }
 
 /**
@@ -269,7 +351,9 @@ export function defaultPlanInput(now: Date = new Date()): PlanInput {
 				id: "income-salary",
 				label: "Salary",
 				startYear,
+				startMonth: 0,
 				endYear: startYear + 29,
+				endMonth: 11,
 				amount: 1_200_000,
 				growthMode: "override",
 				growthRate: 0.03,
@@ -280,7 +364,9 @@ export function defaultPlanInput(now: Date = new Date()): PlanInput {
 				id: "expense-living",
 				label: "Living expenses",
 				startYear,
+				startMonth: 0,
 				endYear: null,
+				endMonth: 11,
 				amount: 480_000,
 				growthMode: "inflation",
 				growthRate: 0,
@@ -334,9 +420,10 @@ export function runSimulation(input: PlanInput): SimulationResult {
 
 	const system = getTaxSystem(TAX_COUNTRY, TAX_YEAR)
 	const warnings: string[] = []
+	const months: SimulationMonth[] = []
 	const years: SimulationYear[] = []
 
-	// Wallet balances persist across years; EF cap is evaluated per year.
+	// Wallet balances persist across months; EF cap is evaluated per month.
 	const wallets: Record<WalletId, number> = {
 		emergency: clampNonNegative(input.startingWallets.emergency),
 		goal: clampNonNegative(input.startingWallets.goal),
@@ -344,60 +431,94 @@ export function runSimulation(input: PlanInput): SimulationResult {
 		taxAdvantaged: clampNonNegative(input.startingWallets.taxAdvantaged),
 	}
 
-	for (let index = 0; index < horizon; index += 1) {
-		const year = input.startYear + index
-		const income = sumRows(input.incomes, year, input.inflation)
-		// US-004: from the retirement year, spending switches to the desired
-		// retirement spend (inflation-adjusted) + still-active expense rows.
-		const rowExpenses = sumRows(input.expenses, year, input.inflation)
+	const monthlyGrowth: Record<WalletId, number> = {
+		emergency: Math.pow(1 + clampRate(input.walletRates.emergency ?? 0), 1 / 12) - 1,
+		goal: Math.pow(1 + clampRate(input.walletRates.goal ?? 0), 1 / 12) - 1,
+		nontax: Math.pow(1 + clampRate(input.walletRates.nontax ?? 0), 1 / 12) - 1,
+		taxAdvantaged: Math.pow(1 + clampRate(input.walletRates.taxAdvantaged ?? 0), 1 / 12) - 1,
+	}
+
+	const totalMonths = horizon * 12
+	let unmetMonthIndex: number | null = null
+	// Annual TH tax liability per calendar year, computed once (January).
+	const yearTaxCache = new Map<number, TaxResult>()
+
+	for (let index = 0; index < totalMonths; index += 1) {
+		const month = index % 12
+		const year = input.startYear + Math.floor(index / 12)
+		const monthIndexInYear = month // 0..11
+
+		// Steps 1-2 — month-scoped income/spending via the anniversary model.
+		const income = round2(monthShare(input.incomes, index, input.inflation, input.startYear))
+		const rowExpenses = round2(monthShare(input.expenses, index, input.inflation, input.startYear))
+		// US-004: from the retirement month, spending switches to the desired
+		// pension. Same anniversary rule as rows: pension starts at the Jan of
+		// retirementYear and steps ×(1+inflation) each Jan anniversary.
 		const retired =
-			input.retirementYear !== null && year >= input.retirementYear
+			input.retirementYear !== null &&
+			index >= (input.retirementYear - input.startYear) * 12
 		const pension = retired
-			? round2(
-					clampNonNegative(input.retirementMonthlyToday) *
-						12 *
-						Math.pow(1 + clampRate(input.inflation), year - input.startYear),
+			? clampNonNegative(input.retirementMonthlyToday) *
+				Math.pow(
+					1 + clampRate(input.inflation),
+					Math.floor(
+						(index - (input.retirementYear! - input.startYear) * 12) / 12,
+					),
 				)
 			: 0
-		const expenses = round2(rowExpenses + pension)
+		const expenses = rowExpenses + pension
 
-		// US-005: deductible-flagged expense rows feed the TH tax calc.
-		const mortgageInterest = round2(
-			input.expenses.reduce(
-				(sum, row) =>
-					sum +
-					(row.deductible === "mortgageInterest"
-						? rowAmountInYear(row, year, input.inflation)
-						: 0),
-				0,
-			),
-		)
+		// Step 3 — TH tax is an annual liability; accrue raw 1/12 monthly and
+		// let December carry the remainder so the year sums exactly.
+		let tax: number
+		if (monthIndexInYear === 0) {
+			// Peek: compute the whole year's tax once (January) using the
+			// year's totals from the anniversary model.
+			const yearIncome = sumRows(input.incomes, year, input.inflation)
+			const yearMortgage = round2(
+				input.expenses.reduce(
+					(sum, row) =>
+						sum +
+						(row.deductible === "mortgageInterest"
+							? rowAmountInYear(row, year, input.inflation)
+							: 0),
+					0,
+				),
+			)
+			const taxResult: TaxResult = system.compute({
+				incomes: [{ categoryCode: "employment", amount: yearIncome }],
+				allowances: {
+					personal: Math.max(1, Math.round(input.personalAllowances)),
+					spouse: Math.max(0, Math.round(input.spouseAllowances)),
+					children: Math.max(0, Math.round(input.childrenAllowances)),
+					parents: Math.max(0, Math.round(input.parentsAllowances)),
+					disabled: 0,
+				},
+				deductions: {
+					insurance: clampNonNegative(input.insurance),
+					mortgageInterest: yearMortgage,
+					donations: 0,
+					retirementSavings: { ssf: 0, rmf: 0, provident: 0 },
+				},
+				withheld: Math.round(clampNonNegative(input.annualWithholding)),
+				estimatedPaid: 0,
+			})
+			warnings.push(...taxResult.warnings)
+			yearTaxCache.set(year, taxResult)
+			tax = taxResult.netTax / 12
+		} else if (monthIndexInYear === 11) {
+			const cached = yearTaxCache.get(year)
+			// Month 11 carries the remainder so the year sums exactly to the
+			// engine liability (no rounding drift).
+			tax = cached ? cached.netTax - (cached.netTax / 12) * 11 : 0
+		} else {
+			const cached = yearTaxCache.get(year)
+			tax = cached ? cached.netTax / 12 : 0
+		}
 
-		// Step 3 — tax on employment income (TH 2026 system).
-		const taxResult: TaxResult = system.compute({
-			incomes: [{ categoryCode: "employment", amount: income }],
-			allowances: {
-				personal: Math.max(1, Math.round(input.personalAllowances)),
-				spouse: Math.max(0, Math.round(input.spouseAllowances)),
-				children: Math.max(0, Math.round(input.childrenAllowances)),
-				parents: Math.max(0, Math.round(input.parentsAllowances)),
-				disabled: 0,
-			},
-			deductions: {
-				insurance: clampNonNegative(input.insurance),
-				mortgageInterest,
-				donations: 0,
-				retirementSavings: { ssf: 0, rmf: 0, provident: 0 },
-			},
-			withheld: Math.round(clampNonNegative(input.annualWithholding)),
-			estimatedPaid: 0,
-		})
-		warnings.push(...taxResult.warnings)
-
-		const tax = taxResult.netTax
 		const netCash = round2(income - tax - expenses)
 
-		// Step 5 — contribute by savings split, then grow balances.
+		// Step 5 — contribute by savings split, then EF-cap overflow check.
 		let contribution = 0
 		if (netCash > 0) {
 			for (const id of WALLET_IDS) {
@@ -407,22 +528,19 @@ export function runSimulation(input: PlanInput): SimulationResult {
 			contribution = netCash
 		}
 
-		// Emergency fund cap: overflow this year's share flows to investments.
-		const monthlyExpenses = expenses / 12
-		const efTarget = round2(clampNonNegative(input.efMonths) * monthlyExpenses)
+		const efTarget = round2(clampNonNegative(input.efMonths) * expenses)
 		const efOverflow = Math.max(0, round2(wallets.emergency - efTarget))
 		if (efOverflow > 0 && netCash > 0) {
 			wallets.emergency = round2(wallets.emergency - efOverflow)
 			wallets.nontax = round2(wallets.nontax + efOverflow)
+			contribution = round2(Math.max(0, contribution - efOverflow))
 		}
 
 		for (const id of WALLET_IDS) {
-			const rate = clampRate(input.walletRates[id] ?? 0)
-			wallets[id] = round2(wallets[id] * (1 + rate))
+			wallets[id] = round2(wallets[id] * (1 + monthlyGrowth[id]))
 		}
 
-		// Step 6 — any deficit year (retirement, sabbatical, mid-career gap)
-		// withdraws for spending from wallets EF → goal → non-tax → tax-advantaged.
+		// Step 6 — any deficit month withdraws EF → goal → non-tax → tax-adv.
 		let withdrawal = 0
 		let unmetNeed = 0
 		if (netCash < 0) {
@@ -438,27 +556,59 @@ export function runSimulation(input: PlanInput): SimulationResult {
 					need = round2(need - draw)
 				}
 			}
+			if (withdrawal < unmetNeed - 0.01 && unmetMonthIndex === null) {
+				unmetMonthIndex = index
+			}
 		}
 
 		const netWorth = round2(
 			WALLET_IDS.reduce((sum, id) => sum + wallets[id], 0),
 		)
-		const unmet = withdrawal > 0 && withdrawal < unmetNeed - 0.01
 
-		years.push({
+		months.push({
+			index,
 			year,
+			month,
 			age: year - input.birthYear,
 			income,
 			expenses,
 			tax,
 			netCash,
-			contribution: contribution > 0 ? round2(contribution) : 0,
+			contribution: contribution > 0 ? contribution : 0,
 			withdrawal,
 			wallets: { ...wallets },
 			netWorth,
-			unmet,
-			taxResult,
+			unmet: withdrawal > 0 && withdrawal < unmetNeed - 0.01,
 		})
+
+		// December — roll the year up from its 12 months.
+		if (monthIndexInYear === 11) {
+			const yearMonths = months.slice(index - 11, index + 1)
+			const sum = (pick: (m: SimulationMonth) => number) =>
+				round2(yearMonths.reduce((acc, m) => acc + pick(m), 0))
+			const sumWallets = (id: WalletId) =>
+				round2(yearMonths[yearMonths.length - 1]?.wallets[id] ?? 0)
+			const yearUnmet = yearMonths.some((m) => m.unmet)
+			years.push({
+				year,
+				age: year - input.birthYear,
+				income: sum((m) => m.income),
+				expenses: sum((m) => m.expenses),
+				tax: sum((m) => m.tax),
+				netCash: sum((m) => m.netCash),
+				contribution: sum((m) => m.contribution),
+				withdrawal: sum((m) => m.withdrawal),
+				wallets: {
+					emergency: sumWallets("emergency"),
+					goal: sumWallets("goal"),
+					nontax: sumWallets("nontax"),
+					taxAdvantaged: sumWallets("taxAdvantaged"),
+				},
+				netWorth,
+				unmet: yearUnmet,
+				taxResult: yearTaxCache.get(year)!,
+			})
+		}
 	}
 
 	const firstUnmet = years.find((entry) => entry.unmet)?.year ?? null
@@ -468,8 +618,10 @@ export function runSimulation(input: PlanInput): SimulationResult {
 		startYear: input.startYear,
 		endYear: input.startYear + horizon - 1,
 		years,
+		months,
+		unmetMonthIndex,
 		unmetYear: firstUnmet,
-		totalTax: round2(years.reduce((sum, entry) => sum + entry.tax, 0)),
+		totalTax: round2(months.reduce((sum, entry) => sum + entry.tax, 0)),
 		warnings: [...new Set(warnings)],
 	}
 }

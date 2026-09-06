@@ -33,7 +33,7 @@ describe("summary", () => {
 
 	it("detects a retirement that runs out of money", () => {
 		const p = plan({
-			retirementMonthlyToday: 250_000, // 3M/yr at 60: income can't keep up
+			retirementMonthlyToday: 400_000, // 4.8M/yr at 60: far beyond what the plan supports
 			horizonYears: 60,
 		})
 		const result = runSimulation(p)

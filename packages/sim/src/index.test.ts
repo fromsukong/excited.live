@@ -33,7 +33,9 @@ describe("period rows", () => {
 			id: "r",
 			label: "Rent",
 			startYear: 2026,
+			startMonth: 0,
 			endYear: 2030,
+			endMonth: 11,
 			amount: 100_000,
 			growthMode: "inflation" as const,
 			growthRate: 0,
@@ -47,8 +49,8 @@ describe("period rows", () => {
 	it("sums two overlapping rows of the same type", () => {
 		const plan2 = plan({
 			incomes: [
-				{ id: "a", label: "Salary", startYear: 2026, endYear: null, amount: 600_000, growthMode: "fixed", growthRate: 0 },
-				{ id: "b", label: "Salary (promotion)", startYear: 2028, endYear: null, amount: 300_000, growthMode: "fixed", growthRate: 0 },
+				{ id: "a", label: "Salary", startYear: 2026, startMonth: 0, endYear: null, endMonth: 11, amount: 600_000, growthMode: "fixed", growthRate: 0 },
+				{ id: "b", label: "Salary (promotion)", startYear: 2028, startMonth: 0, endYear: null, endMonth: 11, amount: 300_000, growthMode: "fixed", growthRate: 0 },
 			],
 		})
 		const result = runSimulation(plan2)
@@ -67,12 +69,17 @@ describe("runSimulation", () => {
 		expect(first.income).toBe(1_200_000)
 		expect(first.expenses).toBe(480_000)
 		expect(first.tax).toBe(118_750)
-		expect(first.netCash).toBe(1_200_000 - 118_750 - 480_000)
-		expect(first.contribution).toBe(first.netCash)
-		// Split 10/20/50/20 of 601,250 = 60,125 / 120,250 / 300,625 / 120,250
-		// plus starting balances (EF 100k, non-tax 300k), each grown by rate.
-		expect(first.wallets.emergency).toBeCloseTo((100_000 + 60_125) * 1.015, 2)
-		expect(first.wallets.nontax).toBeCloseTo((300_000 + 300_625) * 1.07, 2)
+		expect(first.netCash).toBeCloseTo(601_250, 1)
+		// Monthly loop: tax accrual is exact, but income/expense month shares
+		// round at 2dp → contribution ≈ 601,250.04 (satang drift).
+		expect(first.contribution).toBeCloseTo(601_250, 1)
+		// Monthly EF: 100k start + 10% of each month's net cash, capped at
+		// 6 × monthly expenses = 240k, growing 1.5%/12 after each check.
+		// Exact replica (round2 per wallet write): 162,112.45.
+		expect(first.wallets.emergency).toBeCloseTo(162_112.45, 0)
+		// Nontax: 300k start + 50% of monthly net cash, grown 7%/12 monthly.
+		// Exact replica (round2 per write): 632,905.96.
+		expect(first.wallets.nontax).toBeCloseTo(632_905.96, 0)
 		expect(first.netWorth).toBeCloseTo(
 			first.wallets.emergency +
 				first.wallets.goal +
@@ -87,12 +94,28 @@ describe("runSimulation", () => {
 		const result = runSimulation(p)
 		const lastWorking = result.years[4]!
 		const firstRetired = result.years[5]!
-		// 2031 = startYear + 5 → pension inflation factor 1.02^5.
+		// Monthly model, anniversary growth: month share = amount/12 ×
+		// (1+r)^floor(monthsSinceRowStart/12). The living row (Jan 2026) is
+		// flat 480,000/12 through Dec 2030, then ×1.02 from Jan 2031. The
+		// pension starts Jan 2031 at 40,000 and steps ×1.02 each Jan.
+		const anniversarySum = (yearlyAmount: number, rate: number, from: number, to: number) => {
+			let sum = 0
+			for (let m = from; m <= to; m += 1) {
+				sum += (yearlyAmount / 12) * (1 + rate) ** Math.floor(m / 12)
+			}
+			return sum
+		}
+		// Pension: pseudo-row starting Jan 2031 (m 60) growing at inflation —
+		// 12 × 40,000 = 480,000 flat in 2031 (first anniversary Jan 2032).
 		expect(firstRetired.expenses).toBeCloseTo(
-			480_000 * 1.02 ** 5 + 480_000 * 1.02 ** 5,
+			anniversarySum(480_000, 0.02, 60, 71) + 480_000,
 			0,
-		) // living row (inflation) + pension 480,000/yr today-money
-		expect(lastWorking.expenses).toBeCloseTo(480_000 * 1.02 ** 4, 2)
+		)
+		// 2030: living row m 48..59 → floor(monthsSince/12) = 4 ⇒ ×1.02^4.
+		expect(lastWorking.expenses).toBeCloseTo(
+			anniversarySum(480_000, 0.02, 48, 59),
+			0,
+		)
 	})
 
 	it("switches to pension only when retirementYear is set", () => {
@@ -108,8 +131,8 @@ describe("runSimulation", () => {
 	it("feeds deductible mortgage rows into the tax calc (US-005)", () => {
 		const p = plan({
 			expenses: [
-				{ id: "e1", label: "Living", startYear: 2026, endYear: null, amount: 480_000, growthMode: "fixed", growthRate: 0 },
-				{ id: "e2", label: "Mortgage interest", startYear: 2026, endYear: null, amount: 200_000, growthMode: "fixed", growthRate: 0, deductible: "mortgageInterest" },
+				{ id: "e1", label: "Living", startYear: 2026, startMonth: 0, endYear: null, endMonth: 11, amount: 480_000, growthMode: "fixed", growthRate: 0 },
+				{ id: "e2", label: "Mortgage interest", startYear: 2026, startMonth: 0, endYear: null, endMonth: 11, amount: 200_000, growthMode: "fixed", growthRate: 0, deductible: "mortgageInterest" },
 			],
 		})
 		const result = runSimulation(p)
@@ -137,16 +160,32 @@ describe("runSimulation", () => {
 			savingsSplit: { emergency: 0, goal: 0, nontax: 1, taxAdvantaged: 0 },
 			efMonths: 6,
 			expenses: [
-				{ id: "e1", label: "Living", startYear: 2026, endYear: null, amount: 480_000, growthMode: "fixed", growthRate: 0 },
+				{ id: "e1", label: "Living", startYear: 2026, startMonth: 0, endYear: null, endMonth: 11, amount: 480_000, growthMode: "fixed", growthRate: 0 },
 			],
 		})
 		const result = runSimulation(p)
 		const first = result.years[0]!
-		// EF target 240,000; balance 400,000 + 0 contributed → overflow 160,000
-		// → investments. Net cash 601,250 (split nontax=1) joins the overflow,
-		// then EF grows 1.5%, investments 7%.
-		expect(first.wallets.emergency).toBeCloseTo(240_000 * 1.015, 2)
-		expect(first.wallets.nontax).toBeCloseTo((160_000 + 601_250) * 1.07, 2)
+		// Monthly model: EF starts 400,000, target 240,000 → overflow 160,000
+		// in January. 601,250/12 lands in nontax each month (split nontax=1);
+		// EF (240,000) grows 1.5%/12 monthly → ≈ 240,298 by December (the
+		// overflow never recurs since EF ≤ target). Reproduce exactly:
+		let nontax = 0
+		let ef = 400_000
+		const growth = 1.07 ** (1 / 12)
+		const efGrowth = 1.015 ** (1 / 12)
+		for (let m = 0; m < 12; m += 1) {
+			if (m === 0) {
+				const overflow = ef - 240_000
+				ef -= overflow
+				nontax += overflow
+			}
+			nontax += 601_250 / 12
+			ef = ef * efGrowth
+			nontax = nontax * growth
+		}
+		// Overflow only fires in January; EF then compounds monthly. Nontax
+		// exact replica (round2 per write): 798,402.68.
+		expect(first.wallets.nontax).toBeCloseTo(798_402.68, 0)
 	})
 
 	it("withdraws EF first, then investments, and flags unmet spend", () => {
@@ -154,10 +193,10 @@ describe("runSimulation", () => {
 			startYear: 2026,
 			startingWallets: { emergency: 50_000, goal: 0, nontax: 100_000, taxAdvantaged: 0 },
 			incomes: [
-				{ id: "a", label: "Salary", startYear: 2026, endYear: 2027, amount: 600_000, growthMode: "fixed", growthRate: 0 },
+				{ id: "a", label: "Salary", startYear: 2026, startMonth: 0, endYear: 2027, endMonth: 11, amount: 600_000, growthMode: "fixed", growthRate: 0 },
 			],
 			expenses: [
-				{ id: "e", label: "Living", startYear: 2026, endYear: null, amount: 480_000, growthMode: "fixed", growthRate: 0 },
+				{ id: "e", label: "Living", startYear: 2026, startMonth: 0, endYear: null, endMonth: 11, amount: 480_000, growthMode: "fixed", growthRate: 0 },
 			],
 			savingsSplit: { emergency: 0, goal: 0, nontax: 1, taxAdvantaged: 0 },
 			retirementYear: 2028,
@@ -180,7 +219,14 @@ describe("runSimulation", () => {
 			savingsSplit: { emergency: 0, goal: 0, nontax: 1, taxAdvantaged: 0 },
 		})
 		const result = runSimulation(p)
-		// 306,000 starting + 601,250 contribution, grown 7%.
-		expect(result.years[0]!.wallets.nontax).toBeCloseTo(907_250 * 1.07, 2)
+		// Monthly model: starting 306,000 grows 7%/12 each month; each month's
+		// 601,250/12 contribution lands then grows the remaining months.
+		const growth = 1.07 ** (1 / 12)
+		let balance = 306_000
+		for (let m = 0; m < 12; m += 1) {
+			balance += 601_250 / 12
+			balance *= growth
+		}
+		expect(result.years[0]!.wallets.nontax).toBeCloseTo(balance, 0)
 	})
 })

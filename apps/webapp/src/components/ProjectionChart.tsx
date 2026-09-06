@@ -20,7 +20,7 @@ import { formatBaht, formatBahtCompact } from "../lib/format"
 
 const WIDTH = 1000
 const HEIGHT = 320
-const PAD = { top: 16, right: 16, bottom: 28, left: 64 }
+const PAD = { top: 14, right: 14, bottom: 10, left: 64 }
 
 export interface ProjectionChartProps {
 	/** Projected years to draw (already sliced to the active period). */
@@ -28,12 +28,15 @@ export interface ProjectionChartProps {
 	/** Which series to draw: end-of-year net worth or yearly cash flow. */
 	metric?: "netWorth" | "cashFlow"
 	ariaLabel: string
+	/** Fired on hover/drag/leave so panels below can mirror the active year. */
+	onActiveYearChange?: (year: number | null) => void
 }
 
 export function ProjectionChart({
 	years,
 	metric = "netWorth",
 	ariaLabel,
+	onActiveYearChange,
 }: ProjectionChartProps) {
 	const [activeIndex, setActiveIndex] = useState<number | null>(null)
 
@@ -80,7 +83,13 @@ export function ProjectionChart({
 		if (bounds.width === 0) return
 		const fraction = (clientX - bounds.left) / bounds.width
 		const index = Math.round(fraction * (points.length - 1))
-		setActiveIndex(Math.min(Math.max(index, 0), points.length - 1))
+		const clamped = Math.min(Math.max(index, 0), points.length - 1)
+		setActiveIndex(clamped)
+		onActiveYearChange?.(points[clamped]?.year ?? null)
+	}
+	function handleLeave() {
+		setActiveIndex(null)
+		onActiveYearChange?.(null)
 	}
 
 	const gridLines = [0, 0.25, 0.5, 0.75, 1].map((fraction) => {
@@ -104,7 +113,7 @@ export function ProjectionChart({
 				className="mvp-chart"
 				style={{ width: "100%", height: "auto", display: "block", touchAction: "none" }}
 				onPointerMove={(event) => handlePointer(event.clientX, event.currentTarget)}
-				onPointerLeave={() => setActiveIndex(null)}
+				onPointerLeave={handleLeave}
 				onPointerDown={(event) => handlePointer(event.clientX, event.currentTarget)}
 			>
 				<SvgDefs>
