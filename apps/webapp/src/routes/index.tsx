@@ -1,6 +1,5 @@
 import { useMemo, useState, type ComponentType, type SVGProps } from "react"
 import {
-	ArrowRightIcon,
 	Badge,
 	BookmarkIcon,
 	Button,
@@ -67,7 +66,6 @@ function Home() {
 	const [horizon, setHorizon] = useState<HorizonKey>("30")
 	const [metric, setMetric] = useState<MetricKey>("metric.netWorth")
 	const [selectedMetricKey, setSelectedMetricKey] = useState<string>("metric.netWorthValue")
-	const [selectedInfoKey, setSelectedInfoKey] = useState<string | null>(null)
 
 	const summary = useMemo(() => {
 		try {
@@ -134,19 +132,15 @@ function Home() {
 		const s = summary.data
 		const v = s.retirement
 		const goalsOk = s.goals.filter((g) => g.onTrack).length
+		const goalsShort = s.goals.length - goalsOk
 		return [
 			{
 				labelKey: "info.retirement",
 				value: v.funded ? t("info.retirement.funded") : t("info.retirement.short"),
-				descKey: "info.retirement.desc",
+				descKey: v.funded ? "info.retirement.left" : "info.retirement.runsOut",
 				descVars: {
-					verdict: v.funded
-						? t("info.retirement.left", {
-								amount: formatBaht(v.remainingAtEnd),
-								year: String(v.endYear),
-							})
-						: t("info.retirement.runsOut", { year: String(v.unmetYear ?? "") }),
-					detail: `retire ${v.retirementYear}`,
+					amount: formatBaht(v.remainingAtEnd),
+					year: String(v.funded ? v.endYear : (v.unmetYear ?? "")),
 				},
 				Icon: CompassIcon,
 			},
@@ -170,16 +164,20 @@ function Home() {
 			{
 				labelKey: "info.paths",
 				value: formatBaht(s.pathCompare.fundValue),
-				descKey: "info.paths.desc",
+				descKey:
+					s.pathCompare.gap >= 0 ? "info.paths.desc.fund" : "info.paths.desc.taxable",
 				descVars: {
 					fund: formatBaht(s.pathCompare.fundValue),
-					taxable: formatBaht(s.pathCompare.taxableValue),
+					gap: formatBaht(Math.abs(s.pathCompare.gap)),
 				},
 				Icon: LinkIcon,
 			},
 			{
 				labelKey: "info.runsOut",
-				value: s.runsOutYear === null ? t("info.runsOut.desc.never") : String(s.runsOutYear),
+				value:
+					s.runsOutYear === null
+						? t("info.runsOut.desc.never")
+						: String(s.runsOutYear),
 				descKey: s.runsOutYear === null ? "info.runsOut.desc.never" : "info.runsOut.desc.year",
 				descVars: { year: String(s.runsOutYear ?? "") },
 				Icon: CalendarIcon,
@@ -189,9 +187,9 @@ function Home() {
 				value:
 					s.goals.length === 0
 						? t("info.goals.desc.none")
-						: t("info.goals.desc.ok", { count: String(goalsOk) }),
-				descKey: s.goals.length === 0 ? "info.goals.desc.none" : "info.goals.desc.short",
-				descVars: { ok: String(goalsOk), short: String(s.goals.length - goalsOk) },
+						: t("info.goals.desc.ok", { ok: String(goalsOk), total: String(s.goals.length) }),
+				descKey: "info.goals.sub",
+				descVars: { ok: String(goalsOk), short: String(goalsShort) },
 				Icon: BookmarkIcon,
 			},
 		]
@@ -358,19 +356,9 @@ function Home() {
 									</Stack>
 									<Stack className="plan-actions-list">
 										{planInfos.map((info) => (
-											<PlanInfoRow
-												key={info.labelKey}
-												info={info}
-												isSelected={selectedInfoKey === info.labelKey}
-												onSelect={() => setSelectedInfoKey(info.labelKey)}
-											/>
+											<PlanInfoRow key={info.labelKey} info={info} />
 										))}
 									</Stack>
-									<PlainButton className="export-action" onClick={() => setSelectedInfoKey("info.export")}>
-										<Text className="export-action__icon"><BookmarkIcon aria-hidden="true" width={17} height={17} /></Text>
-										<Text className="export-action__label">{t("info.export")}</Text>
-										<ArrowRightIcon aria-hidden="true" width={17} height={17} />
-									</PlainButton>
 									<Text size="sm" color="secondary" className="assumptions-note">{t("info.export.desc")}</Text>
 									</Stack>
 									</Card>
@@ -415,23 +403,16 @@ function Home() {
 	)
 }
 
-function PlanInfoRow({
-	info,
-	isSelected,
-	onSelect,
-}: {
-	info: PlanInfo
-	isSelected: boolean
-	onSelect: () => void
-}) {
+function PlanInfoRow({ info }: { info: PlanInfo }) {
 	const { t } = useLocale()
 	const InfoIcon = info.Icon
 
 	return (
-		<PlainButton
-			className={`plan-action ${isSelected ? "is-selected" : ""}`}
-			aria-pressed={isSelected}
-			onClick={onSelect}
+		<Stack
+			direction="horizontal"
+			align="center"
+			gap={2}
+			className="plan-action plan-action--static"
 		>
 			<Text className="plan-action__icon"><InfoIcon aria-hidden="true" width={18} height={18} /></Text>
 			<Stack className="plan-action__copy">
@@ -440,8 +421,7 @@ function PlanInfoRow({
 					{t(info.descKey, (info.descVars ?? {}) as Record<string, string>)} · <Text weight="bold">{info.value}</Text>
 				</Text>
 			</Stack>
-			<Text className="plan-action__arrow" aria-hidden="true"><ArrowRightIcon width={17} height={17} /></Text>
-		</PlainButton>
+		</Stack>
 	)
 }
 
