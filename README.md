@@ -37,7 +37,7 @@ GitHub Actions builds the app and uploads directly to Cloudflare Pages (Cloudfla
 
 1. PR open/update → two preview deploys: `<branch>-mock` and `<branch>-live` on `*.excited-live.pages.dev`
 2. Merge to `main` → automatically deployed to the prelive project: **https://excited-live-prelive.pages.dev**
-3. Production (excited.live) → manual trigger only: GitHub → Actions → Deploy Production → Run workflow → type PROD to confirm
+3. Production (**https://app.excited.live** — the app's custom domain; root `excited.live` is the future marketing site) → manual trigger only: GitHub → Actions → Deploy Production → Run workflow → type PROD to confirm
 
 Preview and prelive URLs are where you review changes; production only updates when someone runs the manual workflow.
 
