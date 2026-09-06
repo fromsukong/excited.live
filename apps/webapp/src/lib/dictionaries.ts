@@ -14,6 +14,8 @@ export const strings: Dictionary = {
 	"nav.hello": { en: "Your plan, live", th: "แผนของคุณ สด ๆ" },
 	"nav.synced": { en: "Numbers update as you type", th: "ตัวเลขอัปเดตทันทีที่แก้" },
 	"locale.toggle": { en: "Switch language", th: "เปลี่ยนภาษา" },
+	"plan.heading.full.ok": { en: "Your plan is on track", th: "แผนของคุณกำลังไปได้ดี" },
+	"plan.heading.full.risk": { en: "Your plan needs work", th: "แผนของคุณต้องปรับ" },
 	"locale.en": { en: "EN", th: "EN" },
 	"locale.th": { en: "ไทย", th: "ไทย" },
 

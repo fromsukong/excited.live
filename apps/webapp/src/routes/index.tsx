@@ -282,10 +282,7 @@ function Home() {
 										{t("plan.snapshotDate", { year: String(plan.startYear) })}
 									</Text>
 									<Heading level={1}>
-										{t("plan.heading.prefix")}{" "}
-										<Text color="secondary" weight="bold">
-											{onTrack ? t("plan.heading.status") : t("plan.heading.needsWork")}
-										</Text>
+										{onTrack ? t("plan.heading.full.ok") : t("plan.heading.full.risk")}
 									</Heading>
 								</Stack>
 
