@@ -31,7 +31,35 @@ export function Docs({
 			<DocsLayout
 				tree={tree}
 				themeSwitch={{ enabled: false }}
-				nav={{ title: 'excited.live' }}
+				nav={{
+					title: (
+						<span
+							style={{
+								display: 'inline-flex',
+								alignItems: 'center',
+								gap: 8,
+							}}
+						>
+							<img
+								src="/logo-mark.png"
+								alt="excited.live"
+								width={26}
+								height={26}
+								style={{ borderRadius: 999, display: 'block' }}
+							/>
+							<span
+								style={{
+									fontWeight: 600,
+									fontSize: 17,
+									letterSpacing: '-0.02em',
+									color: '#141413',
+								}}
+							>
+								excited<span style={{ color: '#CF4500' }}>.live</span>
+							</span>
+						</span>
+					),
+				}}
 			>
 				<DocsPage {...page}>{children}</DocsPage>
 			</DocsLayout>

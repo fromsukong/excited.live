@@ -11,7 +11,10 @@ const description =
 	<!-- ============ NAV ============ -->
 	<div class="nav-wrap">
 		<nav class="nav-pill" aria-label="Main">
-			<a class="nav-brand" href="/">excited<span class="brand-dot">.live</span></a>
+			<a class="nav-brand" href="/">
+				<img src="/logo-mark.png" alt="" width="28" height="28" />
+				<span>excited<span class="brand-dot">.live</span></span>
+			</a>
 			<div class="nav-links">
 				<a href="#what">
 					<span data-lang-en>What is it</span>
@@ -41,7 +44,40 @@ const description =
 
 	<!-- ============ HERO ============ -->
 	<header class="hero" id="waitlist">
-		<div class="ghost-mark" aria-hidden="true">ex!</div>
+		<div class="hero-graph" aria-hidden="true">
+			<svg viewBox="0 0 460 340">
+				<g class="grid">
+					<line x1="20" y1="70" x2="440" y2="70" />
+					<line x1="20" y1="145" x2="440" y2="145" />
+					<line x1="20" y1="220" x2="440" y2="220" />
+					<line x1="20" y1="295" x2="440" y2="295" />
+				</g>
+				<path
+					class="area"
+					d="M20 295 C 90 288, 150 262, 200 240 C 260 214, 300 175, 350 140 C 385 115, 415 85, 440 62 L440 295 Z"
+				/>
+				<path
+					class="line-proj"
+					d="M20 295 C 110 282, 200 262, 290 252 C 350 245, 405 240, 440 236"
+				/>
+				<path
+					class="line-main"
+					d="M20 295 C 90 288, 150 262, 200 240 C 260 214, 300 175, 350 140 C 385 115, 415 85, 440 62"
+				/>
+				<circle class="dot-halo" cx="440" cy="62" r="13" />
+				<circle class="dot" cx="440" cy="62" r="6" />
+				<text class="axis" x="20" y="322">2026</text>
+				<text class="axis" x="400" y="322">2036</text>
+			</svg>
+			<span class="hero-chip chip-goal">
+				<span data-lang-en>Buy a condo · 2031</span>
+				<span data-lang-th>ซื้อคอนโด · 2031</span>
+			</span>
+			<span class="hero-chip chip-reached">
+				<span data-lang-en>Goal reached ✓</span>
+				<span data-lang-th>ถึงเป้าหมาย ✓</span>
+			</span>
+		</div>
 		<div class="hero-inner">
 			<p class="eyebrow">
 				<span data-lang-en>Coming soon</span>
@@ -64,18 +100,18 @@ const description =
 			<div class="hero-perks">
 				<span class="perk-chip">
 					<span class="dot"></span>
-					<span data-lang-en>Early access</span>
-					<span data-lang-th>ลองใช้ก่อนใคร</span>
+					<span data-lang-en>Battle-tested math</span>
+					<span data-lang-th>คณิตที่พิสูจน์แล้ว</span>
 				</span>
 				<span class="perk-chip">
 					<span class="dot"></span>
-					<span data-lang-en>Special reward</span>
-					<span data-lang-th>ของรางวัลสุดพิเศษ</span>
+					<span data-lang-en>AI native</span>
+					<span data-lang-th>AI เนทีฟ</span>
 				</span>
 				<span class="perk-chip">
 					<span class="dot"></span>
-					<span data-lang-en>Priority support</span>
-					<span data-lang-th>ซัพพอร์ตก่อนใคร</span>
+					<span data-lang-en>Data safe</span>
+					<span data-lang-th>ข้อมูลปลอดภัย</span>
 				</span>
 			</div>
 			<WaitlistForm client:visible />
@@ -113,28 +149,28 @@ const description =
 				<div class="orbit-circle">
 					<span class="step-num">01</span>
 					<span class="step-title">
-						<span data-lang-en>Plan</span>
-						<span data-lang-th>วางแผน</span>
+						<span data-lang-en>Set goals</span>
+						<span data-lang-th>กำหนดเป้าหมาย</span>
 					</span>
-					<span class="satellite" aria-hidden="true">🧭</span>
+					<span class="satellite" aria-hidden="true">🎯</span>
 				</div>
 				<p class="orbit-caption">
-					<span data-lang-en>Tell us your life and money plan.</span>
-					<span data-lang-th>บอกแผนชีวิตและการเงินของคุณ</span>
+					<span data-lang-en>Tell us the life you want to live.</span>
+					<span data-lang-th>บอกเป้าหมายชีวิตที่คุณอยากได้</span>
 				</p>
 			</div>
 			<div class="orbit-item">
 				<div class="orbit-circle">
 					<span class="step-num">02</span>
 					<span class="step-title">
-						<span data-lang-en>Simulate</span>
-						<span data-lang-th>จำลอง</span>
+						<span data-lang-en>Weigh trade-offs</span>
+						<span data-lang-th>คำนวณ tradeoff</span>
 					</span>
-					<span class="satellite" aria-hidden="true">✨</span>
+					<span class="satellite" aria-hidden="true">⚖️</span>
 				</div>
 				<p class="orbit-caption">
-					<span data-lang-en>See years of your future in seconds.</span>
-					<span data-lang-th>เห็นอนาคตหลายปีในไม่กี่วินาที</span>
+					<span data-lang-en>See what each choice really costs.</span>
+					<span data-lang-th>เห็นต้นทุนจริงของทุกทางเลือก</span>
 				</p>
 			</div>
 			<div class="orbit-item">
@@ -147,8 +183,8 @@ const description =
 					<span class="satellite" aria-hidden="true">🌴</span>
 				</div>
 				<p class="orbit-caption">
-					<span data-lang-en>Make the call with confidence.</span>
-					<span data-lang-th>ตัดสินใจได้อย่างมั่นใจ</span>
+					<span data-lang-en>Go live it — AI keeps your plan on track.</span>
+					<span data-lang-th>ใช้ชีวิตจริง — ให้ AI ช่วยดูแลแผนให้</span>
 				</p>
 			</div>
 		</div>
@@ -213,6 +249,43 @@ const description =
 			</h2>
 			<WaitlistForm client:visible dark />
 
+			<div class="journey">
+				<p class="eyebrow">
+					<span data-lang-en>Follow the journey</span>
+					<span data-lang-th>ติดตามเส้นทางของเรา</span>
+				</p>
+				<div class="journey-links">
+					<a
+						class="journey-link is-live"
+						href="https://www.instagram.com/excited.live/"
+						rel="noopener noreferrer"
+					>
+						Instagram
+					</a>
+					<span class="journey-link is-soon">
+						YouTube
+						<em>
+							<span data-lang-en>soon</span>
+							<span data-lang-th>เร็ว ๆ นี้</span>
+						</em>
+					</span>
+					<span class="journey-link is-soon">
+						X
+						<em>
+							<span data-lang-en>soon</span>
+							<span data-lang-th>เร็ว ๆ นี้</span>
+						</em>
+					</span>
+					<span class="journey-link is-soon">
+						Threads
+						<em>
+							<span data-lang-en>soon</span>
+							<span data-lang-th>เร็ว ๆ นี้</span>
+						</em>
+					</span>
+				</div>
+			</div>
+
 			<div class="footer-cols">
 				<div class="footer-col">
 					<h4>
@@ -234,35 +307,12 @@ const description =
 				</div>
 				<div class="footer-col">
 					<h4>
-						<span data-lang-en>Company</span>
-						<span data-lang-th>บริษัท</span>
+						<span data-lang-en>Creator</span>
+						<span data-lang-th>ผู้สร้าง</span>
 					</h4>
 					<a href="https://fromsukong.com" rel="noopener noreferrer">FromSukong</a>
 					<a href="https://github.com/fromsukong/excited.live" rel="noopener noreferrer">
 						GitHub</a
-					>
-				</div>
-				<div class="footer-col">
-					<h4>
-						<span data-lang-en>Legal</span>
-						<span data-lang-th>ข้อกฎหมาย</span>
-					</h4>
-					<a href="/docs/privacy">
-						<span data-lang-en>Privacy Policy</span>
-						<span data-lang-th>นโยบายความเป็นส่วนตัว</span>
-					</a>
-					<a href="/docs/terms">
-						<span data-lang-en>Terms of Use</span>
-						<span data-lang-th>เงื่อนไขการใช้งาน</span>
-					</a>
-				</div>
-				<div class="footer-col">
-					<h4>
-						<span data-lang-en>Follow</span>
-						<span data-lang-th>ติดตาม</span>
-					</h4>
-					<a href="https://www.instagram.com/fromsukong/" rel="noopener noreferrer"
-						>Instagram</a
 					>
 				</div>
 			</div>
@@ -270,6 +320,16 @@ const description =
 			<div class="footer-bottom">
 				<span>© 2026 FromSukong · <span data-lang-en>Made in Bangkok</span>
 					<span data-lang-th>ทำในกรุงเทพฯ</span></span>
+				<span class="legal-links">
+					<a href="/docs/privacy">
+						<span data-lang-en>Privacy</span>
+						<span data-lang-th>ความเป็นส่วนตัว</span>
+					</a>
+					<a href="/docs/terms">
+						<span data-lang-en>Terms</span>
+						<span data-lang-th>เงื่อนไข</span>
+					</a>
+				</span>
 				<div class="lang-toggle" role="group" aria-label="Language">
 					<button type="button" data-set-lang="en">EN</button>
 					<button type="button" data-set-lang="th">ไทย</button>

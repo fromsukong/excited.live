@@ -31,7 +31,12 @@ const toc: TOCItemType[] = headings.map((heading) => ({
 	<title>{page.data.title}</title>
 	<meta name="description" content={page.data.description} />
 	<meta property="og:image" content={image} />
-	<a class="docs-back" href="/">← excited.live</a>
+	<a class="docs-back" href="/">
+		<img src="/logo-mark.png" alt="" width="22" height="22" />
+		<span>excited<span class="brand-dot">.live</span></span>
+		<span class="docs-back-sep">/</span>
+		<span class="docs-back-page">{page.data.title}</span>
+	</a>
 	<Docs
 		tree={source.getPageTree()}
 		pathname={Astro.url.pathname}
