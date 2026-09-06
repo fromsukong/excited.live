@@ -1,0 +1,295 @@
+---
+import Layout from '@/components/layout.astro';
+import WaitlistForm from '@/components/WaitlistForm';
+
+const title = 'excited.live — Plan the life you want to live';
+const description =
+	'Simulate your money and life plans before you live them. Tax, expenses, and future scenarios — free for everyone. Join the waitlist.';
+---
+
+<Layout title={title} description={description}>
+	<!-- ============ NAV ============ -->
+	<div class="nav-wrap">
+		<nav class="nav-pill" aria-label="Main">
+			<a class="nav-brand" href="/">excited<span class="brand-dot">.live</span></a>
+			<div class="nav-links">
+				<a href="#what">
+					<span data-lang-en>What is it</span>
+					<span data-lang-th>มันคืออะไร</span>
+				</a>
+				<a href="#perks">
+					<span data-lang-en>Why join</span>
+					<span data-lang-th>ทำไมต้องลง</span>
+				</a>
+				<a href="/docs">
+					<span data-lang-en>Docs</span>
+					<span data-lang-th>เอกสาร</span>
+				</a>
+			</div>
+			<div class="nav-actions">
+				<div class="lang-toggle" role="group" aria-label="Language">
+					<button type="button" data-set-lang="en">EN</button>
+					<button type="button" data-set-lang="th">ไทย</button>
+				</div>
+				<a class="btn-ink" href="#waitlist">
+					<span data-lang-en>Join waitlist</span>
+					<span data-lang-th>ลงทะเบียน</span>
+				</a>
+			</div>
+		</nav>
+	</div>
+
+	<!-- ============ HERO ============ -->
+	<header class="hero" id="waitlist">
+		<div class="ghost-mark" aria-hidden="true">ex!</div>
+		<div class="hero-inner">
+			<p class="eyebrow">
+				<span data-lang-en>Coming soon</span>
+				<span data-lang-th>เร็ว ๆ นี้</span>
+			</p>
+			<h1>
+				<span data-lang-en>Plan the life<br />you want to <span class="accent">live</span></span>
+				<span data-lang-th>วางแผนชีวิตแบบ<br />ที่คุณอยาก<span class="accent">ใช้ชีวิต</span></span>
+			</h1>
+			<p class="hero-sub">
+				<span data-lang-en>
+					Simulate your money and your plans before you live them — tax, expenses, and life
+					goals. Free for everyone.
+				</span>
+				<span data-lang-th>
+					จำลองการเงินและแผนชีวิตของคุณก่อนใช้จริง — ภาษี ค่าใช้จ่าย และเป้าหมายต่าง ๆ
+					ฟรีสำหรับทุกคน
+				</span>
+			</p>
+			<div class="hero-perks">
+				<span class="perk-chip">
+					<span class="dot"></span>
+					<span data-lang-en>Early access</span>
+					<span data-lang-th>ลองใช้ก่อนใคร</span>
+				</span>
+				<span class="perk-chip">
+					<span class="dot"></span>
+					<span data-lang-en>Special reward</span>
+					<span data-lang-th>ของรางวัลสุดพิเศษ</span>
+				</span>
+				<span class="perk-chip">
+					<span class="dot"></span>
+					<span data-lang-en>Priority support</span>
+					<span data-lang-th>ซัพพอร์ตก่อนใคร</span>
+				</span>
+			</div>
+			<WaitlistForm client:visible />
+		</div>
+	</header>
+
+	<!-- ============ WHAT IS IT ============ -->
+	<section class="section" id="what">
+		<div class="section-head">
+			<p class="eyebrow">
+				<span data-lang-en>What is excited.live</span>
+				<span data-lang-th>excited.live คืออะไร</span>
+			</p>
+			<h2>
+				<span data-lang-en>Simulate your life before you live it.</span>
+				<span data-lang-th>จำลองชีวิตก่อนใช้มันจริง</span>
+			</h2>
+			<p>
+				<span data-lang-en>
+					excited.live is a free financial simulation tool. Try real decisions — changing
+					jobs, buying a home, retiring early — and see the numbers before you commit.
+				</span>
+				<span data-lang-th>
+					excited.live เป็นเครื่องมือจำลองการเงินฟรี ลองการตัดสินใจจริง — เปลี่ยนงาน ซื้อบ้าน
+					เกษียณเร็ว — แล้วเห็นตัวเลขก่อนลงมือทำจริง
+				</span>
+			</p>
+		</div>
+
+		<div class="orbit-stage">
+			<svg class="orbit-svg" viewBox="0 0 1200 300" preserveAspectRatio="none" aria-hidden="true">
+				<path d="M 200 170 C 420 30, 780 30, 1000 170" />
+			</svg>
+			<div class="orbit-item">
+				<div class="orbit-circle">
+					<span class="step-num">01</span>
+					<span class="step-title">
+						<span data-lang-en>Plan</span>
+						<span data-lang-th>วางแผน</span>
+					</span>
+					<span class="satellite" aria-hidden="true">🧭</span>
+				</div>
+				<p class="orbit-caption">
+					<span data-lang-en>Tell us your life and money plan.</span>
+					<span data-lang-th>บอกแผนชีวิตและการเงินของคุณ</span>
+				</p>
+			</div>
+			<div class="orbit-item">
+				<div class="orbit-circle">
+					<span class="step-num">02</span>
+					<span class="step-title">
+						<span data-lang-en>Simulate</span>
+						<span data-lang-th>จำลอง</span>
+					</span>
+					<span class="satellite" aria-hidden="true">✨</span>
+				</div>
+				<p class="orbit-caption">
+					<span data-lang-en>See years of your future in seconds.</span>
+					<span data-lang-th>เห็นอนาคตหลายปีในไม่กี่วินาที</span>
+				</p>
+			</div>
+			<div class="orbit-item">
+				<div class="orbit-circle">
+					<span class="step-num">03</span>
+					<span class="step-title">
+						<span data-lang-en>Live</span>
+						<span data-lang-th>ใช้ชีวิต</span>
+					</span>
+					<span class="satellite" aria-hidden="true">🌴</span>
+				</div>
+				<p class="orbit-caption">
+					<span data-lang-en>Make the call with confidence.</span>
+					<span data-lang-th>ตัดสินใจได้อย่างมั่นใจ</span>
+				</p>
+			</div>
+		</div>
+	</section>
+
+	<!-- ============ WHY JOIN ============ -->
+	<section class="section" id="perks">
+		<div class="section-head">
+			<p class="eyebrow">
+				<span data-lang-en>Why join the waitlist</span>
+				<span data-lang-th>ทำไมต้องลงทะเบียน</span>
+			</p>
+			<h2>
+				<span data-lang-en>Be first in line when doors open.</span>
+				<span data-lang-th>เป็นคนแรก ๆ ที่ได้เข้าใช้</span>
+			</h2>
+		</div>
+
+		<div class="perk-cards">
+			<article class="perk-card">
+				<span class="perk-icon" aria-hidden="true">🚀</span>
+				<h3>
+					<span data-lang-en>Early access</span>
+					<span data-lang-th>ลองใช้ก่อนใคร</span>
+				</h3>
+				<p>
+					<span data-lang-en>Get your invite before the public launch.</span>
+					<span data-lang-th>ได้รับเชิญก่อนเปิดให้คนทั่วไปใช้</span>
+				</p>
+			</article>
+			<article class="perk-card">
+				<span class="perk-icon" aria-hidden="true">🎁</span>
+				<h3>
+					<span data-lang-en>Special reward</span>
+					<span data-lang-th>ของรางวัลสุดพิเศษ</span>
+				</h3>
+				<p>
+					<span data-lang-en>Founding members get a thank-you reward at launch.</span>
+					<span data-lang-th>ผู้ร่วมก่อตั้งได้ของขวัญขอบคุณตอนเปิดตัว</span>
+				</p>
+			</article>
+			<article class="perk-card">
+				<span class="perk-icon" aria-hidden="true">⭐</span>
+				<h3>
+					<span data-lang-en>Priority support</span>
+					<span data-lang-th>ซัพพอร์ตก่อนใคร</span>
+				</h3>
+				<p>
+					<span data-lang-en>Your questions jump the queue.</span>
+					<span data-lang-th>คำถามของคุณได้รับการตอบก่อน</span>
+				</p>
+			</article>
+		</div>
+	</section>
+
+	<!-- ============ FOOTER ============ -->
+	<footer class="footer">
+		<div class="footer-inner">
+			<h2>
+				<span data-lang-en>Ready to live the life you're excited about?</span>
+				<span data-lang-th>พร้อมใช้ชีวิตแบบที่คุณตั้งตารอแล้วหรือยัง?</span>
+			</h2>
+			<WaitlistForm client:visible dark />
+
+			<div class="footer-cols">
+				<div class="footer-col">
+					<h4>
+						<span data-lang-en>Product</span>
+						<span data-lang-th>ผลิตภัณฑ์</span>
+					</h4>
+					<a href="#what">
+						<span data-lang-en>What is it</span>
+						<span data-lang-th>มันคืออะไร</span>
+					</a>
+					<a href="#perks">
+						<span data-lang-en>Why join</span>
+						<span data-lang-th>ทำไมต้องลง</span>
+					</a>
+					<a href="/docs">
+						<span data-lang-en>Docs</span>
+						<span data-lang-th>เอกสาร</span>
+					</a>
+				</div>
+				<div class="footer-col">
+					<h4>
+						<span data-lang-en>Company</span>
+						<span data-lang-th>บริษัท</span>
+					</h4>
+					<a href="https://fromsukong.com" rel="noopener noreferrer">FromSukong</a>
+					<a href="https://github.com/fromsukong/excited.live" rel="noopener noreferrer">
+						GitHub</a
+					>
+				</div>
+				<div class="footer-col">
+					<h4>
+						<span data-lang-en>Legal</span>
+						<span data-lang-th>ข้อกฎหมาย</span>
+					</h4>
+					<a href="/docs/privacy">
+						<span data-lang-en>Privacy Policy</span>
+						<span data-lang-th>นโยบายความเป็นส่วนตัว</span>
+					</a>
+					<a href="/docs/terms">
+						<span data-lang-en>Terms of Use</span>
+						<span data-lang-th>เงื่อนไขการใช้งาน</span>
+					</a>
+				</div>
+				<div class="footer-col">
+					<h4>
+						<span data-lang-en>Follow</span>
+						<span data-lang-th>ติดตาม</span>
+					</h4>
+					<a href="https://www.instagram.com/fromsukong/" rel="noopener noreferrer"
+						>Instagram</a
+					>
+				</div>
+			</div>
+
+			<div class="footer-bottom">
+				<span>© 2026 FromSukong · <span data-lang-en>Made in Bangkok</span>
+					<span data-lang-th>ทำในกรุงเทพฯ</span></span>
+				<div class="lang-toggle" role="group" aria-label="Language">
+					<button type="button" data-set-lang="en">EN</button>
+					<button type="button" data-set-lang="th">ไทย</button>
+				</div>
+			</div>
+		</div>
+	</footer>
+
+	<script is:inline>
+		// Pure-CSS bilingual toggle: flips <html data-lang>, persists to localStorage.
+		document.addEventListener('click', function (event) {
+			const target = event.target.closest('[data-set-lang]');
+			if (!target) return;
+			const lang = target.getAttribute('data-set-lang');
+			document.documentElement.dataset.lang = lang;
+			try {
+				localStorage.setItem('exl-lang', lang);
+			} catch {
+				/* private mode — toggle still works for this page view */
+			}
+		});
+	</script>
+</Layout>
