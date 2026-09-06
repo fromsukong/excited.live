@@ -17,6 +17,76 @@ export const strings: Dictionary = {
 	"locale.en": { en: "EN", th: "EN" },
 	"locale.th": { en: "ไทย", th: "ไทย" },
 
+	// Old-layout chrome (kept per Prame — chart left, plan info right)
+	"plan.snapshotDate": { en: "Plan snapshot · this year", th: "ภาพรวมแผน · ปีนี้" },
+	"plan.heading.prefix": { en: "Your plan is", th: "แผนของคุณ" },
+	"plan.heading.status": { en: "on track", th: "กำลังไปได้ดี" },
+	"plan.heading.needsWork": { en: "needs attention", th: "ควรปรับ" },
+	"metric.netWorth": { en: "Net worth", th: "มูลค่าสุทธิ" },
+	"metric.cashFlow": { en: "Cash flow", th: "กระแสเงินสด" },
+	"period.all": { en: "All", th: "ทั้งหมด" },
+	"chart.aria.netWorth": { en: "Net worth projection chart", th: "แผนภูมิมูลค่าสุทธิ" },
+	"chart.aria.cashFlow": { en: "Cash flow projection chart", th: "แผนภูมิกระแสเงินสด" },
+	"a11y.chartMetric": { en: "Chart metric", th: "ตัวชี้วัดของแผนภูมิ" },
+	"a11y.chartPeriod": { en: "Chart period", th: "ช่วงเวลาของแผนภูมิ" },
+	"a11y.financialSnapshot": { en: "Financial snapshot", th: "ภาพรวมการเงิน" },
+	"a11y.planActions": { en: "Plan details", th: "รายละเอียดแผน" },
+
+	// Left column financial rows (engine-driven)
+	"metric.netWorthValue": { en: "Net Worth", th: "มูลค่าสุทธิ" },
+	"metric.changeInNetWorth": { en: "Change in Net Worth", th: "การเปลี่ยนแปลงมูลค่าสุทธิ" },
+	"metric.liquidNetWorth": { en: "Liquid Net Worth", th: "มูลค่าสุทธิสภาพคล่อง" },
+	"metric.withdrawals": { en: "Withdrawals", th: "เงินถอน" },
+	"metric.withdrawalRate": { en: "Withdrawal Rate", th: "อัตราการถอน" },
+	"metric.income": { en: "Income", th: "รายได้" },
+	"metric.taxableIncome": { en: "Taxable Income", th: "รายได้สุทธิที่ต้องเสียภาษี" },
+	"metric.taxes": { en: "Taxes", th: "ภาษี" },
+	"metric.effectiveTaxRate": { en: "Effective Tax Rate", th: "อัตราภาษีเฉลี่ย" },
+	"metric.spending": { en: "Spending", th: "การใช้จ่าย" },
+	"metric.expenses": { en: "Expenses", th: "ค่าใช้จ่าย" },
+	"metric.savingsRate": { en: "Savings Rate", th: "อัตราการออม" },
+	"metric.taxBalance": { en: "Tax Balance", th: "ยอดภาษีคงค้าง" },
+
+	// Right column — plan summary card
+	"plan.actions": { en: "Plan", th: "แผน" },
+	"plan.lastSyncedToday": { en: "Recomputed just now", th: "คำนวณใหม่เมื่อสักครู่" },
+	"plan.keepCurrent": { en: "Every input is live", th: "ทุกตัวเลขแก้ได้สด ๆ" },
+	"plan.summaryBody": {
+		en: "Edit any input below — the chart, your numbers, and this plan update instantly.",
+		th: "แก้ตัวเลขด้านล่างได้เลย กราฟ ตัวเลข และแผนจะอัปเดตทันที",
+	},
+
+	// Right column — info rows (engine answers)
+	"info.eyebrow": { en: "What the plan says", th: "แผนบอกอะไร" },
+	"info.heading": { en: "Your answers", th: "คำตอบของคุณ" },
+	"info.count": { en: "6 answers", th: "6 คำตอบ" },
+	"info.retirement.funded": { en: "Retirement", th: "เกษียณ" },
+	"info.retirement.short": { en: "Retirement", th: "เกษียณ" },
+	"info.retirement.left": { en: "funded · {amount} left at {year}", th: "พอ · เหลือ {amount} ปี {year}" },
+	"info.retirement.runsOut": { en: "runs out {year}", th: "เงินหมดปี {year}" },
+	"info.runsOut": { en: "Money runs out", th: "เงินหมดปี" },
+	"info.runsOut.desc.never": { en: "covers the whole plan", th: "พอตลอดทั้งแผน" },
+	"info.runsOut.desc.year": { en: "first short year", th: "ปีแรกที่เงินไม่พอ" },
+	"info.maxForever": { en: "Max forever spend", th: "ใช้ได้ตลอดไปสูงสุด" },
+	"info.maxForever.desc": { en: "per month, forever, from today", th: "ต่อเดือน ตลอดไป จากวันนี้" },
+	"info.optimizer": { en: "ThaiESG / RMF this year", th: "ThaiESG / RMF ปีนี้" },
+	"info.optimizer.desc": { en: "recommended · saves {tax} tax", th: "แนะนำ · ประหยัดภาษี {tax}" },
+	"info.paths": { en: "Fund vs taxable", th: "กองทุน vs เสียภาษี" },
+	"info.paths.desc.fund": { en: "{fund} wins by {gap}", th: "{fund} ได้เปรียบ {gap}" },
+	"info.paths.desc.taxable": { en: "taxable wins by {gap}", th: "เสียภาษี ได้เปรียบ {gap}" },
+	"info.goals": { en: "Goal checks", th: "ตรวจเป้าหมาย" },
+	"info.goals.desc.ok": { en: "{ok} of {total} goals on track", th: "{ok} จาก {total} เป้าหมายกำลังไปได้ดี" },
+	"info.goals.desc.none": { en: "no goals set yet", th: "ยังไม่มีเป้าหมาย" },
+	"info.export": { en: "Assumptions", th: "สมมติฐาน" },
+	"info.export.desc": { en: "TH 2026 tax · nominal averages · demo", th: "ภาษีไทย 2569 · ค่าเฉลี่ยระยะยาว · ตัวอย่าง" },
+
+	// Editor (inline section below the grid)
+	"editor.heading": { en: "Plan inputs", th: "ตัวเลขของแผน" },
+	"editor.desc": {
+		en: "Everything here is editable — add rows for each income or expense, with start/end years and growth.",
+		th: "แก้ได้ทุกช่อง เพิ่มแถวรายได้หรือรายจ่ายได้ พร้อมปีเริ่ม-จบ และการเติบโต",
+	},
+
 	// Sections
 	"section.inputs": { en: "Your plan", th: "แผนของคุณ" },
 	"section.inputs.desc": {
