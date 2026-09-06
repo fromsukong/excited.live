@@ -15,6 +15,7 @@
 		"@astryxdesign/theme-neutral": "^0.5.0",
 		"@excited-live/design-system": "workspace:*",
 		"@excited-live/i18n": "workspace:*",
+		"@excited-live/sim": "workspace:*",
 		"@excited-live/tax": "workspace:*",
 		"@tanstack/react-router": "^1.170.32",
 		"@tanstack/react-start": "^1.168.49",
