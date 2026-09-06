@@ -386,7 +386,9 @@ button {
   align-items: center;
   gap: 16px;
   min-height: 41px;
-  padding: 0 2px;
+  /* Horizontal inset so hover/selected pills never hug the text (plan-action
+     uses 12px; the tighter 10px suits this denser list). */
+  padding: 0 10px;
   border-bottom: 1px solid var(--color-border);
   color: var(--copy);
   text-align: left;
@@ -585,7 +587,10 @@ button {
   align-items: center;
   gap: 13px;
   min-height: 68px;
-  padding: 10px 7px 10px 0;
+  /* Roomy inset so the hover/selected pill clears the icon, text and arrow on
+     all sides instead of hugging them (0 left padding made the pill touch the
+     icon badge). */
+  padding: 10px 12px;
   border-bottom: 1px solid var(--color-border);
   color: var(--copy);
   text-align: left;
@@ -900,12 +905,6 @@ button {
     font-size: 13px !important;
   }
 
-  .financial-row.is-selected,
-  .financial-row:hover {
-    padding-right: 8px;
-    padding-left: 8px;
-  }
-
   .plan-summary-card__inner {
     min-height: 285px;
     padding: 24px 20px 25px;
@@ -972,7 +971,8 @@ button {
     grid-template-columns: 34px minmax(0, 1fr) 18px;
     gap: 10px;
     min-height: 63px;
-    padding: 9px 4px 9px 0;
+    /* Match the desktop pill inset (scaled down for the 640px layout). */
+    padding: 9px 10px;
   }
 
   .plan-action__icon {
