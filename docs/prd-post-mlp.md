@@ -16,7 +16,7 @@ Phase 3+. Trigger-based: nothing here starts until its trigger fires. Each item 
 
 ## 3. White-label for advisors (trigger: first advisor pilot committed)
 
-- Revenue phase: B2B2C — advisors/institutions pay for engagement, retention, trust. End users stay free.
+- Revenue phase: B2B2C — advisors/institutions pay for engagement, retention, trust. End users keep the free core app (self-serve revenue = one-time AI credits + seat packs, see [pricing.md](pricing.md)). Every repeat seat-pack buyer is a white-label sales lead.
 - Pilot scope defined with the first advisor: branding, advisor dashboard, client management, export.
 - Banks need vendor/contract/liability — service layer (hosting, updates, white-label setup), not code restriction.
 - Brand moat: Apache-2.0 lets anyone clone code, nobody may use the excited.live name/logo.
