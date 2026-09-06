@@ -526,7 +526,11 @@ function PlanInputs({
 									<NumberInput
 										label={t(`wallet.${id}`)}
 										isLabelHidden
-										value={percentMode ? plan[field][id] * 100 : plan[field][id]}
+										value={
+											percentMode
+												? Math.round(plan[field][id] * 100 * 100) / 100
+												: plan[field][id]
+										}
 										onChange={(value) => patchWallet(field, id, percentMode ? value / 100 : value)}
 										min={min}
 										max={max}
