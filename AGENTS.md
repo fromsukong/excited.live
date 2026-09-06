@@ -13,8 +13,7 @@ pnpm + turbo monorepo:
 - `packages/*` — pure logic engines (currently `packages/tax`), designed to be
   shared by the web app, a future mobile surface, MCP tools, and white-label builds
 
-Product context: free for end users; revenue comes from white-labeling for
-advisors and institutions. User-facing text is bilingual `{ en, th }`, EN first.
+Product context: core app free for end users; self-serve revenue via two one-time-pay SKUs (AI credits + advisor seat packs, see docs/pricing.md); white-label revenue later. User-facing text is bilingual `{ en, th }`, EN first.
 
 ## Non-negotiable rules
 
