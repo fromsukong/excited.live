@@ -119,3 +119,4 @@ The real product. Accounts, a 5-minute onboarding wizard, a life-story chart, in
 ## 9. Open Questions (MLP-relevant)
 
 - OQ-1: Auth method — email/password vs Google OAuth?
+- OQ-6: Monetization gate for AI (US-106) — per docs/pricing.md: AI features unlock after a one-time ฿500 credit pack OR verified-developer free AI. Open sub-questions: developer verification mechanism (GitHub account or equivalent — must resist fake verification from paying users), and the credit-purchase UX (manual PromptPay at launch).
