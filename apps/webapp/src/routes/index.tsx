@@ -18,7 +18,6 @@ import {
 	PresentationIcon,
 	SegmentedControl,
 	SegmentedControlItem,
-	SettingsIcon,
 	Stack,
 	Text,
 	TextInput,
@@ -68,7 +67,6 @@ function Home() {
 	const [horizon, setHorizon] = useState<HorizonKey>("30")
 	const [metric, setMetric] = useState<MetricKey>("metric.netWorth")
 	const [selectedMetricKey, setSelectedMetricKey] = useState<string>("metric.netWorthValue")
-	const [editorOpen, setEditorOpen] = useState(false)
 	const [selectedInfoKey, setSelectedInfoKey] = useState<string | null>(null)
 
 	const summary = useMemo(() => {
@@ -308,15 +306,7 @@ function Home() {
 											{t("metric.cashFlow")}
 										</PlainButton>
 									</Stack>
-									<Button
-										label={editorOpen ? t("accounts.connected") : t("accounts.connect")}
-										variant="ghost"
-										size="sm"
-										icon={<SettingsIcon />}
-										className={`portfolio-button ${editorOpen ? "is-connected" : ""}`}
-										onClick={() => setEditorOpen((current) => !current)}
-									/>
-									<Stack direction="horizontal" vAlign="center" role="group" aria-label={t("a11y.chartPeriod")} className="period-switch">
+								<Stack direction="horizontal" vAlign="center" role="group" aria-label={t("a11y.chartPeriod")} className="period-switch">
 										{HORIZONS.map((item) => (
 											<PlainButton
 												className={`period-switch__item ${horizon === item ? "is-active" : ""}`}
@@ -354,19 +344,8 @@ function Home() {
 										<Heading level={2}>{t("plan.keepCurrent")}</Heading>
 										<Text as="p" color="secondary">{t("plan.summaryBody")}</Text>
 									</Stack>
-									<Stack direction="horizontal" justify="start" vAlign="center" className="plan-summary-card__footer">
-										<Button
-											label={t("plan.primaryEdit")}
-											variant="primary"
-											size="md"
-											icon={<SettingsIcon />}
-											className="plan-primary-button"
-											onClick={() => setEditorOpen(true)}
-										/>
-										<Text color="secondary">{t("plan.selected", { row: selectedInfoKey ? t(selectedInfoKey) : t("plan.primaryEdit") })}</Text>
 									</Stack>
-								</Stack>
-							</Card>
+									</Card>
 
 							<Card className="actions-card" variant="transparent" padding={0}>
 								<Stack className="actions-card__inner">
@@ -393,30 +372,27 @@ function Home() {
 										<ArrowRightIcon aria-hidden="true" width={17} height={17} />
 									</PlainButton>
 									<Text size="sm" color="secondary" className="assumptions-note">{t("info.export.desc")}</Text>
-								</Stack>
-							</Card>
-						</Stack>
-					</Grid>
+									</Stack>
+									</Card>
+									</Stack>
+									</Grid>
 
-					{editorOpen ? (
-						<PlanEditor
-							plan={plan}
-							setPlan={setPlan}
-							patchRow={patchRow}
-							addRow={addRow}
-							removeRow={removeRow}
-							patchWallet={patchWallet}
-							onClose={() => setEditorOpen(false)}
-							t={t}
-						/>
-					) : null}
-				</Stack>
-			</Stack>
-		</Theme>
-	)
-}
+									<PlanEditor
+									plan={plan}
+									setPlan={setPlan}
+									patchRow={patchRow}
+									addRow={addRow}
+									removeRow={removeRow}
+									patchWallet={patchWallet}
+									t={t}
+									/>
+									</Stack>
+									</Stack>
+									</Theme>
+									)
+									}
 
-function FinancialMetricRow({
+									function FinancialMetricRow({
 	metric,
 	isSelected,
 	onSelect,
@@ -477,7 +453,6 @@ function PlanEditor({
 	addRow,
 	removeRow,
 	patchWallet,
-	onClose,
 	t,
 }: {
 	plan: PlanInput
@@ -486,18 +461,14 @@ function PlanEditor({
 	addRow: (kind: "incomes" | "expenses") => void
 	removeRow: (kind: "incomes" | "expenses", id: string) => void
 	patchWallet: (field: "savingsSplit" | "walletRates" | "startingWallets", id: WalletId, value: number) => void
-	onClose: () => void
 	t: (key: string, vars?: Record<string, string>) => string
 }) {
 	return (
 		<Card padding={3} className="plan-editor">
 			<Stack gap={3}>
-				<Stack direction="horizontal" justify="between" align="center">
-					<Stack gap={0.5}>
-						<Heading level={2}>{t("editor.heading")}</Heading>
-						<Text color="secondary">{t("editor.desc")}</Text>
-					</Stack>
-					<Button label={t("accounts.connected")} variant="secondary" size="sm" onClick={onClose} />
+				<Stack gap={0.5}>
+					<Heading level={2}>{t("editor.heading")}</Heading>
+					<Text color="secondary">{t("editor.desc")}</Text>
 				</Stack>
 
 				<Grid columns={4} gap={2}>
