@@ -66,6 +66,7 @@ export const strings: Dictionary = {
 	"info.retirement.left": { en: "{amount} left at {year}", th: "เหลือ {amount} ถึงปี {year}" },
 	"info.retirement.runsOut": { en: "money runs out {year}", th: "เงินหมดปี {year}" },
 	"info.runsOut": { en: "Money runs out", th: "เงินหมดปี" },
+	"info.runsOut.never": { en: "never", th: "ไม่หมด" },
 	"info.runsOut.desc.never": { en: "covers the whole plan", th: "พอตลอดทั้งแผน" },
 	"info.runsOut.desc.year": { en: "first short year", th: "ปีแรกที่เงินไม่พอ" },
 	"info.maxForever": { en: "Max forever spend", th: "ใช้ได้ตลอดไปสูงสุด" },

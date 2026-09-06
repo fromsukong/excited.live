@@ -176,7 +176,7 @@ function Home() {
 				labelKey: "info.runsOut",
 				value:
 					s.runsOutYear === null
-						? t("info.runsOut.desc.never")
+						? t("info.runsOut.never")
 						: String(s.runsOutYear),
 				descKey: s.runsOutYear === null ? "info.runsOut.desc.never" : "info.runsOut.desc.year",
 				descVars: { year: String(s.runsOutYear ?? "") },
@@ -186,9 +186,9 @@ function Home() {
 				labelKey: "info.goals",
 				value:
 					s.goals.length === 0
-						? t("info.goals.desc.none")
-						: t("info.goals.desc.ok", { ok: String(goalsOk), total: String(s.goals.length) }),
-				descKey: "info.goals.sub",
+						? "—"
+						: `${goalsOk}/${String(s.goals.length)}`,
+				descKey: s.goals.length === 0 ? "info.goals.desc.none" : "info.goals.sub",
 				descVars: { ok: String(goalsOk), short: String(goalsShort) },
 				Icon: BookmarkIcon,
 			},
