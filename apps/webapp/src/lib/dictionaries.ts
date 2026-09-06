@@ -163,6 +163,10 @@ export const strings: Dictionary = {
 		th: "สมมติฐาน: ภาษีไทย 2569 ค่าเฉลี่ยระยะยาว ถอน ThaiESG/RMF ไม่เสียภาษี ตัวอย่างเพื่อทดลอง",
 	},
 	"a11y.locale": { en: "Language", th: "ภาษา" },
+	"a11y.leftTabs": { en: "Panel view", th: "มุมมองแผง" },
+	"a11y.planInputs": { en: "Plan inputs", th: "ตัวเลขของแผน" },
+	"tab.financials": { en: "By the numbers", th: "ตัวเลข" },
+	"tab.answers": { en: "What the plan says", th: "สิ่งที่แผนบอก" },
 	"a11y.netWorthChart": { en: "Net worth projection chart", th: "แผนภูมิมูลค่าสุทธิ" },
 }
 

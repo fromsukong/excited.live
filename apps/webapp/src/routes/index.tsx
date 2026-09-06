@@ -1,13 +1,11 @@
 import { useMemo, useState, type ComponentType, type SVGProps } from "react"
 import {
-	Badge,
 	BookmarkIcon,
 	Button,
 	CalendarIcon,
 	Card,
 	ChartIcon,
 	CompassIcon,
-	FeyMark,
 	Grid,
 	Heading,
 	Img,
@@ -66,6 +64,7 @@ function Home() {
 	const [horizon, setHorizon] = useState<HorizonKey>("30")
 	const [metric, setMetric] = useState<MetricKey>("metric.netWorth")
 	const [selectedMetricKey, setSelectedMetricKey] = useState<string>("metric.netWorthValue")
+	const [leftTab, setLeftTab] = useState<"financials" | "answers">("financials")
 
 	const summary = useMemo(() => {
 		try {
@@ -318,54 +317,47 @@ function Home() {
 									</Stack>
 								</Stack>
 
-								<Stack className="financial-list" aria-label={t("a11y.financialSnapshot")}>
-									{financialMetrics.map((item) => (
-										<FinancialMetricRow
-											key={item.key}
-											metric={item}
-											isSelected={selectedMetricKey === item.key}
-											onSelect={() => setSelectedMetricKey(item.key)}
-										/>
-									))}
+								<Stack direction="horizontal" vAlign="center" role="group" aria-label={t("a11y.leftTabs")} className="left-tab-switch">
+									<PlainButton
+										className={`left-tab-switch__item ${leftTab === "financials" ? "is-active" : ""}`}
+										aria-pressed={leftTab === "financials"}
+										onClick={() => setLeftTab("financials")}
+									>
+										{t("tab.financials")}
+									</PlainButton>
+									<PlainButton
+										className={`left-tab-switch__item ${leftTab === "answers" ? "is-active" : ""}`}
+										aria-pressed={leftTab === "answers"}
+										onClick={() => setLeftTab("answers")}
+									>
+										{t("tab.answers")}
+									</PlainButton>
 								</Stack>
-							</Stack>
-						</Card>
 
-						<Stack as="section" aria-label={t("a11y.planActions")} className="plan-column">
-							<Card className="plan-summary-card" variant="transparent" padding={0}>
-								<Stack className="plan-summary-card__inner">
-									<Stack direction="horizontal" justify="between" vAlign="center" className="plan-summary-card__meta">
-										<Badge label={t("plan.actions")} variant="neutral" icon={<FeyMark size={14} />} className="plan-badge" />
-										<Text color="secondary" className="plan-summary-card__timestamp">{t("plan.lastSyncedToday")}</Text>
+								{leftTab === "financials" ? (
+									<Stack className="financial-list" aria-label={t("a11y.financialSnapshot")}>
+										{financialMetrics.map((item) => (
+											<FinancialMetricRow
+												key={item.key}
+												metric={item}
+												isSelected={selectedMetricKey === item.key}
+												onSelect={() => setSelectedMetricKey(item.key)}
+											/>
+										))}
 									</Stack>
-									<Stack className="plan-summary-card__body">
-										<Heading level={2}>{t("plan.keepCurrent")}</Heading>
-										<Text as="p" color="secondary">{t("plan.summaryBody")}</Text>
-									</Stack>
-									</Stack>
-									</Card>
-
-							<Card className="actions-card" variant="transparent" padding={0}>
-								<Stack className="actions-card__inner">
-									<Stack direction="horizontal" justify="between" vAlign="start" className="actions-card__heading">
-										<Stack>
-											<Text color="secondary" weight="bold" className="actions-card__eyebrow">{t("info.eyebrow")}</Text>
-											<Heading level={2}>{t("info.heading")}</Heading>
-										</Stack>
-										<Text color="secondary" className="actions-card__count">{t("info.count")}</Text>
-									</Stack>
-									<Stack className="plan-actions-list">
+								) : (
+									<Stack className="plan-actions-list" aria-label={t("a11y.planActions")}>
 										{planInfos.map((info) => (
 											<PlanInfoRow key={info.labelKey} info={info} />
 										))}
+										<Text size="sm" color="secondary" className="assumptions-note">{t("info.export.desc")}</Text>
 									</Stack>
-									<Text size="sm" color="secondary" className="assumptions-note">{t("info.export.desc")}</Text>
-									</Stack>
-									</Card>
-									</Stack>
-									</Grid>
+								)}
+								</Stack>
+								</Card>
 
-									<PlanEditor
+								<Stack as="section" aria-label={t("a11y.planInputs")} className="plan-column">
+								<PlanInputs
 									plan={plan}
 									setPlan={setPlan}
 									patchRow={patchRow}
@@ -373,12 +365,14 @@ function Home() {
 									removeRow={removeRow}
 									patchWallet={patchWallet}
 									t={t}
-									/>
-									</Stack>
-									</Stack>
-									</Theme>
-									)
-									}
+								/>
+								</Stack>
+								</Grid>
+								</Stack>
+								</Stack>
+								</Theme>
+								)
+								}
 
 									function FinancialMetricRow({
 	metric,
@@ -425,8 +419,8 @@ function PlanInfoRow({ info }: { info: PlanInfo }) {
 	)
 }
 
-/** Full-width plan editor below the dashboard grid (toggle via Edit plan). */
-function PlanEditor({
+/** Right-column action inputs: every section inline and always visible. */
+function PlanInputs({
 	plan,
 	setPlan,
 	patchRow,

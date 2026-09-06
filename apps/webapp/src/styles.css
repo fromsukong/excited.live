@@ -1045,3 +1045,38 @@ button {
 .assumptions-note {
   margin-top: 8px;
 }
+
+/* Left panel tabs: By the numbers / What the plan says (same look as the
+   metric switch, placed under the chart toolbar). */
+.left-tab-switch {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.left-tab-switch__item {
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--copy-muted);
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+
+.left-tab-switch__item:hover {
+  color: var(--copy);
+}
+
+.left-tab-switch__item.is-active {
+  color: var(--copy);
+  background: var(--panel-bg);
+  border-color: var(--panel-border);
+}
+
+/* The answers list inside the tab reuses plan-action rows without hover. */
+.plan-actions-list .plan-action--static {
+  cursor: default;
+}
