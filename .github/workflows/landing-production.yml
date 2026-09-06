@@ -1,0 +1,36 @@
+name: Landing Deploy Production
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: landing-production
+  cancel-in-progress: true
+
+env:
+  WRANGLER_VERSION: "4.127.1"
+
+jobs:
+  production:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 10.12.0
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Build landingpage
+        working-directory: apps/landingpage
+        run: pnpm exec turbo run build --filter=@excited-live/landingpage
+      - name: Deploy production
+        working-directory: apps/landingpage
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          npx --yes wrangler@${{ env.WRANGLER_VERSION }} pages project create excited-live-landing --production-branch main || true
+          npx --yes wrangler@${{ env.WRANGLER_VERSION }} pages deploy dist --project-name=excited-live-landing --branch=main --commit-dirty=true

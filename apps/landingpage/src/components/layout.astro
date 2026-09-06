@@ -1,0 +1,51 @@
+---
+import { ClientRouter } from 'astro:transitions';
+import '../styles/global.css';
+
+interface Props {
+	title?: string;
+	description?: string;
+}
+
+const {
+	title = 'excited.live — Plan the life you want to live',
+	description =
+		'Simulate your money and life plans before you live them. Tax, expenses, and future scenarios — free for everyone. Join the waitlist.',
+} = Astro.props;
+---
+
+<!doctype html>
+<html lang="en" data-theme="light" data-lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>{title}</title>
+		<meta name="description" content={description} />
+		<meta name="theme-color" content="#F3F0EE" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+		<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link
+			href="https://fonts.googleapis.com/css2?family=Sofia+Sans:wght@400;450;500;600;700&display=swap"
+			rel="stylesheet"
+		/>
+		<script is:inline>
+			// Restore language before first paint (EN first per repo rule).
+			(() => {
+				try {
+					const saved = localStorage.getItem('exl-lang');
+					document.documentElement.dataset.lang =
+						saved === 'th' || saved === 'en' ? saved : 'en';
+				} catch {
+					document.documentElement.dataset.lang = 'en';
+				}
+			})();
+		</script>
+		<ClientRouter />
+	</head>
+	<body>
+		<slot />
+	</body>
+</html>

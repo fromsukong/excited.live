@@ -55,11 +55,13 @@ export default tseslint.config(
 		ignores: [
 			"**/node_modules/**",
 			"**/dist/**",
+			"**/.astro/**",
 			"**/.turbo/**",
 			"**/.output/**",
 			"**/.tanstack/**",
 			"**/.verify/**",
 			"**/routeTree.gen.ts",
+			"**/*.cjs",
 		],
 	},
 	js.configs.recommended,

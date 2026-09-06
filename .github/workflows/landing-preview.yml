@@ -1,0 +1,69 @@
+name: Landing PR Previews
+
+on:
+  pull_request:
+    paths:
+      - "apps/landingpage/**"
+      - "pnpm-lock.yaml"
+      - "turbo.json"
+      - ".github/workflows/landing-*.yml"
+
+concurrency:
+  group: landing-preview-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+env:
+  WRANGLER_VERSION: "4.127.1"
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 10.12.0
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Build landingpage
+        working-directory: apps/landingpage
+        run: pnpm exec turbo run build --filter=@excited-live/landingpage
+      - name: Deploy preview
+        working-directory: apps/landingpage
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          PR_HEAD_REF: ${{ github.head_ref }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          SANITIZED_BRANCH="$(python3 - <<'PY'
+          import os, re
+          b = os.environ.get('PR_HEAD_REF', '')
+          s = re.sub('[A-Z]', lambda m: m.group(0).lower(), b)
+          s = re.sub('[^a-z0-9-]', '-', s).strip('-')[:23].strip('-')
+          print(s)
+          PY
+          )"
+          ALIAS="${SANITIZED_BRANCH:-pr}"
+          npx --yes wrangler@${{ env.WRANGLER_VERSION }} pages project create excited-live-landing-preview --production-branch main || true
+          npx --yes wrangler@${{ env.WRANGLER_VERSION }} pages deploy dist --project-name=excited-live-landing-preview --branch="$ALIAS" --commit-dirty=true
+          echo "Preview: https://${ALIAS}.excited-live-landing-preview.pages.dev"
+      - name: Comment preview URL
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_HEAD_REF: ${{ github.head_ref }}
+        run: |
+          SANITIZED_BRANCH="$(python3 - <<'PY'
+          import os, re
+          b = os.environ.get('PR_HEAD_REF', '')
+          s = re.sub('[A-Z]', lambda m: m.group(0).lower(), b)
+          s = re.sub('[^a-z0-9-]', '-', s).strip('-')[:23].strip('-')
+          print(s)
+          PY
+          )"
+          URL="https://${SANITIZED_BRANCH:-pr}.excited-live-landing-preview.pages.dev"
+          gh pr comment "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --body "🚀 Landing preview: $URL" || true
