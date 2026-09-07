@@ -62,9 +62,9 @@ The real product. Accounts, a 5-minute onboarding wizard, a life-story chart, in
 ### US-106: AI / MCP surface
 **Description:** As an AI agent, I run trial simulations via MCP and propose plan changes; the user accepts on the web.
 **Acceptance Criteria:**
-- [ ] Free trial: every new account gets a 7-day free trial with full product access (trial credit entitlement TBD, docs/pricing.md Revision 3 Open decision 2). At launch, trials are activated manually (PromptPay era)
-- [ ] Subscription billing: $99/year gates the whole app, AI included — 30,000 credits/month, unused credits roll over up to a 100,000 cap; top-up $9.99 = 30,000 credits (exempt from the cap); AI billing consumes the user's credit balance, metered per model; no BYOK option
-- [ ] MCP metering: MCP tool calls consume credits at a discounted rate vs. the web app (multiplier TBD, docs/pricing.md Revision 3)
+- [ ] Free trial: every new account gets a 7-day free trial with full product access (one trial per person, assumed; docs/pricing.md Revision 3). At launch, trials are activated manually (PromptPay era)
+- [ ] Subscription billing: $109/year gates the whole app; personal AI included and unmetered across web + MCP ("unlimited", fair-use policy TBD); no BYOK on personal
+- [ ] Advisor tier (Phase 3 surface): $59/month or $599/year; advisor AI via BYOK or credit packs ($9.99 = 30,000 credits); 100,000 tokens/month allowance (clarify — docs/pricing.md Revision 3 Open decision 2); 5 client seats + unlimited 30-day trial clients, +$9.99/mo per extra seat
 - [ ] MCP trial simulation endpoint (read-only compute)
 - [ ] Proposal = suggested diff; applying requires web acceptance (US-103 flow)
 - [ ] AI assist helps users maintain the complex system (explain, suggest, never auto-apply)
@@ -90,7 +90,7 @@ The real product. Accounts, a 5-minute onboarding wizard, a life-story chart, in
 
 ## 4. Functional Requirements
 
-- FR-10: Accounts + saved plans; onboarding wizard; life-story chart; registry-driven editing; proposal accept/reject on web; scenario toggles; what-if sliders; MCP trial-sim; AI billing ($99/yr subscription credits + $9.99 top-ups, docs/pricing.md Revision 3); TH-only tax (US hidden); EN/TH.
+- FR-10: Accounts + saved plans; onboarding wizard; life-story chart; registry-driven editing; proposal accept/reject on web; scenario toggles; what-if sliders; MCP trial-sim; AI billing ($109/yr unlimited personal; advisor BYOK/credits, docs/pricing.md Revision 3); TH-only tax (US hidden); EN/TH.
 - FR-11: Engines stay pure TS (no network/DOM/date); sheet tabs port 1:1 to app modules; plan-service is the single backend boundary.
 - FR-12: Wizard ships before polish on other lovable features.
 
@@ -122,4 +122,4 @@ The real product. Accounts, a 5-minute onboarding wizard, a life-story chart, in
 ## 9. Open Questions (MLP-relevant)
 
 - OQ-1: Auth method — email/password vs Google OAuth?
-- OQ-6 (RESOLVED 2026-09-06 Rev 2; superseded 2026-09-07 by Revision 3): AI monetization is a $99/year subscription with AI included — 30,000 credits/month (100,000 accumulation cap), $9.99/30,000 top-ups, 7-day free trial, no BYOK. Purchase UX at launch: manual PromptPay activation.
+- OQ-6 (RESOLVED 2026-09-06 Rev 2; superseded 2026-09-07 by Revision 3): AI monetization is a $109/year subscription — personal AI unlimited (fair-use TBD), 7-day free trial, no BYOK on personal; Advisor tier $59/mo or $599/yr with AI via BYOK or $9.99/30k credit packs. Purchase UX at launch: manual PromptPay activation.
