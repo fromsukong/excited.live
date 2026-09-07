@@ -548,11 +548,26 @@ html[data-lang='th'] .lang-toggle [data-set-lang='th'] {
 
 	.waitlist-row {
 		flex-direction: column;
-		border-radius: var(--panel-radius);
+		gap: 12px;
+		background: transparent;
+		border: 0;
+		padding: 0;
+		border-radius: 0;
+		box-shadow: none;
+	}
+
+	.waitlist-row input {
+		background: var(--white);
+		border: 1.5px solid var(--ink);
+		border-radius: 28px;
+		padding: 14px 18px;
+		min-height: 52px;
+		box-shadow: var(--shadow-nav);
 	}
 
 	.waitlist-row .btn-ink {
 		width: 100%;
+		min-height: 52px;
 	}
 }
 
