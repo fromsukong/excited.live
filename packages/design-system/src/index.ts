@@ -29,6 +29,7 @@ export {
 export {
 	SvgIcon,
 	FeyMark,
+	ChatIcon,
 	MoonIcon,
 	SunIcon,
 	LinkIcon,
