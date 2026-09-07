@@ -11,7 +11,7 @@ Motto: "(I am) excited to live". FromSukong content funnels attention to excited
 1. [PRD — MVP (Google Sheet)](prd-mvp.md) — proves the math and UX with pure formulas. The sheet IS the spec: every tab ports 1:1 into the app later.
 2. [PRD — MLP (Web App)](prd-mlp.md) — the Minimum Lovable Product: accounts, wizard, life-story chart, sliders, scenario toggles, AI/MCP.
 3. [PRD — Post-MLP](prd-post-mlp.md) — trigger-based backlog: mobile, white-label, US tax, exit-tax realism.
-4. [Pricing](pricing.md) — $99/year subscription (AI included, monthly credits + top-ups, 7-day free trial); advisor seats pending re-decision.
+4. [Pricing](pricing.md) — $99/year subscription (whole app gated, AI included, 7-day free trial); Advisor tier $499/yr or $49/mo (5 client seats + unlimited 30-day trial clients).
 
 ## Principles shared by every phase
 

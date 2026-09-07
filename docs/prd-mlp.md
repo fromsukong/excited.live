@@ -62,8 +62,8 @@ The real product. Accounts, a 5-minute onboarding wizard, a life-story chart, in
 ### US-106: AI / MCP surface
 **Description:** As an AI agent, I run trial simulations via MCP and propose plan changes; the user accepts on the web.
 **Acceptance Criteria:**
-- [ ] Free trial: every new account gets a 7-day free trial with full product access (trial credit entitlement TBD, docs/pricing.md Revision 3 open decision 8). At launch, trials are activated manually (PromptPay era)
-- [ ] Subscription billing: $99/year with AI included — 30,000 credits/month, unused credits roll over up to a 100,000 cap; top-up $9.99 = 30,000 credits; AI billing consumes the user's credit balance, metered per model; no BYOK option
+- [ ] Free trial: every new account gets a 7-day free trial with full product access (trial credit entitlement TBD, docs/pricing.md Revision 3 Open decision 2). At launch, trials are activated manually (PromptPay era)
+- [ ] Subscription billing: $99/year gates the whole app, AI included — 30,000 credits/month, unused credits roll over up to a 100,000 cap; top-up $9.99 = 30,000 credits (exempt from the cap); AI billing consumes the user's credit balance, metered per model; no BYOK option
 - [ ] MCP metering: MCP tool calls consume credits at a discounted rate vs. the web app (multiplier TBD, docs/pricing.md Revision 3)
 - [ ] MCP trial simulation endpoint (read-only compute)
 - [ ] Proposal = suggested diff; applying requires web acceptance (US-103 flow)
