@@ -13,7 +13,7 @@ pnpm + turbo monorepo:
 - `packages/*` — pure logic engines (currently `packages/tax`), designed to be
   shared by the web app, a future mobile surface, MCP tools, and white-label builds
 
-Product context: core app free for end users; AI free to start (1M starter tokens at signup) then two one-time-pay SKUs (฿500 AI credit packs + advisor seat packs, see docs/pricing.md); white-label revenue later. User-facing text is bilingual `{ en, th }`, EN first.
+Product context: $99/year subscription with AI included (30,000 credits/month, 100,000 accumulation cap; $9.99/30k top-ups; 7-day free trial; no BYOK — see docs/pricing.md Revision 3); white-label revenue later. User-facing text is bilingual `{ en, th }`, EN first.
 
 ## Non-negotiable rules
 
