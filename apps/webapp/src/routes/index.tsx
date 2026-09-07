@@ -450,7 +450,9 @@ function PlanInputs({
 			<Card padding={3} className="input-section">
 				<Stack gap={2}>
 					<Heading level={3}>{t("section.inputs")}</Heading>
-					<Grid columns={4} gap={2}>
+					{/* Responsive: 4-up on wide desktops, 2-up on phones (min-width floor
+					    keeps 1fr tracks from being forced wider by input min-content). */}
+					<Grid columns={{ minWidth: 140, max: 4 }} gap={2}>
 						<NumberInput
 							label={t("input.startYear")}
 							value={plan.startYear}
@@ -525,7 +527,9 @@ function PlanInputs({
 			<Card padding={3} className="input-section">
 				<Stack gap={2}>
 					<Heading level={3}>{t("wallets.heading")}</Heading>
-					<Grid columns={3} gap={3}>
+					{/* Responsive: 3-up on wide desktops, stacks on narrow cards —
+					    wallet label is a fixed 140px span. */}
+					<Grid columns={{ minWidth: 190, max: 3 }} gap={3}>
 					{(
 						[
 							["wallets.split", "savingsSplit", "%", 0, 100, 5, true],
@@ -662,7 +666,10 @@ function PeriodEditor({
 			</Stack>
 			{rows.map((row) => (
 				<Card key={row.id} padding={2} variant="muted">
-					<Grid columns={showDeductible ? 6 : 5} gap={1.5}>
+						{/* Responsive: 5/6-up on wide desktops, wraps to fewer columns on
+						    narrow cards so month+year pickers never overflow (min-content
+						    of a picker row is ~200px). */}
+						<Grid columns={{ minWidth: showDeductible ? 150 : 185, max: showDeductible ? 6 : 5 }} gap={1.5}>
 						<TextInput
 							label={t("row.label")}
 							value={row.label}
