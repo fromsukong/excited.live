@@ -30,10 +30,10 @@ const description =
 				</a>
 			</div>
 			<div class="nav-actions">
-				<div class="lang-toggle" role="group" aria-label="Language">
-					<button type="button" data-set-lang="en">EN</button>
-					<button type="button" data-set-lang="th">ไทย</button>
-				</div>
+				<select class="lang-select" aria-label="Language">
+					<option value="en">🇬🇧 English</option>
+					<option value="th">🇹🇭 ไทย</option>
+				</select>
 				<a class="btn-ink" href="#waitlist">
 					<span data-lang-en>Join waitlist</span>
 					<span data-lang-th>ลงทะเบียน</span>
@@ -330,16 +330,22 @@ const description =
 						<span data-lang-th>เงื่อนไข</span>
 					</a>
 				</span>
-				<div class="lang-toggle" role="group" aria-label="Language">
-					<button type="button" data-set-lang="en">EN</button>
-					<button type="button" data-set-lang="th">ไทย</button>
-				</div>
+				<select class="lang-select" aria-label="Language">
+					<option value="en">🇬🇧 English</option>
+					<option value="th">🇹🇭 ไทย</option>
+				</select>
 			</div>
 		</div>
 	</footer>
 
-	<script is:inline>
+	<script is:inline data-astro-rerun>
 		// Pure-CSS bilingual toggle: flips <html data-lang>, persists to localStorage.
+		function syncLangSelects() {
+			const lang = document.documentElement.dataset.lang;
+			document.querySelectorAll('select.lang-select').forEach((s) => {
+				s.value = lang;
+			});
+		}
 		document.addEventListener('click', function (event) {
 			const target = event.target.closest('[data-set-lang]');
 			if (!target) return;
@@ -351,5 +357,16 @@ const description =
 				/* private mode — toggle still works for this page view */
 			}
 		});
+		document.addEventListener('change', function (event) {
+			const select = event.target.closest('select.lang-select');
+			if (!select) return;
+			document.documentElement.dataset.lang = select.value;
+			try {
+				localStorage.setItem('exl-lang', select.value);
+			} catch {
+				/* private mode — toggle still works for this page view */
+			}
+		});
+		syncLangSelects();
 	</script>
 </Layout>
