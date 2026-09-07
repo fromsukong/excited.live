@@ -175,7 +175,6 @@ export const strings: Dictionary = {
 
 	// Bottom dock — quick actions pinned to the screen edge (mobile bottom,
 	// desktop bottom of the right column) with the chat launcher always open.
-	"dock.aria": { en: "Quick actions", th: "การทำงานด่วน" },
 	"dock.chat": { en: "Chat", th: "แชท" },
 	"dock.addIncome": { en: "+ Income", th: "+ รายได้" },
 	"dock.addExpense": { en: "+ Expense", th: "+ รายจ่าย" },

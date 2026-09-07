@@ -789,7 +789,8 @@ button {
     overflow: visible;
   }
 
-  /* Keep the last input rows reachable above the fixed dock + chat panel. */
+  /* Keep the last input rows reachable above the fixed dock. (The open chat
+     panel is a one-tap-dismiss overlay that may cover them — deliberate.) */
   .plan-column::after {
     content: "";
     display: block;
@@ -1122,9 +1123,9 @@ button {
  * ────────────────────────────────────────────────────────────────────── */
 .dock {
   position: fixed;
-  right: 12px;
+  right: max(12px, env(safe-area-inset-right, 0px));
   bottom: calc(10px + env(safe-area-inset-bottom, 0px));
-  left: 12px;
+  left: max(12px, env(safe-area-inset-left, 0px));
   z-index: 60;
   display: flex;
   gap: 6px;
@@ -1196,9 +1197,9 @@ button {
 /* Floating chat panel (mock) — sits just above the dock. */
 .chat-panel {
   position: fixed;
-  right: 12px;
+  right: max(12px, env(safe-area-inset-right, 0px));
   bottom: calc(70px + env(safe-area-inset-bottom, 0px));
-  left: 12px;
+  left: max(12px, env(safe-area-inset-left, 0px));
   z-index: 55;
   max-height: min(58vh, 430px);
   border: 1px solid var(--panel-border);
