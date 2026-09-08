@@ -60,6 +60,21 @@ CI runs Node 22; pnpm 10 is pinned via the `packageManager` field.
 - If you find the checkout sitting on someone else's branch, leave it alone —
   create your own worktree/branch from `origin/main`.
 
+## Working with Antigravity CLI (`agy`)
+
+Some agent sessions here run headless via `agy -p "<task>"` (Antigravity CLI)
+as the code executor, with an orchestrator (Hermes/OpenCode) writing the spec
+and reviewing the diff. If you ARE the agy session: minimizing your own loop
+is the point of this workflow.
+
+- Smallest diff that satisfies the task. No drive-by refactors, no
+  reformatting of untouched files, no extra packages without being asked.
+- Read a file before editing it. Verify ONCE at the end
+  (`pnpm typecheck && pnpm lint && pnpm test`), not after every edit.
+- Finish with a short report: files changed, commands run, pass/fail results.
+- The orchestrator reviews the full `git diff` before anything is committed
+  or pushed — agy output is never merged unread.
+
 ## Deploy model (read-only for agents)
 
 See DEVELOPMENT.md for the full picture. Short version: PR previews are
