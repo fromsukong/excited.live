@@ -172,6 +172,43 @@ export const strings: Dictionary = {
 	"wallets.heading": { en: "Wallets", th: "กระเป๋าเงิน" },
 	"row.until": { en: "Until", th: "ถึง" },
 	"a11y.netWorthChart": { en: "Net worth projection chart", th: "แผนภูมิมูลค่าสุทธิ" },
+
+	// Bottom dock — quick actions pinned to the screen edge (mobile bottom,
+	// desktop bottom of the right column) with the chat launcher always open.
+	"dock.chat": { en: "Chat", th: "แชท" },
+	"dock.addIncome": { en: "+ Income", th: "+ รายได้" },
+	"dock.addExpense": { en: "+ Expense", th: "+ รายจ่าย" },
+	"dock.scrollToInputs": { en: "Edit plan", th: "แก้แผน" },
+	"a11y.dock": { en: "Quick actions dock", th: "แถบการทำงานด่วน" },
+
+	// Chat panel (mock replies — real assistant lands later)
+	"chat.title": { en: "Assistant", th: "ผู้ช่วย" },
+	"chat.subtitle": { en: "Demo — canned replies", th: "ตัวอย่าง — ตอบล่วงหน้า" },
+	"chat.placeholder": { en: "Ask about your plan…", th: "ถามเรื่องแผนของคุณ…" },
+	"chat.send": { en: "Send", th: "ส่ง" },
+	"chat.empty": {
+		en: "Ask about your plan — try “Can I retire early?”",
+		th: "ถามเรื่องแผนของคุณได้เลย ลองถาม “เกษียณเร็วได้ไหม”",
+	},
+	"chat.reply.summary": { en: "Here is where your plan stands right now:", th: "สถานะแผนของคุณตอนนี้:" },
+	"chat.reply.retirement": {
+		en: "Retirement looks {status}: {detail}",
+		th: "เกษียณ{status}: {detail}",
+	},
+	"chat.reply.runway": {
+		en: "On the current plan your money lasts until {year}.",
+		th: "ด้วยแผนปัจจุบัน เงินของคุณพอถึงปี {year}",
+	},
+	"chat.reply.maxForever": {
+		en: "You could spend about {amount} per month, forever, from today.",
+		th: "คุณใช้ได้ราว {amount} ต่อเดือน ตลอดไป จากวันนี้",
+	},
+	"chat.reply.fallback": {
+		en: "Got it — this demo replies with a few canned answers. The real assistant lands soon.",
+		th: "รับทราบ — ตัวอย่างนี้ตอบด้วยคำตอบสำเร็จรูป ตัวจริงเร็ว ๆ นี้",
+	},
+	"chat.status.funded": { en: "on track", th: "กำลังไปได้ดี" },
+	"chat.status.short": { en: "at risk", th: "มีความเสี่ยง" },
 }
 
 /** Optional per-locale overrides on top of `strings` (none needed yet). */

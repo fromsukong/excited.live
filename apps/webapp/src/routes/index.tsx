@@ -1,10 +1,11 @@
-import { useMemo, useState, type ComponentType, type SVGProps } from "react"
+import { useMemo, useRef, useState, type ComponentType, type SVGProps } from "react"
 import {
 	BookmarkIcon,
 	Button,
 	CalendarIcon,
 	Card,
 	ChartIcon,
+	ChatIcon,
 	CompassIcon,
 	Grid,
 	Heading,
@@ -28,6 +29,7 @@ import {
 	computePlanSummary,
 	defaultPlan,
 	type PlanInput,
+	type PlanSummary,
 	type PeriodRow,
 	type WalletId,
 } from "../lib/plan-service"
@@ -67,6 +69,10 @@ function Home() {
 	const [selectedMetricKey, setSelectedMetricKey] = useState<string>("metric.netWorthValue")
 	const [leftTab, setLeftTab] = useState<"financials" | "answers">("financials")
 	const [hoverYear, setHoverYear] = useState<number | null>(null)
+	// Chat launcher lives in the dock and is open by default so actions are
+	// always one tap away (mock replies — real assistant lands later).
+	const [chatOpen, setChatOpen] = useState(true)
+	const inputsRef = useRef<HTMLElement | null>(null)
 
 	const summary = useMemo(() => {
 		try {
@@ -369,23 +375,37 @@ function Home() {
 								</Stack>
 								</Card>
 
-								<Stack as="section" aria-label={t("a11y.planInputs")} className="plan-column">
-								<PlanInputs
-									plan={plan}
-									setPlan={setPlan}
-									patchRow={patchRow}
-									addRow={addRow}
-									removeRow={removeRow}
-									patchWallet={patchWallet}
-									t={t}
-								/>
+								<Stack as="section" aria-label={t("a11y.planInputs")} className="plan-column" ref={inputsRef}>
+									<PlanInputs
+										plan={plan}
+										setPlan={setPlan}
+										patchRow={patchRow}
+										addRow={addRow}
+										removeRow={removeRow}
+										patchWallet={patchWallet}
+										t={t}
+									/>
+									{chatOpen && summary.ok ? (
+										<ChatPanel summary={summary.data} t={t} />
+									) : null}
+									<PlanDock
+										chatOpen={chatOpen}
+										onToggleChat={() => setChatOpen((open) => !open)}
+										onAddIncome={() => addRow("incomes")}
+										onAddExpense={() => addRow("expenses")}
+										onEditPlan={() => {
+											setChatOpen(false)
+											inputsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+										}}
+										t={t}
+									/>
 								</Stack>
-								</Grid>
-								</Stack>
-								</Stack>
-								</Theme>
-								)
-								}
+							</Grid>
+						</Stack>
+					</Stack>
+				</Theme>
+			)
+}
 
 									function FinancialMetricRow({
 	metric,
@@ -752,4 +772,144 @@ function PeriodEditor({
 			))}
 		</Stack>
 	)
+}
+
+/* ── Bottom dock ──────────────────────────────────────────────────────────
+ * Quick actions pinned to the screen edge so they are always reachable:
+ * mobile → fixed to the bottom of the viewport; desktop → bottom of the
+ * right (inputs) column, which is the scrollable side. The chat launcher
+ * is the primary action and opens the floating chat panel.
+ * ────────────────────────────────────────────────────────────────────── */
+function PlanDock({
+	chatOpen,
+	onToggleChat,
+	onAddIncome,
+	onAddExpense,
+	onEditPlan,
+	t,
+}: {
+	chatOpen: boolean
+	onToggleChat: () => void
+	onAddIncome: () => void
+	onAddExpense: () => void
+	onEditPlan: () => void
+	t: (key: string, vars?: Record<string, string>) => string
+}) {
+	return (
+		<Stack as="nav" direction="horizontal" className="dock" aria-label={t("a11y.dock")}>
+			<PlainButton className="dock__button" onClick={onAddIncome}>
+				<Text weight="semibold" className="dock__label">{t("dock.addIncome")}</Text>
+			</PlainButton>
+			<PlainButton className="dock__button" onClick={onAddExpense}>
+				<Text weight="semibold" className="dock__label">{t("dock.addExpense")}</Text>
+			</PlainButton>
+			<PlainButton className="dock__button dock__button--edit" onClick={onEditPlan}>
+				<Text weight="semibold" className="dock__label">{t("dock.scrollToInputs")}</Text>
+			</PlainButton>
+			<PlainButton
+				className={`dock__button dock__button--chat ${chatOpen ? "is-open" : ""}`}
+				onClick={onToggleChat}
+				aria-pressed={chatOpen}
+			>
+				<ChatIcon className="dock__chat-icon" aria-hidden="true" />
+				<Text weight="semibold" className="dock__label">{t("dock.chat")}</Text>
+			</PlainButton>
+		</Stack>
+	)
+}
+
+/* ── Floating chat panel (mock) ───────────────────────────────────────────
+ * Pairs with the dock: anchored above the dock on mobile, inside the right
+ * column on desktop. Replies are canned summaries computed from the plan —
+ * the real assistant swaps in behind the same props later.
+ * ────────────────────────────────────────────────────────────────────── */
+interface ChatMessage {
+	id: number
+	role: "user" | "assistant"
+	text: string
+}
+
+function ChatPanel({
+	summary,
+	t,
+}: {
+	summary: PlanSummary
+	t: (key: string, vars?: Record<string, string>) => string
+}) {
+	const [messages, setMessages] = useState<ChatMessage[]>([])
+	const [draft, setDraft] = useState("")
+	const nextId = useRef(1)
+
+	const send = () => {
+		const text = draft.trim()
+		if (!text) return
+		const userMsg: ChatMessage = { id: nextId.current++, role: "user", text }
+		const reply: ChatMessage = { id: nextId.current++, role: "assistant", text: mockReply(text, summary, t) }
+		setMessages((current) => [...current, userMsg, reply])
+		setDraft("")
+	}
+
+	return (
+		<Stack className="chat-panel" role="log" aria-live="polite">
+			<Stack direction="horizontal" justify="between" vAlign="center" className="chat-panel__head">
+				<Stack gap={0}>
+					<Text weight="semibold">{t("chat.title")}</Text>
+					<Text size="sm" color="secondary">{t("chat.subtitle")}</Text>
+				</Stack>
+			</Stack>
+			<Stack gap={2} className="chat-panel__log">
+				{messages.length === 0 ? (
+					<Text size="sm" color="secondary">{t("chat.empty")}</Text>
+				) : (
+					messages.map((message) => (
+						<Text
+							key={message.id}
+							size="sm"
+							className={`chat-bubble chat-bubble--${message.role}`}
+						>
+							{message.text}
+						</Text>
+					))
+				)}
+			</Stack>
+			<Stack direction="horizontal" gap={2} vAlign="center" className="chat-panel__composer">
+				<TextInput
+					label={t("chat.placeholder")}
+					isLabelHidden
+					placeholder={t("chat.placeholder")}
+					value={draft}
+					onChange={setDraft}
+					onEnter={send}
+					className="chat-panel__input"
+				/>
+				<Button size="md" label={t("chat.send")} onClick={send}>{t("chat.send")}</Button>
+			</Stack>
+		</Stack>
+	)
+}
+
+/** Canned demo answers derived from the live plan summary. */
+function mockReply(
+	text: string,
+	summary: PlanSummary,
+	t: (key: string, vars?: Record<string, string>) => string,
+): string {
+	const question = text.toLowerCase()
+	const v = summary.retirement
+	if (question.includes("retire") || question.includes("เกษียณ")) {
+		return t("chat.reply.retirement", {
+			status: v.funded ? t("chat.status.funded") : t("chat.status.short"),
+			detail: v.funded
+				? t("info.retirement.left", { amount: formatBaht(v.remainingAtEnd), year: String(v.endYear) })
+				: t("info.retirement.runsOut", { year: String(v.unmetYear ?? "") }),
+		})
+	}
+	if (question.includes("run out") || question.includes("หมด")) {
+		const year = summary.runsOutYear
+		return t("chat.reply.runway", { year: year === null ? t("info.runsOut.never") : String(year) })
+	}
+	if (question.includes("spend") || question.includes("afford") || question.includes("ใช้")) {
+		return t("chat.reply.maxForever", { amount: formatBaht(summary.maxForeverMonthly) })
+	}
+	return t("chat.reply.fallback")
 }
