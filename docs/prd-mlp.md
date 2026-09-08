@@ -88,9 +88,18 @@ The real product. Accounts, a 5-minute onboarding wizard, a life-story chart, in
 - [ ] UI exposes TH only; registry keeps US for future expansion
 - [ ] No US user path in wizard, inputs, or tax tab
 
+### US-110: Market reality bands (Monte Carlo P10/P50/P90)
+**Description:** As a user, I see a shaded P10–P90 band around my projection, so I know the plan survives bad markets, not just the average one.
+**Acceptance Criteria:**
+- [ ] Engine: seeded Monte Carlo in packages/sim (pure, deterministic — same plan ⇒ same bands; no Math.random); investment wallets sampled per year, cash-like wallets stay at plan rates
+- [ ] Chart draws the P10–P90 band for the net-worth metric (net cash has no market risk in the MVP engine, so no cash-flow band); same plan ⇒ same band across reloads and SSR/client
+- [ ] Live editing stays fast: band recompute is debounced, typing recompute unaffected
+- [ ] Survival stats: share of scenarios that never run out + worst-case first unmet year
+- [ ] Bilingual labels; verify in browser using dev-browser skill
+
 ## 4. Functional Requirements
 
-- FR-10: Accounts + saved plans; onboarding wizard; life-story chart; registry-driven editing; proposal accept/reject on web; scenario toggles; what-if sliders; MCP trial-sim; AI billing ($109/yr unlimited personal; advisor BYOK/credits, docs/pricing.md Revision 3); TH-only tax (US hidden); EN/TH.
+- FR-10: Accounts + saved plans; onboarding wizard; life-story chart; registry-driven editing; proposal accept/reject on web; scenario toggles; what-if sliders; Monte Carlo market bands (US-110); MCP trial-sim; AI billing ($109/yr unlimited personal; advisor BYOK/credits, docs/pricing.md Revision 3); TH-only tax (US hidden); EN/TH.
 - FR-11: Engines stay pure TS (no network/DOM/date); sheet tabs port 1:1 to app modules; plan-service is the single backend boundary.
 - FR-12: Wizard ships before polish on other lovable features.
 

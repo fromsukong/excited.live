@@ -18,6 +18,7 @@
 
 import {
 	DEFAULT_WALLETS,
+	defaultMonteCarloConfig,
 	type GoalCheck,
 	type PlanInput,
 	type SimulationResult,
@@ -27,10 +28,12 @@ import {
 	maxForeverMonthlySpend,
 	optimizeRetirementContribution,
 	retirementVerdict,
+	runMonteCarlo,
 	runSimulation,
 	type RetirementVerdict,
 	type PathCompare,
 	type OptimizerResult,
+	type MonteCarloResult,
 } from "@excited-live/sim"
 
 /** Everything the UI needs, computed in one pass from the plan. */
@@ -88,6 +91,18 @@ export function defaultPlan(): PlanInput {
 /** Wallet metadata for rendering (labels stay in the engine, bilingual). */
 export const walletDefs = DEFAULT_WALLETS
 
+/**
+ * US-110 — Monte Carlo market bands for the chart overlay. Same MOCK-layer
+ * contract as the rest of this file: when a backend lands, this body swaps
+ * to a fetch without touching the UI.
+ */
+export function computeMonteCarloBands(plan: PlanInput): MonteCarloResult {
+	// Seeded config — same plan ⇒ same bands (SSR/client + reload match).
+	// The engine treats an omitted seed as "random run" by design.
+	return runMonteCarlo(plan, defaultMonteCarloConfig)
+}
+
 /** Re-exports for UI typing — the UI never imports @excited-live/sim itself. */
 export type { PlanInput, PeriodRow, WalletId, GoalRow, SimulationYear } from "@excited-live/sim"
+export type { MonteCarloResult, MonteCarloYear, MonteCarloBand } from "@excited-live/sim"
 export { realReturn, WALLET_IDS } from "@excited-live/sim"

@@ -262,6 +262,14 @@ const clampNonNegative = (value: number): number =>
 const clampRate = (value: number): number =>
 	Number.isFinite(value) ? Math.min(Math.max(value, 0), 1) : 0
 
+/**
+ * Rate clamp for the internal per-year override hook (Monte Carlo, US-110):
+ * unlike the 0..1 clamp on user-facing inputs, it allows deep-negative
+ * market years down to −75% so a bad-path simulation stays honest.
+ */
+const clampYearlyRate = (value: number): number =>
+	Number.isFinite(value) ? Math.min(Math.max(value, -0.75), 1) : 0
+
 const round2 = (value: number): number => Math.round(value * 100) / 100
 
 /**
@@ -399,11 +407,23 @@ export function defaultPlanInput(now: Date = new Date()): PlanInput {
 	}
 }
 
+/** Options for the internal per-year rate override (Monte Carlo, US-110). */
+export interface RunSimulationOptions {
+	/**
+	 * Returns the wallet rates to use for a projected calendar year.
+	 * When provided it REPLACES `input.walletRates` for that year — every
+	 * wallet's rate must be supplied. Applied per year (annualized then
+	 * converted to monthly inside the engine), keeping a zero-hook run
+	 * bit-identical to today's fixed-rate projection.
+	 */
+	rateForYear?: (year: number) => Record<WalletId, number>
+}
+
 /**
  * Run the multi-wallet projection. Throws RangeError on structurally invalid
  * input (bad split, non-positive horizon) so callers can surface it.
  */
-export function runSimulation(input: PlanInput): SimulationResult {
+export function runSimulation(input: PlanInput, options: RunSimulationOptions = {}): SimulationResult {
 	const horizon = Math.floor(input.horizonYears)
 	if (!Number.isFinite(horizon) || horizon < 1 || horizon > 60) {
 		throw new RangeError(`horizonYears must be 1..60, got ${input.horizonYears}`)
@@ -442,6 +462,9 @@ export function runSimulation(input: PlanInput): SimulationResult {
 	let unmetMonthIndex: number | null = null
 	// Annual TH tax liability per calendar year, computed once (January).
 	const yearTaxCache = new Map<number, TaxResult>()
+	// US-110 hook: rates for the current year (null = use plan.walletRates).
+	let yearRates: Record<WalletId, number> | null = null
+	let yearRatesFor = -1
 
 	for (let index = 0; index < totalMonths; index += 1) {
 		const month = index % 12
@@ -537,7 +560,26 @@ export function runSimulation(input: PlanInput): SimulationResult {
 		}
 
 		for (const id of WALLET_IDS) {
-			wallets[id] = round2(wallets[id] * (1 + monthlyGrowth[id]))
+			let growth: number
+			if (options.rateForYear) {
+				// US-110: per-year rate override (Monte Carlo). Resolved once
+				// per year; annualized here so monthly compounding matches
+				// the annual rate exactly ((1+r)^(1/12) per month).
+				if (yearRatesFor !== year) {
+					const rates = options.rateForYear(year)
+					yearRates = {
+						emergency: clampYearlyRate(rates.emergency ?? 0),
+						goal: clampYearlyRate(rates.goal ?? 0),
+						nontax: clampYearlyRate(rates.nontax ?? 0),
+						taxAdvantaged: clampYearlyRate(rates.taxAdvantaged ?? 0),
+					}
+					yearRatesFor = year
+				}
+				growth = Math.pow(1 + (yearRates?.[id] ?? 0), 1 / 12) - 1
+			} else {
+				growth = monthlyGrowth[id]
+			}
+			wallets[id] = round2(wallets[id] * (1 + growth))
 		}
 
 		// Step 6 — any deficit month withdraws EF → goal → non-tax → tax-adv.
@@ -578,7 +620,12 @@ export function runSimulation(input: PlanInput): SimulationResult {
 			withdrawal,
 			wallets: { ...wallets },
 			netWorth,
-			unmet: withdrawal > 0 && withdrawal < unmetNeed - 0.01,
+			// US-110 regression fix: an empty-wallet month draws nothing, so
+			// the old `withdrawal > 0` guard left fully-uncovered months
+			// unflagged ("never runs out" despite zero balances). The flag
+			// now tracks the documented contract: wallets could not cover
+			// the full spending.
+			unmet: unmetNeed - withdrawal > 0.01,
 		})
 
 		// December — roll the year up from its 12 months.
@@ -647,3 +694,13 @@ export {
 	type OptimizerInput,
 	type OptimizerResult,
 } from "./optimize"
+
+export {
+	defaultMonteCarloConfig,
+	runMonteCarlo,
+	simulateMarketPath,
+	percentile,
+	type MonteCarloBand,
+	type MonteCarloConfig,
+} from "./monte-carlo"
+export type { MonteCarloResult, MonteCarloYear } from "./monte-carlo"
