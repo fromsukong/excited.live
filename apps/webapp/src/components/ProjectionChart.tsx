@@ -1,40 +1,26 @@
 /**
  * ProjectionChart — the one custom visual on the dashboard (a line chart is
- * the single thing Astryx has no primitive for). Rendered with Apache ECharts
- * (tree-shaken: line chart + grid + tooltip on the canvas renderer), so the
- * heavy interaction layer (hover inspection, pointer tracking, crisp resize)
- * no longer has to be hand-rolled SVG. Supports two metrics (net worth /
- * cash flow); hovering inspects a year and syncs the readout above the chart
- * and the panels below via `onActiveYearChange`. Monte Carlo P10/P90 years
- * draw as a shaded band; unmet-spend years get a ⚠ in the readout.
- *
- * Look is unchanged from the previous hand-rolled SVG version: accent line,
- * gradient area under the line, dashed orange zero line when the scale dips
- * negative, x labels every 10 years plus the final year. Colors are read
- * from the Astryx theme CSS variables at render time (canvas cannot resolve
- * `var(...)` or `light-dark(...)` on its own), with light-theme fallbacks.
- * The Astryx root Theme sets `data-astryx-theme` on <html> in a layout
- * effect AFTER our first commit — resolving colors before that moment picks
- * up the library-default palette (blue accent) and flashed blue on first
- * load. So chart init and option building are deferred until the theme
- * attribute exists (the container stays blank cream, matching the card).
+ * the single thing Astryx has no primitive for). Pure SVG via design-system
+ * primitives. Supports two metrics (net worth / cash flow); hover, drag and
+ * keyboard focus inspect a year. Unmet-spend years get a warning marker.
  */
-import { useEffect, useMemo, useRef, useState } from "react"
-import * as echarts from "echarts/core"
-import { LineChart } from "echarts/charts"
-import { GridComponent, TooltipComponent } from "echarts/components"
-import { CanvasRenderer } from "echarts/renderers"
-import type { EChartsType } from "echarts/core"
-import { Stack, Text } from "@excited-live/design-system"
+import { useMemo, useState } from "react"
+import {
+	Svg,
+	SvgCircle,
+	SvgDefs,
+	SvgGradientStop,
+	SvgLine,
+	SvgPath,
+	Stack,
+	Text,
+} from "@excited-live/design-system"
 import type { MonteCarloBand, SimulationYear } from "../lib/plan-service"
 import { formatBaht, formatBahtCompact } from "../lib/format"
 
-echarts.use([LineChart, GridComponent, TooltipComponent, CanvasRenderer])
-
-const FONT_FAMILY = '"Sofia Sans", Arial, "Helvetica Neue", sans-serif'
-/** Matches the old SVG geometry: 64px label gutter, tight right/top padding. */
-const GRID = { left: 64, right: 14, top: 14, bottom: 26 }
-const HOST_HEIGHT = 320
+const WIDTH = 1000
+const HEIGHT = 320
+const PAD = { top: 14, right: 14, bottom: 22, left: 64 }
 
 export interface ProjectionChartProps {
 	/** Projected years to draw (already sliced to the active period). */
@@ -47,63 +33,8 @@ export interface ProjectionChartProps {
 	 * metric units). Drawn as a shaded area under the plan line.
 	 */
 	band?: readonly MonteCarloBand[]
-	/** Fired on hover/leave so panels below can mirror the active year. */
+	/** Fired on hover/drag/leave so panels below can mirror the active year. */
 	onActiveYearChange?: (year: number | null) => void
-}
-
-/** Net-worth or cash-flow value for one simulated year (pure, per metric). */
-function valueOf(year: SimulationYear, metric: ProjectionChartProps["metric"]): number {
-	return metric === "netWorth" ? year.netWorth : year.netCash
-}
-
-/**
- * Resolve a theme CSS variable to a concrete computed color (rgb/rgba).
- * Tokens are authored as `light-dark(...)`, which canvas cannot parse, so a
- * hidden probe element lets the browser resolve it per color-scheme first.
- */
-function resolveColor(varName: string, fallback: string): string {
-	if (typeof document === "undefined") return fallback
-	const probe = document.createElement("span")
-	probe.style.display = "none"
-	probe.style.color = `var(${varName})`
-	document.body.appendChild(probe)
-	const resolved = getComputedStyle(probe).color
-	probe.remove()
-	return resolved || fallback
-}
-
-/** The five theme colors the chart is drawn with. */
-interface ChartPalette {
-	accent: string
-	secondary: string
-	border: string
-	orange: string
-	onAccent: string
-}
-
-/**
- * Read the palette from live CSS variables. Returns null until the Astryx
- * root Theme provider has stamped `data-astryx-theme` on <html> — before
- * that the cascade still resolves to the library-default palette (blue
- * accent), which is exactly the first-load flash this guards against.
- */
-function readPalette(): ChartPalette | null {
-	if (typeof document === "undefined") return null
-	if (!document.documentElement.hasAttribute("data-astryx-theme")) return null
-	return {
-		accent: resolveColor("--color-accent", "#141413"),
-		secondary: resolveColor("--color-text-secondary", "#696969"),
-		border: resolveColor("--color-border", "rgba(20, 20, 19, 0.1)"),
-		orange: resolveColor("--color-text-orange", "#9A3A0A"),
-		onAccent: resolveColor("--color-on-accent", "#F3F0EE"),
-	}
-}
-
-/** Inject an alpha channel into a resolved rgb()/rgba() color string. */
-function withAlpha(color: string, alpha: number): string {
-	const match = /rgba?\(\s*([\d.]+)[\s,]+([\d.]+)[\s,]+([\d.]+)/.exec(color)
-	if (!match) return color
-	return `rgba(${match[1]}, ${match[2]}, ${match[3]}, ${alpha})`
 }
 
 export function ProjectionChart({
@@ -113,247 +44,175 @@ export function ProjectionChart({
 	band,
 	onActiveYearChange,
 }: ProjectionChartProps) {
-	const containerRef = useRef<HTMLElement | null>(null)
-	const chartRef = useRef<EChartsType | null>(null)
-	const [active, setActive] = useState<SimulationYear | null>(null)
-	// Flips once the Astryx root Theme provider has stamped its scope
-	// attribute on <html>; before that the chart palette is not trustworthy.
-	const [themeReady, setThemeReady] = useState(false)
+	const [activeIndex, setActiveIndex] = useState<number | null>(null)
 
-	const onActiveYearRef = useRef(onActiveYearChange)
+	const valueOf = (year: SimulationYear) =>
+		metric === "netWorth" ? year.netWorth : year.netCash
 
-	// Keep the latest callback without re-initializing the chart on rerenders.
-	useEffect(() => {
-		onActiveYearRef.current = onActiveYearChange
-	}, [onActiveYearChange])
-
-	// One-time init/teardown: chart instance, crisp resize, hover-leave reset.
-	// Deferred until the theme palette is readable: the Astryx root Theme
-	// stamps `data-astryx-theme` on <html> in its layout effect, which runs
-	// AFTER this component's first commit. Initializing before that moment
-	// resolved colors against the library-default palette (blue accent) and
-	// flashed blue on first load. The MutationObserver below fires exactly
-	// when the attribute lands; the palette/option memos then rebuild and
-	// the option effect replays into the freshly created instance.
-	useEffect(() => {
-		const container = containerRef.current
-		if (!container) return
-		let observer: ResizeObserver | null = null
-		let mutation: MutationObserver | null = null
-		const start = (chart: EChartsType) => {
-			observer = new ResizeObserver(() => chart.resize())
-			observer.observe(container)
-			const handleGlobalOut = () => {
-				setActive(null)
-				onActiveYearRef.current?.(null)
-			}
-			chart.getZr().on("globalout", handleGlobalOut)
-		}
-		const teardown = () => {
-			mutation?.disconnect()
-			mutation = null
-			observer?.disconnect()
-			observer = null
-			chartRef.current?.getZr().off("globalout")
-			chartRef.current?.dispose()
-			chartRef.current = null
-		}
-		const tryStart = () => {
-			if (chartRef.current || !readPalette()) return
-			const chart = echarts.init(container, undefined, { renderer: "canvas" })
-			chartRef.current = chart
-			start(chart)
-			mutation?.disconnect()
-			mutation = null
-			// Unlock the palette/option memos so the themed option is built
-			// and pushed into the instance we just created.
-			setThemeReady(true)
-		}
-		tryStart()
-		if (!chartRef.current) {
-			mutation = new MutationObserver(tryStart)
-			mutation.observe(document.documentElement, {
-				attributes: true,
-				attributeFilter: ["data-astryx-theme"],
-			})
-		}
-		return teardown
-	}, [])
-
-	// Option is built only once the theme palette is readable. Until then
-	// palette is null and the memo yields null — nothing is pushed to a
-	// chart that does not exist yet, and no default-palette option is
-	// ever constructed.
-	const palette = useMemo(() => (themeReady ? readPalette() : null), [themeReady])
-	const option = useMemo<echarts.EChartsCoreOption | null>(() => {
-		if (!palette) return null
-		const { accent, secondary, border, orange, onAccent } = palette
-
-		const values = years.map((year) => valueOf(year, metric))
+	const { points, min, max, bandArea } = useMemo(() => {
+		const values = years.map(valueOf)
 		// Band edges widen the scale so the shaded area always fits. The band
 		// arrives in the active metric's units (mapped by the caller).
-		const bandAligned = band && band.length === years.length ? band : null
-		const scaleValues = [...values]
-		if (bandAligned) {
-			for (const entry of bandAligned) scaleValues.push(entry.p10, entry.p90)
+		for (const entry of band ?? []) {
+			values.push(entry.p10, entry.p90)
 		}
-		const rawMax = Math.max(...scaleValues, 0)
-		const rawMin = Math.min(...scaleValues, 0)
+		const rawMax = Math.max(...values, 0)
+		const rawMin = Math.min(...values, 0)
 		const span = rawMax - rawMin || 1
-
-		const categories = years.map((year) => String(year.year))
-
-		const readout = (year: SimulationYear) =>
-			`${year.year} · ${formatBaht(valueOf(year, metric))}${year.unmet ? " · ⚠" : ""}`
-
-		const bandSeries = bandAligned
+		const innerW = WIDTH - PAD.left - PAD.right
+		const innerH = HEIGHT - PAD.top - PAD.bottom
+		const xFor = (index: number) =>
+			years.length === 1 ? PAD.left + innerW / 2 : PAD.left + (index / (years.length - 1)) * innerW
+		const yFor = (value: number) => PAD.top + (1 - (value - rawMin) / span) * innerH
+		const bandPoints =
+			band && band.length === years.length
+				? band.map((entry, index) => ({
+						x: xFor(index),
+						p10: yFor(entry.p10),
+						p90: yFor(entry.p90),
+					}))
+				: null
+		const bandAreaPath = bandPoints
 			? [
-					{
-						// Lower edge of the band: stacked base for the delta above.
-						name: "band-base",
-						type: "line",
-						data: bandAligned.map((entry) => entry.p10),
-						stack: "projection-band",
-						symbol: "none",
-						lineStyle: { opacity: 0 },
-						silent: true,
-						tooltip: { show: false },
-					},
-					{
-						// Upper edge drawn as p10 + (p90 − p10), filled between.
-						name: "band-range",
-						type: "line",
-						data: bandAligned.map((entry) => entry.p90 - entry.p10),
-						stack: "projection-band",
-						symbol: "none",
-						lineStyle: { opacity: 0 },
-						areaStyle: { color: withAlpha(accent, 0.1) },
-						silent: true,
-						tooltip: { show: false },
-					},
-				]
-			: []
-
+					...bandPoints.map((point, index) => `${index === 0 ? "M" : "L"}${point.x.toFixed(1)} ${point.p90.toFixed(1)}`),
+					...[...bandPoints].reverse().map((point) => `L${point.x.toFixed(1)} ${point.p10.toFixed(1)}`),
+					"Z",
+				].join(" ")
+			: null
 		return {
-			animation: false,
-			grid: { ...GRID, containLabel: false },
-			xAxis: {
-				type: "category",
-				data: categories,
-				boundaryGap: false,
-				axisLine: { show: false },
-				axisTick: { show: false },
-				axisLabel: {
-					show: true,
-					color: secondary,
-					fontSize: 12,
-					fontFamily: FONT_FAMILY,
-					// Same cadence as before: every 10th year plus the final one.
-					interval: (index: number) => index % 10 === 0 || index === categories.length - 1,
-				},
-			},
-			yAxis: {
-				type: "value",
-				min: rawMin,
-				max: rawMin + span,
-				interval: span / 4,
-				axisLine: { show: false },
-				axisTick: { show: false },
-				splitLine: { lineStyle: { color: border, width: 1 } },
-				axisLabel: {
-					color: secondary,
-					fontSize: 12,
-					fontFamily: FONT_FAMILY,
-					formatter: (value: number) => formatBahtCompact(value),
-				},
-			},
-			tooltip: {
-				trigger: "axis",
-				axisPointer: { type: "line", lineStyle: { color: border, width: 1 } },
-				backgroundColor: accent,
-				borderWidth: 0,
-				padding: [6, 10],
-				textStyle: { color: onAccent, fontSize: 12, fontFamily: FONT_FAMILY },
-				formatter: (params: unknown) => {
-					const list = (Array.isArray(params) ? params : [params]) as Array<{
-						seriesName?: string
-						dataIndex?: number
-					}>
-					const hit = list.find((entry) => entry.seriesName === "plan" && entry.dataIndex != null)
-					if (!hit || hit.dataIndex == null) return ""
-					const year = years[hit.dataIndex]
-					if (!year) return ""
-					setActive(year)
-					onActiveYearRef.current?.(year.year)
-					return readout(year)
-				},
-			},
-			series: [
-				...bandSeries,
-				{
-					name: "plan",
-					type: "line",
-					data: values,
-					// Dot appears only under the cursor, like the old active marker.
-					symbol: "circle",
-					symbolSize: 10,
-					showSymbol: false,
-					lineStyle: { color: accent, width: 2.5 },
-					itemStyle: { color: accent },
-					areaStyle: {
-						color: {
-							type: "linear",
-							x: 0,
-							y: 0,
-							x2: 0,
-							y2: 1,
-							colorStops: [
-								{ offset: 0, color: withAlpha(accent, 0.28) },
-								{ offset: 1, color: withAlpha(accent, 0.02) },
-							],
-						},
-					},
-					markLine:
-						rawMin < 0
-							? {
-									silent: true,
-									symbol: "none",
-									label: { show: false },
-									lineStyle: { color: orange, width: 1, type: "dashed" },
-									data: [{ yAxis: 0 }],
-								}
-							: undefined,
-				},
-			],
+			points: years.map((year, index) => ({
+				year: year.year,
+				x: xFor(index),
+				y: yFor(valueOf(year)),
+				value: valueOf(year),
+				unmet: year.unmet,
+			})),
+			min: rawMin,
+			max: rawMax,
+			bandArea: bandAreaPath,
 		}
-	}, [palette, years, metric, band])
+		// valueOf is a stable pure function of the metric prop.
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [years, metric, band])
 
-	// Push option updates (metric switch, horizon change, band recompute).
-	// Also the replay path for deferred init: when the chart instance is
-	// created after the theme lands, this effect pushes the current option.
-	useEffect(() => {
-		if (!option) return
-		chartRef.current?.setOption(option, { notMerge: true })
-	}, [option])
+	const linePath = points
+		.map((point, index) => `${index === 0 ? "M" : "L"}${point.x.toFixed(1)} ${point.y.toFixed(1)}`)
+		.join(" ")
+	const areaPath = `${linePath} L${(points.at(-1)?.x ?? PAD.left).toFixed(1)} ${HEIGHT - PAD.bottom} L${PAD.left} ${HEIGHT - PAD.bottom} Z`
 
-	// Readout mirrors the old chart: hovered year, else the final year.
-	const readoutYear = active ?? years.at(-1)
+	const zeroY =
+		min < 0 ? PAD.top + (1 - (0 - min) / (max - min || 1)) * (HEIGHT - PAD.top - PAD.bottom) : null
+	const active = activeIndex === null ? points.at(-1) : points[activeIndex]
+
+	/** Map a pointer x back to the nearest year (hover, drag, click). */
+	function handlePointer(clientX: number, target: Element) {
+		const bounds = target.getBoundingClientRect()
+		if (bounds.width === 0) return
+		const fraction = (clientX - bounds.left) / bounds.width
+		const index = Math.round(fraction * (points.length - 1))
+		const clamped = Math.min(Math.max(index, 0), points.length - 1)
+		setActiveIndex(clamped)
+		onActiveYearChange?.(points[clamped]?.year ?? null)
+	}
+	function handleLeave() {
+		setActiveIndex(null)
+		onActiveYearChange?.(null)
+	}
+
+	const gridLines = [0, 0.25, 0.5, 0.75, 1].map((fraction) => {
+		const value = max - fraction * (max - min)
+		const y = PAD.top + fraction * (HEIGHT - PAD.top - PAD.bottom)
+		return { value, y }
+	})
 
 	return (
 		<Stack gap={1}>
-			{readoutYear ? (
+			{active ? (
 				<Text size="sm" color="secondary">
-					{readoutYear.year} · {formatBaht(valueOf(readoutYear, metric))}
-					{readoutYear.unmet ? " · ⚠" : ""}
+					{active.year} · {formatBaht(active.value)}
+					{active.unmet ? " · ⚠" : ""}
 				</Text>
 			) : null}
-			<Stack
-				ref={containerRef}
+			<Svg
+				viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
 				role="img"
 				aria-label={ariaLabel}
-				className="mvp-chart-echarts"
-				style={{ width: "100%", height: HOST_HEIGHT, touchAction: "none" }}
-			/>
+				className="mvp-chart"
+				style={{ width: "100%", height: "auto", display: "block", touchAction: "none" }}
+				onPointerMove={(event) => handlePointer(event.clientX, event.currentTarget)}
+				onPointerLeave={handleLeave}
+				onPointerDown={(event) => handlePointer(event.clientX, event.currentTarget)}
+			>
+				<SvgDefs>
+					<linearGradient id="mvp-area" x1="0" y1="0" x2="0" y2="1">
+						<SvgGradientStop offset="0%" stopColor="var(--color-accent)" stopOpacity="0.28" />
+						<SvgGradientStop offset="100%" stopColor="var(--color-accent)" stopOpacity="0.02" />
+					</linearGradient>
+				</SvgDefs>
+				{gridLines.map((grid) => (
+					<SvgLine
+						key={grid.y}
+						x1={PAD.left}
+						x2={WIDTH - PAD.right}
+						y1={grid.y}
+						y2={grid.y}
+						stroke="var(--color-border)"
+						strokeWidth="1"
+					/>
+				))}
+				{gridLines.map((grid) => (
+					<text
+						key={`label-${grid.y}`}
+						x={PAD.left - 8}
+						y={grid.y + 4}
+						textAnchor="end"
+						fontSize="12"
+						fill="var(--color-text-secondary)"
+					>
+						{formatBahtCompact(grid.value)}
+					</text>
+				))}
+				{zeroY !== null ? (
+					<SvgLine
+						x1={PAD.left}
+						x2={WIDTH - PAD.right}
+						y1={zeroY}
+						y2={zeroY}
+						stroke="var(--color-text-orange)"
+						strokeWidth="1"
+						strokeDasharray="4 4"
+					/>
+				) : null}
+				<SvgPath d={areaPath} fill="url(#mvp-area)" />
+				{/* Band above the gradient so the P10 lower edge stays readable. */}
+				{bandArea ? (
+					<SvgPath d={bandArea} fill="var(--color-accent)" fillOpacity="0.1" />
+				) : null}
+				<SvgPath
+					d={linePath}
+					fill="none"
+					stroke="var(--color-accent)"
+					strokeWidth="2.5"
+					strokeLinejoin="round"
+				/>
+				{active ? (
+					<SvgCircle cx={active.x} cy={active.y} r="5" fill="var(--color-accent)" />
+				) : null}
+				{points
+					.filter((_, index) => index % 10 === 0 || index === points.length - 1)
+					.map((point) => (
+						<text
+							key={`x-${point.year}`}
+							x={point.x}
+							y={HEIGHT - 8}
+							textAnchor="middle"
+							fontSize="12"
+							fill="var(--color-text-secondary)"
+						>
+							{point.year}
+						</text>
+					))}
+			</Svg>
 		</Stack>
 	)
 }

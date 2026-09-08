@@ -14,9 +14,16 @@ export const strings: Dictionary = {
 	"nav.hello": { en: "Your plan, live", th: "แผนของคุณ สด ๆ" },
 	"nav.synced": { en: "Numbers update as you type", th: "ตัวเลขอัปเดตทันทีที่แก้" },
 	"locale.toggle": { en: "Switch language", th: "เปลี่ยนภาษา" },
+	"plan.heading.full.ok": { en: "Your plan is on track", th: "แผนของคุณกำลังไปได้ดี" },
+	"plan.heading.full.risk": { en: "Your plan needs work", th: "แผนของคุณต้องปรับ" },
 	"locale.en": { en: "EN", th: "EN" },
 	"locale.th": { en: "ไทย", th: "ไทย" },
 
+	// Old-layout chrome (kept per Prame — chart left, plan info right)
+	"plan.snapshotDate": { en: "Plan snapshot · this year", th: "ภาพรวมแผน · ปีนี้" },
+	"plan.heading.prefix": { en: "Your plan is", th: "แผนของคุณ" },
+	"plan.heading.status": { en: "on track", th: "กำลังไปได้ดี" },
+	"plan.heading.needsWork": { en: "needs attention", th: "ควรปรับ" },
 	"metric.netWorth": { en: "Net worth", th: "มูลค่าสุทธิ" },
 	"metric.cashFlow": { en: "Cash flow", th: "กระแสเงินสด" },
 	"period.all": { en: "All", th: "ทั้งหมด" },
@@ -176,17 +183,38 @@ export const strings: Dictionary = {
 	"row.until": { en: "Until", th: "ถึง" },
 	"a11y.netWorthChart": { en: "Net worth projection chart", th: "แผนภูมิมูลค่าสุทธิ" },
 
-	// Assistant rail (chat side panel, always open)
+	// Bottom dock — quick actions pinned to the screen edge (mobile bottom,
+	// desktop bottom of the right column) with the chat launcher always open.
+	"dock.chat": { en: "Chat", th: "แชท" },
+	"dock.addIncome": { en: "+ Income", th: "+ รายได้" },
+	"dock.addExpense": { en: "+ Expense", th: "+ รายจ่าย" },
+	"dock.scrollToInputs": { en: "Edit plan", th: "แก้แผน" },
+	"a11y.dock": { en: "Quick actions dock", th: "แถบการทำงานด่วน" },
+
+	// Assistant rail (right column) — Astryx ai-chat style, minimizable.
 	"rail.title": { en: "Assistant", th: "ผู้ช่วย" },
 	"rail.subtitle": { en: "Demo — canned replies", th: "ตัวอย่าง — ตอบล่วงหน้า" },
+	"rail.minimize": { en: "Minimize", th: "ย่อ" },
+	"rail.expand": { en: "Open assistant", th: "เปิดผู้ช่วย" },
 	"rail.today": { en: "Today", th: "วันนี้" },
 	"rail.you": { en: "You", th: "คุณ" },
+	"rail.ask": { en: "Ask", th: "ถาม" },
+	"rail.planSummary": { en: "Plan snapshot", th: "ภาพรวมแผน" },
+
+	// Full-app mode (assistant minimized) — action tabs on the left panel.
+	"appmode.tab.numbers": { en: "Numbers", th: "ตัวเลข" },
+	"appmode.tab.answers": { en: "Insights", th: "มุมมอง" },
+	"appmode.tab.inputs": { en: "Plan inputs", th: "ข้อมูลแผน" },
+
+	// Chat panel (mock replies — real assistant lands later)
+	"chat.title": { en: "Assistant", th: "ผู้ช่วย" },
+	"chat.subtitle": { en: "Demo — canned replies", th: "ตัวอย่าง — ตอบล่วงหน้า" },
+	"chat.placeholder": { en: "Ask about your plan…", th: "ถามเรื่องแผนของคุณ…" },
+	"chat.send": { en: "Send", th: "ส่ง" },
 	"chat.empty": {
 		en: "Ask about your plan — try “Can I retire early?”",
 		th: "ถามเรื่องแผนของคุณได้เลย ลองถาม “เกษียณเร็วได้ไหม”",
 	},
-	"chat.placeholder": { en: "Ask about your plan…", th: "ถามเรื่องแผนของคุณ…" },
-
 	"chat.reply.summary": { en: "Here is where your plan stands right now:", th: "สถานะแผนของคุณตอนนี้:" },
 	"chat.reply.retirement": {
 		en: "Retirement looks {status}: {detail}",
