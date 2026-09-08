@@ -118,6 +118,75 @@ const description =
 		</div>
 	</header>
 
+	<!-- ============ SEE IT IN ACTION ============ -->
+	<section class="section section-demo" id="demo">
+		<div class="section-head">
+			<p class="eyebrow">
+				<span data-lang-en>See it in action</span>
+				<span data-lang-th>ดูตัวอย่างการใช้งานจริง</span>
+			</p>
+			<h2>
+				<span data-lang-en>Type a number. Watch everything move.</span>
+				<span data-lang-th>พิมพ์ตัวเลข แล้วดูทุกอย่างเคลื่อนที่</span>
+			</h2>
+			<p>
+				<span data-lang-en>
+					Real screenshots from the app. Change your salary or retirement age and the
+					chart, taxes, and plan update instantly — no spreadsheets, no waiting.
+				</span>
+				<span data-lang-th>
+					ภาพจริงจากในแอป ลองเปลี่ยนเงินเดือนหรืออายุเกษียณ แล้วกราฟ ภาษี
+					และแผนของคุณอัปเดตทันที — ไม่ต้องใช้ Excel ไม่ต้องรอ
+				</span>
+			</p>
+		</div>
+
+		<div class="demo-stage">
+			<div class="demo-window" role="img"
+				aria-label="excited.live app: typing a new income updates the plan chart and numbers instantly">
+				<div class="demo-chrome" aria-hidden="true">
+					<span class="demo-dot"></span>
+					<span class="demo-dot"></span>
+					<span class="demo-dot"></span>
+					<span class="demo-url">app.excited.live</span>
+					<span class="demo-live-badge">
+						<span data-lang-en>Live demo</span>
+						<span data-lang-th>ดูสด</span>
+					</span>
+				</div>
+				<div class="demo-screen">
+					<img class="demo-shot is-active" src="/demo/app-01.webp" alt="" loading="lazy" width="2560" height="1720" />
+					<img class="demo-shot" src="/demo/app-02.webp" alt="" loading="lazy" width="2560" height="1720" />
+					<img class="demo-shot" src="/demo/app-03.webp" alt="" loading="lazy" width="2560" height="1720" />
+					<img class="demo-shot" src="/demo/app-04.webp" alt="" loading="lazy" width="2560" height="1720" />
+					<img class="demo-shot" src="/demo/app-05.webp" alt="" loading="lazy" width="2560" height="1720" />
+					<img class="demo-shot" src="/demo/app-06.webp" alt="" loading="lazy" width="2560" height="1720" />
+					<img class="demo-shot" src="/demo/app-07.webp" alt="" loading="lazy" width="2560" height="1720" />
+					<img class="demo-shot" src="/demo/app-08.webp" alt="" loading="lazy" width="2560" height="1720" />
+					<img class="demo-shot" src="/demo/app-09.webp" alt="" loading="lazy" width="2560" height="1720" />
+					<div class="demo-cursor" aria-hidden="true"></div>
+					<div class="demo-typing is-visible" aria-hidden="true">
+						<span class="demo-typing-text">1,500,000</span>
+						<span class="demo-typing-caret"></span>
+					</div>
+				</div>
+			</div>
+			<div class="demo-steps" aria-hidden="true">
+				<span class="demo-step is-on">
+					<span data-lang-en>Set your plan</span>
+					<span data-lang-th>ตั้งแผนของคุณ</span>
+				</span>
+				<span class="demo-step">
+					<span data-lang-en>Check cash flow</span>
+					<span data-lang-th>ดูกระแสเงินสด</span>
+				</span>
+				<span class="demo-step">
+					<span data-lang-en>Read the verdict</span>
+					<span data-lang-th>อ่านสรุปผล</span>
+				</span>
+			</div>
+		</div>
+	</section>
 	<!-- ============ WHAT IS IT ============ -->
 	<section class="section" id="what">
 		<div class="section-head">
@@ -368,5 +437,99 @@ const description =
 			}
 		});
 		syncLangSelects();
+	</script>
+
+	<script is:inline data-astro-rerun>
+		// Demo section: rotate through 9 real app frames — 1s per frame, 3 frames per
+		// "tab" (step pill), so the full cycle is 9s. Cursor/typing overlay follow the
+		// measured position of the UI element each frame is about.
+		(function () {
+			var shots = document.querySelectorAll('.demo-shot');
+			var steps = document.querySelectorAll('.demo-step');
+			var cursor = document.querySelector('.demo-cursor');
+			var typing = document.querySelector('.demo-typing');
+			var reduce = false;
+			try {
+				reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+			} catch (e) { /* very old browsers: animation is fine */ }
+			if (!shots.length || reduce) return;
+
+			// Cursor target per frame (measured from the live app DOM):
+			//  1-3  income input (typing new salary)  · tab 1 "Set your plan"
+			//  4-6  cash-flow switch / range pills    · tab 2 "Check cash flow"
+			//  7-9  verdict tab / range pill          · tab 3 "Read the verdict"
+			var POSITIONS = [
+				{ x: 60.2, y: 22, typing: true },
+				{ x: 60.2, y: 22, typing: true },
+				{ x: 60.2, y: 22, typing: false },
+				{ x: 23, y: 26, typing: false },
+				{ x: 36.2, y: 26, typing: false },
+				{ x: 42.7, y: 26, typing: false },
+				{ x: 25.3, y: 28.7, typing: false },
+				{ x: 20.2, y: 28.7, typing: false },
+				{ x: 41.2, y: 26, typing: false }
+			];
+			var current = 0;
+
+			function moveCursor(pos) {
+				if (!cursor) return;
+				cursor.style.left = pos.x + '%';
+				cursor.style.top = pos.y + '%';
+			}
+
+			function show(n) {
+				for (var i = 0; i < shots.length; i++) {
+					shots[i].classList.toggle('is-active', i === n);
+				}
+				// step pills map 3 frames -> 1 tab
+				for (var j = 0; j < steps.length; j++) {
+					steps[j].classList.toggle('is-on', j === Math.floor(n / 3));
+				}
+				moveCursor(POSITIONS[n]);
+				if (typing) typing.classList.toggle('is-visible', !!POSITIONS[n].typing);
+			}
+
+			setInterval(function () {
+				current = (current + 1) % shots.length;
+				show(current);
+			}, 1000);
+		})();
+	</script>
+
+	<script is:inline data-astro-rerun>
+		// Hero graph: draw the growth line in when the page loads; respect reduced motion.
+		(function () {
+			var line = document.querySelector('.hero-graph .line-main');
+			var area = document.querySelector('.hero-graph .area');
+			var dot = document.querySelector('.hero-graph .dot');
+			var halo = document.querySelector('.hero-graph .dot-halo');
+			var chips = document.querySelectorAll('.hero-chip');
+			var reduce = false;
+			try {
+				reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+			} catch (e) { /* very old browsers: animation is fine */ }
+			if (reduce) return;
+			if (line) {
+				var len = 0;
+				try {
+					len = line.getTotalLength();
+				} catch (e) { len = 0; }
+				if (len > 0) {
+					line.style.strokeDasharray = len;
+					line.style.strokeDashoffset = len;
+					// force layout, then transition the draw
+					void line.getBoundingClientRect();
+					line.style.transition = 'stroke-dashoffset 2.2s cubic-bezier(0.22, 1, 0.36, 1) 0.2s';
+					line.style.strokeDashoffset = '0';
+				}
+			}
+			if (area) area.classList.add('is-drawn');
+			if (dot) dot.classList.add('is-drawn');
+			if (halo) halo.classList.add('is-drawn');
+			chips.forEach(function (chip, i) {
+				chip.classList.add('is-drawn');
+				chip.style.transitionDelay = (1.2 + i * 0.35) + 's';
+			});
+		})();
 	</script>
 </Layout>
