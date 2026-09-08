@@ -34,6 +34,16 @@ export const strings: Dictionary = {
 	"a11y.financialSnapshot": { en: "Financial snapshot", th: "ภาพรวมการเงิน" },
 	"a11y.planActions": { en: "Plan details", th: "รายละเอียดแผน" },
 
+	// US-110 — Monte Carlo market band
+	"chart.band.caption": {
+		en: "Shaded band: P10–P90 across {trials} market scenarios · {survival} of plans never run out",
+		th: "แถบแรเงา: P10–P90 จาก {trials} สถานการณ์ตลาด · {survival} ของแผนที่เงินไม่หมดทาง",
+	},
+	"chart.band.unmet": {
+		en: "worst case runs out {year}",
+		th: "กรณีเลวร้ายที่สุด เงินไม่พอในปี {year}",
+	},
+
 	// Left column financial rows (engine-driven)
 	"metric.netWorthValue": { en: "Net Worth", th: "มูลค่าสุทธิ" },
 	"metric.changeInNetWorth": { en: "Change in Net Worth", th: "การเปลี่ยนแปลงมูลค่าสุทธิ" },

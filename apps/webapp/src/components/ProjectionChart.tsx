@@ -15,7 +15,7 @@ import {
 	Stack,
 	Text,
 } from "@excited-live/design-system"
-import type { SimulationYear } from "../lib/plan-service"
+import type { MonteCarloBand, SimulationYear } from "../lib/plan-service"
 import { formatBaht, formatBahtCompact } from "../lib/format"
 
 const WIDTH = 1000
@@ -28,6 +28,11 @@ export interface ProjectionChartProps {
 	/** Which series to draw: end-of-year net worth or yearly cash flow. */
 	metric?: "netWorth" | "cashFlow"
 	ariaLabel: string
+	/**
+	 * US-110 — Monte Carlo P10/P90 band, index-aligned with `years` (same
+	 * metric units). Drawn as a shaded area under the plan line.
+	 */
+	band?: readonly MonteCarloBand[]
 	/** Fired on hover/drag/leave so panels below can mirror the active year. */
 	onActiveYearChange?: (year: number | null) => void
 }
@@ -36,6 +41,7 @@ export function ProjectionChart({
 	years,
 	metric = "netWorth",
 	ariaLabel,
+	band,
 	onActiveYearChange,
 }: ProjectionChartProps) {
 	const [activeIndex, setActiveIndex] = useState<number | null>(null)
@@ -43,8 +49,13 @@ export function ProjectionChart({
 	const valueOf = (year: SimulationYear) =>
 		metric === "netWorth" ? year.netWorth : year.netCash
 
-	const { points, min, max } = useMemo(() => {
+	const { points, min, max, bandArea } = useMemo(() => {
 		const values = years.map(valueOf)
+		// Band edges widen the scale so the shaded area always fits. The band
+		// arrives in the active metric's units (mapped by the caller).
+		for (const entry of band ?? []) {
+			values.push(entry.p10, entry.p90)
+		}
 		const rawMax = Math.max(...values, 0)
 		const rawMin = Math.min(...values, 0)
 		const span = rawMax - rawMin || 1
@@ -53,6 +64,21 @@ export function ProjectionChart({
 		const xFor = (index: number) =>
 			years.length === 1 ? PAD.left + innerW / 2 : PAD.left + (index / (years.length - 1)) * innerW
 		const yFor = (value: number) => PAD.top + (1 - (value - rawMin) / span) * innerH
+		const bandPoints =
+			band && band.length === years.length
+				? band.map((entry, index) => ({
+						x: xFor(index),
+						p10: yFor(entry.p10),
+						p90: yFor(entry.p90),
+					}))
+				: null
+		const bandAreaPath = bandPoints
+			? [
+					...bandPoints.map((point, index) => `${index === 0 ? "M" : "L"}${point.x.toFixed(1)} ${point.p90.toFixed(1)}`),
+					...[...bandPoints].reverse().map((point) => `L${point.x.toFixed(1)} ${point.p10.toFixed(1)}`),
+					"Z",
+				].join(" ")
+			: null
 		return {
 			points: years.map((year, index) => ({
 				year: year.year,
@@ -63,10 +89,11 @@ export function ProjectionChart({
 			})),
 			min: rawMin,
 			max: rawMax,
+			bandArea: bandAreaPath,
 		}
 		// valueOf is a stable pure function of the metric prop.
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [years, metric])
+	}, [years, metric, band])
 
 	const linePath = points
 		.map((point, index) => `${index === 0 ? "M" : "L"}${point.x.toFixed(1)} ${point.y.toFixed(1)}`)
@@ -157,6 +184,10 @@ export function ProjectionChart({
 					/>
 				) : null}
 				<SvgPath d={areaPath} fill="url(#mvp-area)" />
+				{/* Band above the gradient so the P10 lower edge stays readable. */}
+				{bandArea ? (
+					<SvgPath d={bandArea} fill="var(--color-accent)" fillOpacity="0.1" />
+				) : null}
 				<SvgPath
 					d={linePath}
 					fill="none"

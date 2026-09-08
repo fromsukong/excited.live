@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState, type ComponentType, type SVGProps } from "react"
+import { useEffect, useMemo, useRef, useState, type ComponentType, type SVGProps } from "react"
 import {
 	BookmarkIcon,
 	Button,
@@ -26,8 +26,10 @@ import {
 import { createFileRoute } from "@tanstack/react-router"
 import { useLocale } from "../lib/locale-context"
 import {
+	computeMonteCarloBands,
 	computePlanSummary,
 	defaultPlan,
+	type MonteCarloResult,
 	type PlanInput,
 	type PlanSummary,
 	type PeriodRow,
@@ -89,6 +91,52 @@ function Home() {
 		const count = Math.min(Number(horizon), all.length)
 		return all.slice(0, count)
 	}, [summary, horizon])
+
+	// US-110 — Monte Carlo bands. ~200 full projections cost a few hundred ms,
+	// so the recompute is debounced: typing stays instant (deterministic
+	// summary), the band catches up a beat later. The engine is seeded by
+	// default, so the band is stable across renders (SSR/client match).
+	const [bands, setBands] = useState<MonteCarloResult | null>(null)
+	useEffect(() => {
+		const timer = setTimeout(() => {
+			try {
+				setBands(computeMonteCarloBands(plan))
+			} catch {
+				setBands(null)
+			}
+		}, 250)
+		return () => clearTimeout(timer)
+	}, [plan])
+
+	/**
+	 * Band slice index-aligned with `shown`. Only net worth carries market
+	 * risk in the MVP engine, so the band shows for the net-worth metric
+	 * only (cash-flow band would be zero-width everywhere).
+	 */
+	const shownBands = useMemo(() => {
+		if (!bands || !shown || bands.years.length < shown.length) return null
+		if (metric !== "metric.netWorth") return null
+		return bands.years.slice(0, shown.length).map((entry) => ({
+			p10: entry.netWorth.p10,
+			p50: entry.netWorth.p50,
+			p90: entry.netWorth.p90,
+		}))
+	}, [bands, shown, metric])
+
+	const bandCaption = useMemo(() => {
+		// Caption describes the shaded band — net-worth metric only.
+		if (!bands || metric !== "metric.netWorth") return null
+		let survival = Math.floor(bands.survivalRate * 100)
+		// Never print "100% never run out" next to "worst case runs out YEAR".
+		if (bands.unmetYearP100 !== null) survival = Math.min(survival, 99)
+		return {
+			text: t("chart.band.caption", {
+				trials: String(bands.trials),
+				survival: `${survival}%`,
+			}),
+			unmetYear: bands.unmetYearP100,
+		}
+	}, [bands, metric, t])
 
 	const financialMetrics = useMemo<FinancialMetric[]>(() => {
 		if (!summary.ok) return []
@@ -298,11 +346,20 @@ function Home() {
 											years={shown}
 											metric={metric === "metric.netWorth" ? "netWorth" : "cashFlow"}
 											ariaLabel={t(metric === "metric.netWorth" ? "chart.aria.netWorth" : "chart.aria.cashFlow")}
+											band={shownBands ?? undefined}
 											onActiveYearChange={setHoverYear}
 										/>
 									) : (
 										<Text color="secondary">{summary.ok ? "" : summary.error.message}</Text>
 									)}
+									{bandCaption ? (
+										<Text size="sm" color="secondary" className="chart-band-caption">
+											{bandCaption.text}
+											{bandCaption.unmetYear !== null
+												? ` · ${t("chart.band.unmet", { year: String(bandCaption.unmetYear) })}`
+												: ""}
+										</Text>
+									) : null}
 								</Stack>
 
 								<Stack direction="horizontal" vAlign="center" className="chart-toolbar">
