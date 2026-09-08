@@ -1286,30 +1286,6 @@ button {
   min-width: 0;
 }
 
-.assistant-turn--user {
-  align-items: flex-end;
-  text-align: right;
-}
-
-.assistant-turn--assistant {
-  align-items: flex-start;
-}
-
-.assistant-bubble {
-  width: fit-content;
-  max-width: 86%;
-  padding: 10px 14px;
-  border: 1px solid var(--panel-border);
-  border-radius: 18px;
-  border-bottom-right-radius: 6px;
-  color: var(--copy);
-  background: var(--color-overlay-pressed);
-}
-
-.assistant-turn__meta {
-  padding: 0 4px;
-}
-
 .assistant-avatar {
   display: inline-flex;
   align-items: center;
@@ -1325,57 +1301,10 @@ button {
   background: var(--color-neutral);
 }
 
-.assistant-turn__body {
-  max-width: 86%;
-  padding-top: 4px;
-  line-height: 1.55;
-  color: var(--copy);
-}
-
+/* The composer is the Astryx ChatComposer card — only outer spacing here. */
 .assistant-composer {
   flex: 0 0 auto;
-  padding: 12px 14px 10px;
-  border: 1px solid var(--panel-border);
-  border-radius: 22px;
-  background: var(--panel-bg);
-  box-shadow: 0 10px 30px var(--shadow-color, rgba(0, 0, 0, 0.16));
-}
-
-.assistant-composer__ask {
-  padding: 3px 10px;
-  border: 1px solid var(--panel-border);
-  border-radius: 999px;
-  color: var(--copy-soft);
-  font-size: 12px;
-  font-weight: 600;
-  background: transparent;
-  cursor: pointer;
-}
-
-.assistant-composer__input {
-  min-width: 0;
-}
-
-.assistant-composer__send {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 34px;
-  height: 34px;
-  border: 0;
-  border-radius: 999px;
-  color: var(--color-background-card);
-  background: var(--color-text-primary);
-  cursor: pointer;
-}
-
-.assistant-composer__send:hover {
-  opacity: 0.88;
-}
-
-.assistant-composer__send-icon {
-  width: 16px;
-  height: 16px;
+  margin-top: 12px;
 }
 
 /* Minimized assistant: the dock alone provides the Chat launcher; the left

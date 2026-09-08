@@ -6,6 +6,11 @@ import {
 	Card,
 	ChartIcon,
 	ChatIcon,
+	ChatComposer,
+	ChatMessage,
+	ChatMessageBubble,
+	ChatMessageList,
+	ChatToolCalls,
 	CompassIcon,
 	Grid,
 	Heading,
@@ -15,7 +20,6 @@ import {
 	NumberInput,
 	PlainButton,
 	PresentationIcon,
-	SendIcon,
 	SegmentedControl,
 	Selector,
 	SegmentedControlItem,
@@ -24,6 +28,7 @@ import {
 	TextInput,
 	Theme,
 	mastercardTheme,
+	type ChatToolCallItem,
 } from "@excited-live/design-system"
 import { createFileRoute } from "@tanstack/react-router"
 import { useLocale } from "../lib/locale-context"
@@ -907,6 +912,8 @@ interface ChatMessage {
 	id: number
 	role: "user" | "assistant"
 	text: string
+	/** Demo tool calls shown as collapsible rows above the reply text. */
+	toolCalls?: ChatToolCallItem[]
 }
 
 function AssistantRail({
@@ -923,17 +930,59 @@ function AssistantRail({
 	const nextId = useRef(1)
 	const logRef = useRef<HTMLDivElement | null>(null)
 
+	/**
+	 * Demo tool-call flow: the assistant "runs" two tools derived from the
+	 * live plan before answering — each call flips from running → complete
+	 * so the Astryx collapsible tool rows animate like a real assistant.
+	 */
+	const demoToolCalls = (question: string): ChatToolCallItem[] => {
+		const q = question.toLowerCase()
+		const v = summary.retirement
+		const calls: ChatToolCallItem[] = [{ name: "get_plan_snapshot", target: "plan/current", node: "plan-engine" }]
+		if (q.includes("retire") || q.includes("เกษียณ") || q.includes("run out") || q.includes("หมด")) {
+			calls.push({
+				name: "simulate_retirement",
+				target: v.funded ? `until ${v.endYear}` : `runs out ${v.unmetYear ?? ""}`,
+				node: "monte-carlo",
+				stats: "200 scenarios",
+			})
+		}
+		if (q.includes("spend") || q.includes("afford") || q.includes("ใช้")) {
+			calls.push({ name: "solve_max_forever", target: "monthly withdrawal", node: "plan-engine" })
+		}
+		return calls
+	}
+
 	const send = () => {
 		const text = draft.trim()
 		if (!text) return
-		const userMsg: ChatMessage = { id: nextId.current++, role: "user", text }
-		const reply: ChatMessage = { id: nextId.current++, role: "assistant", text: mockReply(text, summary, t) }
-		setMessages((current) => [...current, userMsg, reply])
+		const userId = nextId.current++
+		const assistantId = nextId.current++
+		const calls = demoToolCalls(text)
+		// Turn 1: tool calls running (no text yet). Turn 2: calls complete +
+		// the canned answer, once the "tools" have had time to finish.
+		setMessages((current) => [
+			...current,
+			{ id: userId, role: "user", text },
+			{ id: assistantId, role: "assistant", text: "", toolCalls: calls.map((call) => ({ ...call, status: "running" as const })) },
+		])
 		setDraft("")
-		// Autoscroll after the new turns paint.
-		requestAnimationFrame(() => {
+		window.setTimeout(() => {
+			setMessages((current) =>
+				current.map((message) =>
+					message.id === assistantId
+						? {
+								...message,
+								text: mockReply(text, summary, t),
+								toolCalls: calls.map((call) => ({ ...call, status: "complete" as const, duration: "0.4s" })),
+							}
+						: message,
+				),
+			)
+		}, 900)
+		window.setTimeout(() => {
 			logRef.current?.scrollTo({ top: logRef.current.scrollHeight, behavior: "smooth" })
-		})
+		}, 950)
 	}
 
 	return (
@@ -948,49 +997,43 @@ function AssistantRail({
 				</PlainButton>
 			</Stack>
 
-			<Stack gap={3} className="assistant-rail__log" ref={logRef}>
+			<Stack className="assistant-rail__log" ref={logRef}>
 				<Text size="sm" color="secondary" className="assistant-rail__day">{t("rail.today")}</Text>
-				{messages.length === 0 ? (
-					<Text size="sm" color="secondary">{t("chat.empty")}</Text>
-				) : (
-					messages.map((message) =>
-						message.role === "user" ? (
-							<Stack key={message.id} gap={0.5} className="assistant-turn assistant-turn--user">
-								<Text size="sm" className="assistant-bubble assistant-bubble--user">{message.text}</Text>
-								<Text size="sm" color="secondary" className="assistant-turn__meta">{t("rail.you")}</Text>
-							</Stack>
-						) : (
-							<Stack key={message.id} direction="horizontal" gap={2} className="assistant-turn assistant-turn--assistant">
-								<Stack vAlign="center" className="assistant-avatar" aria-hidden="true">A</Stack>
-								<Text size="sm" className="assistant-turn__body">{message.text}</Text>
-							</Stack>
-						),
-					)
-				)}
+				<ChatMessageList className="assistant-rail__list" aria-label={t("rail.title")}>
+					{messages.length === 0 ? (
+						<Text size="sm" color="secondary">{t("chat.empty")}</Text>
+					) : (
+						messages.map((message) =>
+							message.role === "user" ? (
+								<ChatMessage key={message.id} sender="user">
+									<ChatMessageBubble name={t("rail.you")}>{message.text}</ChatMessageBubble>
+								</ChatMessage>
+							) : (
+								<ChatMessage
+									key={message.id}
+									sender="assistant"
+									avatar={<Stack vAlign="center" className="assistant-avatar" aria-hidden="true">A</Stack>}
+								>
+									{message.toolCalls && message.toolCalls.length > 0 ? (
+										<ChatToolCalls calls={message.toolCalls} />
+									) : null}
+									{message.text ? (
+										<ChatMessageBubble variant="ghost">{message.text}</ChatMessageBubble>
+									) : null}
+								</ChatMessage>
+							),
+						)
+					)}
+				</ChatMessageList>
 			</Stack>
 
-			<Stack gap={1.5} className="assistant-composer">
-				<Stack direction="horizontal" justify="between" vAlign="center" className="assistant-composer__modes">
-					<PlainButton className="assistant-composer__ask">
-						{t("rail.ask")}
-					</PlainButton>
-				</Stack>
-				<TextInput
-					label={t("chat.placeholder")}
-					isLabelHidden
-					placeholder={t("chat.placeholder")}
-					value={draft}
-					onChange={setDraft}
-					onEnter={send}
-					className="assistant-composer__input"
-				/>
-				<Stack direction="horizontal" justify="between" vAlign="center">
-					<Text size="sm" color="secondary">{t("rail.planSummary")}</Text>
-					<PlainButton className="assistant-composer__send" aria-label={t("chat.send")} onClick={send}>
-						<SendIcon className="assistant-composer__send-icon" aria-hidden="true" />
-					</PlainButton>
-				</Stack>
-			</Stack>
+			<ChatComposer
+				className="assistant-composer"
+				value={draft}
+				onChange={setDraft}
+				onSubmit={send}
+				placeholder={t("chat.placeholder")}
+			/>
 		</Stack>
 	)
 }
