@@ -4,20 +4,12 @@ import tailwindcss from '@tailwindcss/vite';
 import mdx from '@astrojs/mdx';
 import { unified } from '@astrojs/markdown-remark';
 import {
-	rehypeCode,
-	remarkCodeTab,
-	remarkHeading,
-	remarkNpm,
-	remarkStructure,
-} from 'fumadocs-core/mdx-plugins';
+	BLOG_REHYPE_PLUGINS,
+	BLOG_REMARK_PLUGINS,
+} from '@/lib/blog-pipeline';
 
-const remarkPlugins = [
-	remarkHeading,
-	remarkCodeTab,
-	remarkNpm,
-	[remarkStructure, { exportAs: 'structuredData' }],
-];
-const rehypePlugins = [rehypeCode];
+const remarkPlugins = [...BLOG_REMARK_PLUGINS];
+const rehypePlugins = [...BLOG_REHYPE_PLUGINS];
 
 export default defineConfig({
 	site: 'https://excited.live',

@@ -1,0 +1,281 @@
+---
+/**
+ * Presentation view — /blog/[slug]/slides
+ *
+ * Build-time only: renders the post markdown through the SAME pipeline as the
+ * blog (src/lib/blog-pipeline.ts), extracts the `.slide-block` divs, and wraps
+ * each one in a <section class="slide">. A tiny inline script handles arrow
+ * keys / swipe / click-zones and "f" for fullscreen. No hydration, no
+ * framework, records clean for YouTube.
+ */
+import { getCollection } from 'astro:content';
+import Layout from '@/components/layout.astro';
+import { renderBlogMarkdown } from '@/lib/blog-pipeline';
+import { splitSlides } from '@/lib/slides';
+import '@/styles/global.css';
+
+export async function getStaticPaths() {
+	const posts = await getCollection('blog', ({ data }) => !data.draft);
+	// Pre-render markdown for every post once (processor caches internally).
+	const paths = [];
+	for (const post of posts) {
+		const html = await renderBlogMarkdown(post.body ?? '');
+		paths.push({
+			params: { slug: post.id },
+			props: { post, html },
+		});
+	}
+	return paths;
+}
+
+const { post, html } = Astro.props;
+const { slidesHtml, slideCount } = splitSlides(html);
+---
+
+<Layout title={`${post.data.title} — Slides — excited.live`} description={post.data.description}>
+	<link rel="stylesheet" href="/katex.min.css" />
+	<div class="deck">
+		{
+			slideCount > 0 ? (
+				<Fragment set:html={slidesHtml} />
+			) : (
+				<section class="slide">
+					<div class="slide-inner">
+						<h1>
+							<span data-lang-en>This post has no slides yet</span>
+							<span data-lang-th>โพสต์นี้ยังไม่มีสไลด์</span>
+						</h1>
+						<p>
+							<span data-lang-en>Wrap the parts you want to present in :::slide fences.</span>
+							<span data-lang-th>ครอบส่วนที่อยากให้เป็นสไลด์ด้วย :::slide … ::: ในไฟล์โพสต์</span>
+						</p>
+					</div>
+				</section>
+			)
+		}
+	</div>
+
+	<div class="deck-hud" role="status" aria-live="polite">
+		<a class="deck-exit" href={`/blog/${post.id}`} title="Back to the post">
+		<span data-lang-en>← Post</span>
+		<span data-lang-th>← บทความ</span>
+	</a>
+		<span class="deck-counter"><span class="deck-current">1</span> / {Math.max(slideCount, 1)}</span>
+	</div>
+
+	<noscript>
+		<style>
+			/* Without JS: show all slides stacked and let the page scroll to them. */
+			.deck {
+				position: static;
+				height: auto;
+				overflow: visible;
+			}
+			.deck .slide {
+				display: flex !important;
+				position: static !important;
+				opacity: 1 !important;
+				min-height: 88vh;
+			}
+			.deck-hud .deck-counter {
+				display: none;
+			}
+		</style>
+	</noscript>
+
+	<script is:inline>
+		(() => {
+			const deck = document.querySelector('.deck');
+			if (!deck) return;
+			const slides = Array.from(deck.querySelectorAll('.slide'));
+			if (slides.length === 0) return;
+			const counter = document.querySelector('.deck-current');
+			let index = 0;
+
+			const show = (i) => {
+				index = Math.max(0, Math.min(slides.length - 1, i));
+				slides.forEach((s, n) => s.classList.toggle('is-active', n === index));
+				if (counter) counter.textContent = String(index + 1);
+				const hash = `#${index + 1}`;
+				if (history.replaceState) history.replaceState(null, '', hash);
+			};
+
+			// Deep link: /slides#3 opens on slide 3 (matches ?t=123s timestamps).
+			const fromHash = location.hash.match(/^#(\d+)$/);
+			show(fromHash ? Number(fromHash[1]) - 1 : 0);
+
+			document.addEventListener('keydown', (e) => {
+				if (['ArrowRight', 'ArrowDown', 'PageDown', ' '].includes(e.key)) {
+					e.preventDefault();
+					show(index + 1);
+				} else if (['ArrowLeft', 'ArrowUp', 'PageUp'].includes(e.key)) {
+					e.preventDefault();
+					show(index - 1);
+				} else if (e.key === 'Home') {
+					show(0);
+				} else if (e.key === 'End') {
+					show(slides.length - 1);
+				} else if (e.key === 'f' || e.key === 'F') {
+					if (document.fullscreenElement) document.exitFullscreen();
+					else document.documentElement.requestFullscreen();
+				}
+			});
+
+			// Click zones: left third = back, right two-thirds = forward.
+			// (Swipe-guarded below: the capture-phase listener swallows the
+			// synthetic click that follows a swipe on mobile.)
+			deck.addEventListener('click', (e) => {
+				if (e.target instanceof Element && e.target.closest('a')) return;
+				const x = e.clientX / window.innerWidth;
+				show(x < 0.3 ? index - 1 : index + 1);
+			});
+
+			// Touch swipe. The moved-flag stops the synthetic click some mobile
+			// browsers fire after a swipe from double-advancing the deck.
+			let startX = null;
+			let swipeHandled = false;
+			deck.addEventListener(
+				'touchstart',
+				(e) => {
+					startX = e.touches[0].clientX;
+					swipeHandled = false;
+				},
+				{ passive: true },
+			);
+			deck.addEventListener(
+				'touchmove',
+				() => {
+					swipeHandled = true;
+				},
+				{ passive: true },
+			);
+			deck.addEventListener(
+				'touchend',
+				(e) => {
+					if (startX === null) return;
+					const dx = e.changedTouches[0].clientX - startX;
+					if (Math.abs(dx) > 48) {
+						show(dx < 0 ? index + 1 : index - 1);
+						swipeHandled = true;
+					}
+					startX = null;
+				},
+				{ passive: true },
+			);
+			deck.addEventListener(
+				'click',
+				() => {
+					if (swipeHandled) {
+						swipeHandled = false;
+						return;
+					}
+				},
+				{ capture: true },
+			);
+		})();
+	</script>
+
+	<style>
+		.deck {
+			position: fixed;
+			inset: 0;
+			background: var(--canvas);
+		}
+		.deck :global(.slide) {
+			position: absolute;
+			inset: 0;
+			display: none;
+			align-items: center;
+			justify-content: center;
+			padding: 6vh 8vw;
+		}
+		.deck :global(.slide.is-active) {
+			display: flex;
+		}
+		.deck :global(.slide-inner) {
+			max-width: 880px;
+			width: 100%;
+			text-align: center;
+		}
+		.deck :global(.slide h1),
+		.deck :global(.slide h2),
+		.deck :global(.slide h3) {
+			color: var(--ink);
+			letter-spacing: -0.02em;
+			margin: 0 0 0.6em;
+		}
+		.deck :global(.slide h1) {
+			font-size: clamp(34px, 6vw, 64px);
+		}
+		.deck :global(.slide h2) {
+			font-size: clamp(28px, 4.6vw, 52px);
+		}
+		.deck :global(.slide h3) {
+			font-size: clamp(22px, 3.4vw, 34px);
+		}
+		.deck :global(.slide p),
+		.deck :global(.slide li) {
+			font-size: clamp(20px, 2.9vw, 34px);
+			line-height: 1.45;
+			color: var(--charcoal);
+		}
+		.deck :global(.slide img) {
+			max-width: min(100%, 72vw);
+			max-height: 62vh;
+			border-radius: 20px;
+			box-shadow: var(--shadow-halo);
+			margin: 0 auto;
+			display: block;
+		}
+		.deck :global(.slide strong) {
+			color: var(--orange);
+			font-weight: 700;
+		}
+		.deck :global(.slide a) {
+			color: var(--link-blue);
+		}
+		/* Math is a first-class slide citizen: size it with the headline tier. */
+		.deck :global(.slide .katex-display) {
+			margin: 0.4em 0;
+		}
+		.deck :global(.slide .katex-display > .katex) {
+			font-size: clamp(26px, 4.2vw, 48px);
+		}
+		.deck :global(.slide table) {
+			margin: 0 auto;
+			border-collapse: collapse;
+			font-size: clamp(15px, 2vw, 22px);
+		}
+		.deck :global(.slide th),
+		.deck :global(.slide td) {
+			border-bottom: 1px solid var(--dust);
+			padding: 8px 16px;
+			text-align: left;
+		}
+		.deck-hud {
+			position: fixed;
+			left: 0;
+			right: 0;
+			bottom: 0;
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			padding: 14px 20px;
+			font-size: 14px;
+			font-weight: 600;
+			color: var(--slate);
+			pointer-events: none;
+		}
+		.deck-exit {
+			pointer-events: auto;
+			color: var(--slate);
+			text-decoration: none;
+			padding: 6px 10px;
+			border-radius: 999px;
+			background: rgba(252, 251, 250, 0.8);
+		}
+		.deck-exit:hover {
+			color: var(--orange);
+		}
+	</style>
+</Layout>

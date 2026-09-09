@@ -1,0 +1,226 @@
+---
+/**
+ * Blog post page — /blog/[slug]/
+ *
+ * Renders the FULL markdown (every paragraph). Slide-worthy blocks (the
+ * `:::slide` fences) stay in flow, styled as callout cards so the blog reads
+ * naturally. A link to /blog/[slug]/slides offers the presentation view.
+ */
+import { getCollection, render } from 'astro:content';
+import Layout from '@/components/layout.astro';
+import { countSlideFences } from '@/lib/blog-pipeline';
+import '@/styles/global.css';
+
+export async function getStaticPaths() {
+	const posts = await getCollection('blog', ({ data }) => !data.draft);
+	return posts.map((post) => ({
+		params: { slug: post.id },
+		props: { post },
+	}));
+}
+
+const { post } = Astro.props;
+const { Content } = await render(post);
+const slideCount = countSlideFences(post.body);
+const hasVideo = Boolean(post.data.youtube);
+---
+
+<Layout title={`${post.data.title} — excited.live`} description={post.data.description}>
+	<link rel="stylesheet" href="/katex.min.css" />
+	<a class="docs-back" href="/blog">
+		<img src="/logo-mark.png" alt="" width="22" height="22" />
+		<span>excited<span class="brand-dot">.live</span></span>
+		<span class="docs-back-sep">/</span>
+		<span class="docs-back-page">
+		<span data-lang-en>Blog</span>
+		<span data-lang-th>บล็อก</span>
+	</span>
+	</a>
+
+	<main class="blog-post">
+		<article class="blog-article">
+			<header class="blog-header">
+				<time class="blog-date" datetime={post.data.date.toISOString()}>
+					{post.data.date.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
+				</time>
+				<h1 class="blog-title">{post.data.title}</h1>
+				{post.data.description && <p class="blog-description">{post.data.description}</p>}
+			</header>
+
+			{
+				hasVideo && (
+					<aside class="blog-video" aria-label="Video version of this post">
+						<div class="blog-video-frame">
+							<iframe
+								src={`https://www.youtube-nocookie.com/embed/${post.data.youtube}`}
+								title={post.data.title}
+								allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+								allowfullscreen
+								loading="lazy"
+								referrerpolicy="strict-origin-when-cross-origin"
+							/>
+						</div>
+						<p class="blog-video-hint">
+						<span data-lang-en>Prefer watching? This post is also the video above.</span>
+						<span data-lang-th>ชอบดูวิดีโอมากกว่า? โพสต์นี้มีในรูปแบบวิดีโอด้านบนด้วย</span>
+					</p>
+					</aside>
+				)
+			}
+
+			{
+				slideCount > 0 && (
+					<div class="blog-slides-cta">
+						<a class="btn-ink" href={`/blog/${post.id}/slides`}>
+							<span data-lang-en>Open as presentation ({slideCount} slides)</span>
+							<span data-lang-th>เปิดเป็นสไลด์ ({slideCount} หน้า)</span>
+						</a>
+					</div>
+				)
+			}
+
+			<div class="blog-prose">
+				<Content />
+			</div>
+		</article>
+	</main>
+
+	<style>
+		.blog-post {
+			max-width: 720px;
+			margin: 0 auto;
+			padding: 24px 24px 96px;
+		}
+		.blog-header {
+			margin: 40px 0 32px;
+		}
+		.blog-date {
+			font-size: 13.5px;
+			font-weight: 600;
+			letter-spacing: 0.02em;
+			color: var(--slate);
+			text-transform: uppercase;
+		}
+		.blog-title {
+			font-size: clamp(30px, 5vw, 44px);
+			line-height: 1.12;
+			letter-spacing: -0.02em;
+			font-weight: 700;
+			color: var(--ink);
+			margin: 12px 0 0;
+		}
+		.blog-description {
+			font-size: 18px;
+			line-height: 1.55;
+			color: var(--charcoal);
+			margin: 16px 0 0;
+		}
+		.blog-video {
+			margin: 0 0 32px;
+		}
+		.blog-video-frame {
+			position: relative;
+			padding-top: 56.25%;
+			border-radius: 20px;
+			overflow: hidden;
+			box-shadow: var(--shadow-halo);
+			background: var(--ink);
+		}
+		.blog-video-frame iframe {
+			position: absolute;
+			inset: 0;
+			width: 100%;
+			height: 100%;
+			border: 0;
+		}
+		.blog-video-hint {
+			font-size: 13.5px;
+			color: var(--slate);
+			margin: 10px 4px 0;
+		}
+		.blog-slides-cta {
+			margin: 0 0 40px;
+		}
+		.blog-prose {
+			font-size: 17px;
+			line-height: 1.7;
+			color: var(--ink);
+		}
+		.blog-prose :global(h2) {
+			font-size: 26px;
+			letter-spacing: -0.015em;
+			margin: 40px 0 12px;
+			color: var(--ink);
+		}
+		.blog-prose :global(h3) {
+			font-size: 20px;
+			margin: 28px 0 10px;
+			color: var(--ink);
+		}
+		.blog-prose :global(p) {
+			margin: 0 0 16px;
+		}
+		.blog-prose :global(a) {
+			color: var(--link-blue);
+		}
+		.blog-prose :global(strong) {
+			color: var(--ink);
+		}
+		.blog-prose :global(img) {
+			max-width: 100%;
+			border-radius: 20px;
+			margin: 8px 0;
+		}
+		.blog-prose :global(blockquote) {
+			border-left: 3px solid var(--dust);
+			margin: 16px 0;
+			padding: 4px 0 4px 16px;
+			color: var(--charcoal);
+		}
+		.blog-prose :global(code) {
+			font-size: 0.92em;
+			background: var(--ghost);
+			border-radius: 6px;
+			padding: 2px 6px;
+		}
+		.blog-prose :global(pre) {
+			background: var(--ink);
+			color: var(--canvas);
+			border-radius: 20px;
+			padding: 18px 20px;
+			overflow-x: auto;
+		}
+		.blog-prose :global(pre code) {
+			background: transparent;
+			color: inherit;
+			padding: 0;
+		}
+		.blog-prose :global(table) {
+			width: 100%;
+			border-collapse: collapse;
+			font-size: 15px;
+			margin: 16px 0;
+		}
+		.blog-prose :global(th),
+		.blog-prose :global(td) {
+			border-bottom: 1px solid var(--dust);
+			padding: 8px 10px;
+			text-align: left;
+		}
+		/* :::slide blocks inside the blog flow = highlighted callout cards */
+		.blog-prose :global(.slide-block) {
+			background: var(--lifted);
+			border: 1px solid var(--dust);
+			border-radius: 20px;
+			padding: 20px 22px;
+			margin: 24px 0;
+			box-shadow: var(--shadow-nav);
+		}
+		.blog-prose :global(.slide-block h2) {
+			margin-top: 0;
+		}
+		.blog-prose :global(.slide-block :last-child) {
+			margin-bottom: 0;
+		}
+	</style>
+</Layout>
