@@ -1,26 +1,25 @@
 import { useEffect, useMemo, useRef, useState, type ComponentType, type SVGProps } from "react"
 import {
 	BookmarkIcon,
-	Button,
 	CalendarIcon,
 	Card,
 	ChartIcon,
+	ChatComposer,
+	ChatMessage,
+	ChatMessageBubble,
+	ChatMessageList,
+	ChatToolCalls,
 	CompassIcon,
 	Grid,
-	Heading,
 	Img,
 	LinkIcon,
-	NumberInput,
 	PlainButton,
 	PresentationIcon,
-	SegmentedControl,
-	Selector,
-	SegmentedControlItem,
 	Stack,
 	Text,
-	TextInput,
 	Theme,
 	mastercardTheme,
+	type ChatToolCallItem,
 } from "@excited-live/design-system"
 import { createFileRoute } from "@tanstack/react-router"
 import { useLocale } from "../lib/locale-context"
@@ -31,8 +30,6 @@ import {
 	type MonteCarloResult,
 	type PlanInput,
 	type PlanSummary,
-	type PeriodRow,
-	type WalletId,
 } from "../lib/plan-service"
 import { ProjectionChart } from "../components/ProjectionChart"
 import { formatBaht, formatBahtMonthly, formatPercent } from "../lib/format"
@@ -60,17 +57,14 @@ interface PlanInfo {
 
 const HORIZONS: readonly HorizonKey[] = ["10", "20", "30", "40", "all"]
 
-const WALLETS: readonly WalletId[] = ["emergency", "goal", "nontax", "taxAdvantaged"]
-
 function Home() {
 	const { t, locale, setLocale } = useLocale()
-	const [plan, setPlan] = useState<PlanInput>(() => defaultPlan())
+	const [plan] = useState<PlanInput>(() => defaultPlan())
 	const [horizon, setHorizon] = useState<HorizonKey>("30")
 	const [metric, setMetric] = useState<MetricKey>("metric.netWorth")
 	const [selectedMetricKey, setSelectedMetricKey] = useState<string>("metric.netWorthValue")
 	const [leftTab, setLeftTab] = useState<"financials" | "answers">("financials")
 	const [hoverYear, setHoverYear] = useState<number | null>(null)
-	const inputsRef = useRef<HTMLElement | null>(null)
 
 	const summary = useMemo(() => {
 		try {
@@ -259,46 +253,6 @@ function Home() {
 		]
 	}, [summary, t])
 
-	const patchRow = (kind: "incomes" | "expenses", id: string, patch: Partial<PeriodRow>) => {
-		setPlan((current) => ({
-			...current,
-			[kind]: current[kind].map((row) => (row.id === id ? { ...row, ...patch } : row)),
-		}))
-	}
-
-	const addRow = (kind: "incomes" | "expenses") => {
-		setPlan((current) => ({
-			...current,
-			[kind]: [
-				...current[kind],
-				{
-					id: `${kind}-${current[kind].length + 1}-${current[kind].length}`,
-					label: kind === "incomes" ? "New income" : "New expense",
-					startYear: current.startYear,
-					endYear: null,
-					amount: 0,
-					growthMode: "inflation",
-					growthRate: 0,
-				},
-			],
-		}))
-	}
-
-	const removeRow = (kind: "incomes" | "expenses", id: string) => {
-		setPlan((current) => ({
-			...current,
-			[kind]: current[kind].filter((row) => row.id !== id),
-		}))
-	}
-
-	const patchWallet = (
-		field: "savingsSplit" | "walletRates" | "startingWallets",
-		id: WalletId,
-		value: number,
-	) => {
-		setPlan((current) => ({ ...current, [field]: { ...current[field], [id]: value } }))
-	}
-
 	return (
 		<Theme theme={mastercardTheme} mode="light">
 			<Stack className="dashboard-shell">
@@ -416,28 +370,11 @@ function Home() {
 								</Stack>
 								</Card>
 
-								<Stack as="section" aria-label={t("a11y.planInputs")} className="plan-column" ref={inputsRef}>
-									<PlanInputs
-										plan={plan}
-										setPlan={setPlan}
-										patchRow={patchRow}
-										addRow={addRow}
-										removeRow={removeRow}
-										patchWallet={patchWallet}
-										t={t}
-									/>
-									{summary.ok ? (
-										<ChatPanel summary={summary.data} t={t} />
-									) : null}
-									<PlanDock
-										onAddIncome={() => addRow("incomes")}
-										onAddExpense={() => addRow("expenses")}
-										onEditPlan={() => {
-											inputsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
-										}}
-										t={t}
-									/>
-								</Stack>
+{summary.ok ? (
+									<Stack as="section" aria-label={t("rail.title")} className="plan-column">
+										<AssistantRail summary={summary.data} t={t} />
+									</Stack>
+								) : null}
 							</Grid>
 						</Stack>
 					</Stack>
@@ -485,377 +422,15 @@ function PlanInfoRow({ info }: { info: PlanInfo }) {
 	)
 }
 
-/** Right-column action inputs: every section inline and always visible. */
-function PlanInputs({
-	plan,
-	setPlan,
-	patchRow,
-	addRow,
-	removeRow,
-	patchWallet,
-	t,
-}: {
-	plan: PlanInput
-	setPlan: (updater: (current: PlanInput) => PlanInput) => void
-	patchRow: (kind: "incomes" | "expenses", id: string, patch: Partial<PeriodRow>) => void
-	addRow: (kind: "incomes" | "expenses") => void
-	removeRow: (kind: "incomes" | "expenses", id: string) => void
-	patchWallet: (field: "savingsSplit" | "walletRates" | "startingWallets", id: WalletId, value: number) => void
-	t: (key: string, vars?: Record<string, string>) => string
-}) {
-	return (
-		<Stack gap={3} className="plan-inputs">
-			<Card padding={3} className="input-section">
-				<Stack gap={2}>
-					<Heading level={3}>{t("section.inputs")}</Heading>
-					{/* Responsive: 4-up on wide desktops, 2-up on phones (min-width floor
-					    keeps 1fr tracks from being forced wider by input min-content). */}
-					<Grid columns={{ minWidth: 140, max: 4 }} gap={2}>
-						<NumberInput
-							label={t("input.startYear")}
-							value={plan.startYear}
-							onChange={(value) => setPlan((c) => ({ ...c, startYear: Math.round(value) }))}
-							isIntegerOnly
-							min={2000}
-							max={2100}
-						/>
-						<NumberInput
-							label={t("input.birthYear")}
-							value={plan.birthYear}
-							onChange={(value) => setPlan((c) => ({ ...c, birthYear: Math.round(value) }))}
-							isIntegerOnly
-							min={1920}
-							max={2015}
-						/>
-						<NumberInput
-							label={t("input.inflation")}
-							value={plan.inflation * 100}
-							onChange={(value) => setPlan((c) => ({ ...c, inflation: value / 100 }))}
-							min={0}
-							max={20}
-							step={0.5}
-							units="%"
-						/>
-						<NumberInput
-							label={t("input.efMonths")}
-							value={plan.efMonths}
-							onChange={(value) => setPlan((c) => ({ ...c, efMonths: value }))}
-							min={0}
-							max={24}
-							step={1}
-						/>
-						<NumberInput
-							label={t("input.retirementYear")}
-							value={plan.retirementYear ?? null}
-							onChange={(value) =>
-								setPlan((c) => ({ ...c, retirementYear: value === null ? null : Math.round(value) }))
-							}
-							isIntegerOnly
-							min={1990}
-							max={2100}
-						/>
-						<NumberInput
-							label={t("input.retirementMonthly")}
-							value={plan.retirementMonthlyToday}
-							onChange={(value) => setPlan((c) => ({ ...c, retirementMonthlyToday: value }))}
-							min={0}
-						step={1000}
-						units="฿"
-					/>
-					<NumberInput
-						label={t("input.horizon")}
-						value={plan.horizonYears}
-						onChange={(value) => setPlan((c) => ({ ...c, horizonYears: Math.round(value) }))}
-						isIntegerOnly
-						min={1}
-						max={60}
-					/>
-				</Grid>
-					</Stack>
-			</Card>
-
-			<Card padding={3} className="input-section">
-				<PeriodEditor rows={plan.incomes} heading={t("incomes.heading")} onPatch={(id, patch) => patchRow("incomes", id, patch)} onAdd={() => addRow("incomes")} onRemove={(id) => removeRow("incomes", id)} t={t} />
-			</Card>
-
-			<Card padding={3} className="input-section">
-				<PeriodEditor rows={plan.expenses} heading={t("expenses.heading")} showDeductible onPatch={(id, patch) => patchRow("expenses", id, patch)} onAdd={() => addRow("expenses")} onRemove={(id) => removeRow("expenses", id)} t={t} />
-			</Card>
-
-			<Card padding={3} className="input-section">
-				<Stack gap={2}>
-					<Heading level={3}>{t("wallets.heading")}</Heading>
-					{/* Responsive: 3-up on wide desktops, stacks on narrow cards —
-					    wallet label is a fixed 140px span. */}
-					<Grid columns={{ minWidth: 190, max: 3 }} gap={3}>
-					{(
-						[
-							["wallets.split", "savingsSplit", "%", 0, 100, 5, true],
-							["wallets.rates", "walletRates", "%", 0, 30, 0.5, true],
-							["wallets.starting", "startingWallets", "฿", 0, 100_000_000, 10_000, false],
-						] as const
-					).map(([labelKey, field, units, min, max, step, percentMode]) => (
-						<Stack key={field} gap={1}>
-							<Text color="secondary">{t(labelKey)}</Text>
-							{WALLETS.map((id) => (
-								<Stack key={id} direction="horizontal" align="center" gap={1.5}>
-									<Text size="sm" xstyle={{ width: 140 } as never}>{t(`wallet.${id}`)}</Text>
-									<NumberInput
-										label={t(`wallet.${id}`)}
-										isLabelHidden
-										value={
-											percentMode
-												? Math.round(plan[field][id] * 100 * 100) / 100
-												: plan[field][id]
-										}
-										onChange={(value) => patchWallet(field, id, percentMode ? value / 100 : value)}
-										min={min}
-										max={max}
-										step={step}
-										units={units}
-									/>
-								</Stack>
-								))}
-							</Stack>
-								))}
-							</Grid>
-							</Stack>
-							</Card>
-							</Stack>
-							)
-							}
-
-/** Editable period-row editor (income or expenses). */
-const MONTHS_EN = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-const MONTHS_TH = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."]
-
-/**
- * Month + year picker for a period row boundary. Month = Astryx Selector
- * dropdown; year = compact integer input. `allowForever` adds an ∞ option
- * that clears the end year (row runs forever).
- */
-function MonthYearPicker({
-	label,
-	year,
-	month,
-	onChange,
-	allowForever = false,
-	t,
-}: {
-	label: string
-	year: number | null
-	month: number
-	onChange: (year: number | null, month: number) => void
-	allowForever?: boolean
-	t: (key: string, vars?: Record<string, string>) => string
-}) {
-	const { locale } = useLocale()
-	const monthNames = locale === "th" ? MONTHS_TH : MONTHS_EN
-	const forever = allowForever && year === null
-	const monthOptions = monthNames.map((name, index) => `${index}:${name}`)
-	return (
-		<Stack gap={0.5}>
-			<Text size="sm" color="secondary">{label}</Text>
-			<Stack direction="horizontal" align="center" gap={1}>
-				{allowForever ? (
-					<SegmentedControl
-						value={forever ? "forever" : "until"}
-						onChange={(value) => onChange(value === "forever" ? null : new Date().getFullYear() + 1, month)}
-						label={label}
-						size="sm"
-					>
-						<SegmentedControlItem value="until" label={t("row.until")} />
-						<SegmentedControlItem value="forever" label="∞" />
-					</SegmentedControl>
-				) : null}
-				{!forever ? (
-					<>
-						<NumberInput
-							label={`${label} year`}
-							isLabelHidden
-							value={year ?? undefined}
-							onChange={(value) => onChange(value === null ? null : Math.round(value), month)}
-							isIntegerOnly
-							min={2000}
-							max={2100}
-							width={88}
-						/>
-						<Selector
-							label={`${label} month`}
-							isLabelHidden
-							value={`${month}:${monthNames[month]}`}
-							onChange={(value) => {
-								const parsed = Number.parseInt(value.split(":")[0] ?? "0", 10)
-								onChange(year, Number.isFinite(parsed) ? parsed : 0)
-							}}
-							options={monthOptions}
-							width={110}
-						/>
-					</>
-				) : null}
-			</Stack>
-		</Stack>
-	)
-}
-
-/** Editable period-row editor (income or expenses) — row list. */
-function PeriodEditor({
-	rows,
-	heading,
-	showDeductible,
-	onPatch,
-	onAdd,
-	onRemove,
-	t,
-}: {
-	rows: PeriodRow[]
-	heading: string
-	showDeductible?: boolean
-	onPatch: (id: string, patch: Partial<PeriodRow>) => void
-	onAdd: () => void
-	onRemove: (id: string) => void
-	t: (key: string, vars?: Record<string, string>) => string
-}) {
-	return (
-		<Stack gap={2}>
-			<Stack direction="horizontal" justify="between" align="center">
-				<Heading level={3}>{heading}</Heading>
-				<Button variant="secondary" size="sm" label={t("row.add")} onClick={onAdd} />
-			</Stack>
-			{rows.map((row) => (
-				<Card key={row.id} padding={2} variant="muted">
-						{/* Responsive: 5/6-up on wide desktops, wraps to fewer columns on
-						    narrow cards so month+year pickers never overflow (min-content
-						    of a picker row is ~200px). */}
-						<Grid columns={{ minWidth: showDeductible ? 150 : 185, max: showDeductible ? 6 : 5 }} gap={1.5}>
-						<TextInput
-							label={t("row.label")}
-							value={row.label}
-							onChange={(value) => onPatch(row.id, { label: value })}
-						/>
-						<NumberInput
-							label={t("row.amount")}
-							value={row.amount}
-							onChange={(value) => onPatch(row.id, { amount: value })}
-							min={0}
-							step={10_000}
-							units="฿"
-						/>
-						<MonthYearPicker
-							label={t("row.startYear")}
-							year={row.startYear}
-							month={row.startMonth}
-							onChange={(year, month) =>
-								onPatch(row.id, { startYear: year ?? row.startYear, startMonth: month })
-							}
-							t={t}
-						/>
-						<MonthYearPicker
-							label={t("row.endYear")}
-							year={row.endYear}
-							month={row.endMonth}
-							allowForever
-							onChange={(year, month) =>
-								onPatch(row.id, { endYear: year, endMonth: month })
-							}
-							t={t}
-						/>
-						<Stack gap={1}>
-							<SegmentedControl
-								value={row.growthMode}
-								onChange={(value) => onPatch(row.id, { growthMode: value as PeriodRow["growthMode"] })}
-								label={t("row.growth")}
-								layout="fill"
-								size="sm"
-							>
-								<SegmentedControlItem value="inflation" label={t("growth.inflation")} />
-								<SegmentedControlItem value="fixed" label={t("growth.fixed")} />
-								<SegmentedControlItem value="override" label={t("growth.override")} />
-							</SegmentedControl>
-							{row.growthMode === "override" ? (
-								<NumberInput
-									label={t("row.growthRate")}
-									value={row.growthRate * 100}
-									onChange={(value) => onPatch(row.id, { growthRate: value / 100 })}
-									min={-10}
-									max={50}
-									step={0.5}
-									units="%"
-								/>
-							) : null}
-						</Stack>
-						{showDeductible ? (
-							<Stack gap={1}>
-								<SegmentedControl
-									value={row.deductible ?? "none"}
-									onChange={(value) =>
-										onPatch(row.id, {
-											deductible: value === "mortgageInterest" ? "mortgageInterest" : "none",
-										})
-									}
-									label={t("row.deductible")}
-									layout="fill"
-									size="sm"
-								>
-									<SegmentedControlItem value="none" label={t("deductible.none")} />
-									<SegmentedControlItem value="mortgageInterest" label={t("deductible.mortgageInterest")} />
-								</SegmentedControl>
-								<PlainButton onClick={() => onRemove(row.id)}>{t("row.remove")}</PlainButton>
-							</Stack>
-						) : (
-							<PlainButton onClick={() => onRemove(row.id)}>{t("row.remove")}</PlainButton>
-						)}
-					</Grid>
-				</Card>
-			))}
-		</Stack>
-	)
-}
-
-/* ── Bottom dock ──────────────────────────────────────────────────────────
- * Quick actions pinned to the screen edge so they are always reachable:
- * mobile → fixed to the bottom of the viewport; desktop → bottom of the
- * right (inputs) column, which is the scrollable side. The chat panel is
- * always visible above it.
- * ────────────────────────────────────────────────────────────────────── */
-function PlanDock({
-	onAddIncome,
-	onAddExpense,
-	onEditPlan,
-	t,
-}: {
-	onAddIncome: () => void
-	onAddExpense: () => void
-	onEditPlan: () => void
-	t: (key: string, vars?: Record<string, string>) => string
-}) {
-	return (
-		<Stack as="nav" direction="horizontal" className="dock" aria-label={t("a11y.dock")}>
-			<PlainButton className="dock__button" onClick={onAddIncome}>
-				<Text weight="semibold" className="dock__label">{t("dock.addIncome")}</Text>
-			</PlainButton>
-			<PlainButton className="dock__button" onClick={onAddExpense}>
-				<Text weight="semibold" className="dock__label">{t("dock.addExpense")}</Text>
-			</PlainButton>
-			<PlainButton className="dock__button dock__button--edit" onClick={onEditPlan}>
-				<Text weight="semibold" className="dock__label">{t("dock.scrollToInputs")}</Text>
-			</PlainButton>
-		</Stack>
-	)
-}
-
-/* ── Floating chat panel (mock) ───────────────────────────────────────────
- * Pairs with the dock: anchored above the dock on mobile, inside the right
- * column on desktop. Replies are canned summaries computed from the plan —
- * the real assistant swaps in behind the same props later.
- * ────────────────────────────────────────────────────────────────────── */
 interface ChatMessage {
 	id: number
 	role: "user" | "assistant"
 	text: string
+	/** Demo tool calls shown as collapsible rows above the reply text. */
+	toolCalls?: ChatToolCallItem[]
 }
 
-function ChatPanel({
+function AssistantRail({
 	summary,
 	t,
 }: {
@@ -865,51 +440,109 @@ function ChatPanel({
 	const [messages, setMessages] = useState<ChatMessage[]>([])
 	const [draft, setDraft] = useState("")
 	const nextId = useRef(1)
+	const logRef = useRef<HTMLDivElement | null>(null)
+
+	/**
+	 * Demo tool-call flow: the assistant "runs" two tools derived from the
+	 * live plan before answering — each call flips from running → complete
+	 * so the Astryx collapsible tool rows animate like a real assistant.
+	 */
+	const demoToolCalls = (question: string): ChatToolCallItem[] => {
+		const q = question.toLowerCase()
+		const v = summary.retirement
+		const calls: ChatToolCallItem[] = [{ name: "get_plan_snapshot", target: "plan/current", node: "plan-engine" }]
+		if (q.includes("retire") || q.includes("เกษียณ") || q.includes("run out") || q.includes("หมด")) {
+			calls.push({
+				name: "simulate_retirement",
+				target: v.funded ? `until ${v.endYear}` : `runs out ${v.unmetYear ?? ""}`,
+				node: "monte-carlo",
+				stats: "200 scenarios",
+			})
+		}
+		if (q.includes("spend") || q.includes("afford") || q.includes("ใช้")) {
+			calls.push({ name: "solve_max_forever", target: "monthly withdrawal", node: "plan-engine" })
+		}
+		return calls
+	}
 
 	const send = () => {
 		const text = draft.trim()
 		if (!text) return
-		const userMsg: ChatMessage = { id: nextId.current++, role: "user", text }
-		const reply: ChatMessage = { id: nextId.current++, role: "assistant", text: mockReply(text, summary, t) }
-		setMessages((current) => [...current, userMsg, reply])
+		const userId = nextId.current++
+		const assistantId = nextId.current++
+		const calls = demoToolCalls(text)
+		// Turn 1: tool calls running (no text yet). Turn 2: calls complete +
+		// the canned answer, once the "tools" have had time to finish.
+		setMessages((current) => [
+			...current,
+			{ id: userId, role: "user", text },
+			{ id: assistantId, role: "assistant", text: "", toolCalls: calls.map((call) => ({ ...call, status: "running" as const })) },
+		])
 		setDraft("")
+		window.setTimeout(() => {
+			setMessages((current) =>
+				current.map((message) =>
+					message.id === assistantId
+						? {
+								...message,
+								text: mockReply(text, summary, t),
+								toolCalls: calls.map((call) => ({ ...call, status: "complete" as const, duration: "0.4s" })),
+							}
+						: message,
+				),
+			)
+		}, 900)
+		window.setTimeout(() => {
+			logRef.current?.scrollTo({ top: logRef.current.scrollHeight, behavior: "smooth" })
+		}, 950)
 	}
 
 	return (
-		<Stack className="chat-panel" role="log" aria-live="polite">
-			<Stack direction="horizontal" justify="between" vAlign="center" className="chat-panel__head">
+		<Stack className="assistant-rail" role="log" aria-live="polite">
+			<Stack direction="horizontal" justify="between" vAlign="center" className="assistant-rail__head">
 				<Stack gap={0}>
-					<Text weight="semibold">{t("chat.title")}</Text>
-					<Text size="sm" color="secondary">{t("chat.subtitle")}</Text>
+					<Text weight="semibold">{t("rail.title")}</Text>
+					<Text size="sm" color="secondary">{t("rail.subtitle")}</Text>
 				</Stack>
 			</Stack>
-			<Stack gap={2} className="chat-panel__log">
-				{messages.length === 0 ? (
-					<Text size="sm" color="secondary">{t("chat.empty")}</Text>
-				) : (
-					messages.map((message) => (
-						<Text
-							key={message.id}
-							size="sm"
-							className={`chat-bubble chat-bubble--${message.role}`}
-						>
-							{message.text}
-						</Text>
-					))
-				)}
+
+			<Stack className="assistant-rail__log" ref={logRef}>
+				<Text size="sm" color="secondary" className="assistant-rail__day">{t("rail.today")}</Text>
+				<ChatMessageList className="assistant-rail__list" aria-label={t("rail.title")}>
+					{messages.length === 0 ? (
+						<Text size="sm" color="secondary">{t("chat.empty")}</Text>
+					) : (
+						messages.map((message) =>
+							message.role === "user" ? (
+								<ChatMessage key={message.id} sender="user">
+									<ChatMessageBubble name={t("rail.you")}>{message.text}</ChatMessageBubble>
+								</ChatMessage>
+							) : (
+								<ChatMessage
+									key={message.id}
+									sender="assistant"
+									avatar={<Stack vAlign="center" className="assistant-avatar" aria-hidden="true">A</Stack>}
+								>
+									{message.toolCalls && message.toolCalls.length > 0 ? (
+										<ChatToolCalls calls={message.toolCalls} />
+									) : null}
+									{message.text ? (
+										<ChatMessageBubble variant="ghost">{message.text}</ChatMessageBubble>
+									) : null}
+								</ChatMessage>
+							),
+						)
+					)}
+				</ChatMessageList>
 			</Stack>
-			<Stack direction="horizontal" gap={2} vAlign="center" className="chat-panel__composer">
-				<TextInput
-					label={t("chat.placeholder")}
-					isLabelHidden
-					placeholder={t("chat.placeholder")}
-					value={draft}
-					onChange={setDraft}
-					onEnter={send}
-					className="chat-panel__input"
-				/>
-				<Button size="md" label={t("chat.send")} onClick={send}>{t("chat.send")}</Button>
-			</Stack>
+
+			<ChatComposer
+				className="assistant-composer"
+				value={draft}
+				onChange={setDraft}
+				onSubmit={send}
+				placeholder={t("chat.placeholder")}
+			/>
 		</Stack>
 	)
 }

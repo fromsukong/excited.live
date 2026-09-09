@@ -80,6 +80,8 @@ export const SettingsIcon = rawIcon(
 	</>,
 );
 export const ArrowRightIcon = rawIcon(<path d="M4 12h15M13.5 6.5 19 12l-5.5 5.5" />);
+export const SendIcon = rawIcon(<path d="M12 19V5M5.5 11.5 12 5l6.5 6.5" />);
+export const MinimizeIcon = rawIcon(<path d="M6 9.5 12 15.5 18 9.5" />);
 export const ChatIcon = rawIcon(
 	<>
 		<path d="M21 11.6c0 4.2-4 7.6-9 7.6-1 0-2-.14-2.9-.4L4 20l1.2-3.6C4 15.1 3 13.4 3 11.6 3 7.4 7 4 12 4s9 3.4 9 7.6Z" />

@@ -40,8 +40,25 @@ export {
 	PresentationIcon,
 	SettingsIcon,
 	ArrowRightIcon,
+	SendIcon,
+	MinimizeIcon,
 	type IconProps,
 } from "./icons";
+export {
+	ChatComposer,
+	ChatMessage,
+	ChatMessageBubble,
+	ChatMessageList,
+	ChatToolCalls,
+	ChatLayout,
+	type ChatComposerProps,
+	type ChatMessageProps,
+	type ChatMessageBubbleProps,
+	type ChatMessageListProps,
+	type ChatToolCallsProps,
+	type ChatToolCallItem,
+	type ChatMessageSender,
+} from "@astryxdesign/core/Chat";
 export { Badge, type BadgeProps } from "@astryxdesign/core/Badge";
 export { Button, type ButtonProps } from "@astryxdesign/core/Button";
 export { Card, type CardProps } from "@astryxdesign/core/Card";

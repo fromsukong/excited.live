@@ -176,22 +176,17 @@ export const strings: Dictionary = {
 	"row.until": { en: "Until", th: "ถึง" },
 	"a11y.netWorthChart": { en: "Net worth projection chart", th: "แผนภูมิมูลค่าสุทธิ" },
 
-	// Bottom dock — quick actions pinned to the screen edge (mobile bottom,
-	// desktop bottom of the right column). Chat panel is always visible.
-	"dock.addIncome": { en: "+ Income", th: "+ รายได้" },
-	"dock.addExpense": { en: "+ Expense", th: "+ รายจ่าย" },
-	"dock.scrollToInputs": { en: "Edit plan", th: "แก้แผน" },
-	"a11y.dock": { en: "Quick actions dock", th: "แถบการทำงานด่วน" },
-
-	// Chat panel (mock replies — real assistant lands later)
-	"chat.title": { en: "Assistant", th: "ผู้ช่วย" },
-	"chat.subtitle": { en: "Demo — canned replies", th: "ตัวอย่าง — ตอบล่วงหน้า" },
-	"chat.placeholder": { en: "Ask about your plan…", th: "ถามเรื่องแผนของคุณ…" },
-	"chat.send": { en: "Send", th: "ส่ง" },
+	// Assistant rail (chat side panel, always open)
+	"rail.title": { en: "Assistant", th: "ผู้ช่วย" },
+	"rail.subtitle": { en: "Demo — canned replies", th: "ตัวอย่าง — ตอบล่วงหน้า" },
+	"rail.today": { en: "Today", th: "วันนี้" },
+	"rail.you": { en: "You", th: "คุณ" },
 	"chat.empty": {
 		en: "Ask about your plan — try “Can I retire early?”",
 		th: "ถามเรื่องแผนของคุณได้เลย ลองถาม “เกษียณเร็วได้ไหม”",
 	},
+	"chat.placeholder": { en: "Ask about your plan…", th: "ถามเรื่องแผนของคุณ…" },
+
 	"chat.reply.summary": { en: "Here is where your plan stands right now:", th: "สถานะแผนของคุณตอนนี้:" },
 	"chat.reply.retirement": {
 		en: "Retirement looks {status}: {detail}",

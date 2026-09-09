@@ -745,14 +745,6 @@ button {
     overflow: visible;
   }
 
-  /* Keep the last input rows reachable above the fixed dock. (The open chat
-     panel is a one-tap-dismiss overlay that may cover them — deliberate.) */
-  .plan-column::after {
-    content: "";
-    display: block;
-    height: 168px;
-  }
-
   .plan-summary-card,
   .plan-summary-card__inner {
     min-height: 230px;
@@ -1044,160 +1036,76 @@ button {
   cursor: default;
 }
 
-/* Right column: one card per input section. */
-.plan-inputs {
-  width: 100%;
-  min-width: 0;
-}
-
-.input-section {
-  width: 100%;
-  min-width: 0;
-}
-
-/* Period row cards inside Income/Expenses sections. */
-.input-section .astryx-card {
-  min-width: 0;
-}
-
-/* The right column scrolls as one list of cards (desktop keeps the old
-   independent-scroll behavior via .plan-column). */
-
-/* ── Bottom dock ──────────────────────────────────────────────────────────
- * Mobile: fixed to the bottom of the screen — always visible, above the
- * chat panel. Desktop (≥1021px): pinned to the bottom of the right column
- * (the scrollable side), so the dock is the last thing that scrolls past
- * and the chat launcher is always reachable.
+/* ── Assistant rail (right column) ────────────────────────────────────────
+ * The whole right side is the chat: Astryx chat components (message list,
+ * bubbles, tool-call rows, composer) inside a single panel.
  * ────────────────────────────────────────────────────────────────────── */
-.dock {
-  position: fixed;
-  right: max(12px, env(safe-area-inset-right, 0px));
-  bottom: calc(10px + env(safe-area-inset-bottom, 0px));
-  left: max(12px, env(safe-area-inset-left, 0px));
-  z-index: 60;
+.assistant-rail {
   display: flex;
-  gap: 6px;
-  padding: 6px;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  padding: 28px 26px 22px;
   border: 1px solid var(--panel-border);
-  border-radius: 999px;
+  border-radius: var(--panel-radius);
   background: var(--panel-bg);
-  box-shadow: 0 8px 28px var(--shadow-color, rgba(0, 0, 0, 0.28));
-}
-
-.dock__button {
-  display: flex;
-  flex: 1 1 0;
-  align-items: center;
-  justify-content: center;
-  min-width: 0;
-  height: 42px;
-  padding: 0 10px;
-  border: 1px solid transparent;
-  border-radius: 999px;
-  color: var(--copy-muted);
-  background: transparent;
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.dock__button:hover {
-  color: var(--copy);
-  background: var(--color-overlay-hover);
-}
-
-.dock__button:active {
-  background: var(--color-overlay-pressed);
-}
-
-.dock__label {
-  font-size: 13px;
   overflow: hidden;
-  text-overflow: ellipsis;
 }
 
-/* Very narrow phones: scroll-to-inputs is redundant while scrolling, so the
-   dock fits three buttons without truncating labels. */
-@media (max-width: 379px) {
-  .dock__button--edit {
-    display: none;
-  }
-}
-
-/* Floating chat panel (mock) — sits just above the dock. */
-.chat-panel {
-  position: fixed;
-  right: max(12px, env(safe-area-inset-right, 0px));
-  bottom: calc(70px + env(safe-area-inset-bottom, 0px));
-  left: max(12px, env(safe-area-inset-left, 0px));
-  z-index: 55;
-  max-height: min(58vh, 430px);
-  border: 1px solid var(--panel-border);
-  border-radius: 24px;
-  background: var(--panel-bg);
-  box-shadow: 0 16px 44px var(--shadow-color, rgba(0, 0, 0, 0.3));
-}
-
-.chat-panel__head {
-  padding: 14px 18px 10px;
+.assistant-rail__head {
+  flex: 0 0 auto;
+  padding-bottom: 14px;
   border-bottom: 1px solid var(--panel-border);
 }
 
-.chat-panel__log {
+.assistant-rail__log {
   display: flex;
   flex: 1 1 auto;
   flex-direction: column;
-  gap: 8px;
+  gap: 18px;
   min-height: 0;
-  padding: 12px 18px;
+  padding: 18px 4px 8px 0;
   overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
 }
 
-.chat-panel__composer {
-  padding: 10px 12px calc(12px + env(safe-area-inset-bottom, 0px));
-  border-top: 1px solid var(--panel-border);
+.assistant-rail__day {
+  align-self: center;
+  padding: 3px 12px;
+  border: 1px solid var(--panel-border);
+  border-radius: 999px;
+  background: var(--color-neutral);
 }
 
-.chat-panel__input {
-  flex: 1 1 auto;
+.assistant-turn {
   min-width: 0;
 }
 
-.chat-bubble {
-  width: fit-content;
-  max-width: 88%;
-  padding: 8px 12px;
+.assistant-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 30px;
+  height: 30px;
   border: 1px solid var(--panel-border);
-  border-radius: 16px;
-}
-
-.chat-bubble--user {
-  align-self: flex-end;
-  color: var(--copy);
-  background: var(--color-overlay-pressed);
-  border-bottom-right-radius: 6px;
-}
-
-.chat-bubble--assistant {
-  align-self: flex-start;
+  border-radius: 999px;
+  color: var(--copy-soft);
+  font-size: 13px;
+  font-weight: 700;
   background: var(--color-neutral);
-  border-bottom-left-radius: 6px;
+}
+
+/* The composer is the Astryx ChatComposer card — only outer spacing here. */
+.assistant-composer {
+  flex: 0 0 auto;
+  margin-top: 12px;
 }
 
 @media (min-width: 1021px) {
-  /* Desktop: dock + chat live at the bottom of the right (inputs) column —
-     sticky so they stay visible while the column scrolls. */
-  .dock {
+  .assistant-rail {
     position: sticky;
-    right: auto;
-    bottom: 12px;
-    left: auto;
-  }
-
-  .chat-panel {
-    position: sticky;
-    right: auto;
-    bottom: 74px;
-    left: auto;
+    top: 0;
   }
 }
-
