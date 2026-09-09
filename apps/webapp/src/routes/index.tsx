@@ -5,7 +5,6 @@ import {
 	CalendarIcon,
 	Card,
 	ChartIcon,
-	ChatIcon,
 	CompassIcon,
 	Grid,
 	Heading,
@@ -71,9 +70,6 @@ function Home() {
 	const [selectedMetricKey, setSelectedMetricKey] = useState<string>("metric.netWorthValue")
 	const [leftTab, setLeftTab] = useState<"financials" | "answers">("financials")
 	const [hoverYear, setHoverYear] = useState<number | null>(null)
-	// Chat launcher lives in the dock and is open by default so actions are
-	// always one tap away (mock replies — real assistant lands later).
-	const [chatOpen, setChatOpen] = useState(true)
 	const inputsRef = useRef<HTMLElement | null>(null)
 
 	const summary = useMemo(() => {
@@ -303,9 +299,6 @@ function Home() {
 		setPlan((current) => ({ ...current, [field]: { ...current[field], [id]: value } }))
 	}
 
-	const onTrack =
-		summary.ok && summary.data.retirement.funded && summary.data.runsOutYear === null
-
 	return (
 		<Theme theme={mastercardTheme} mode="light">
 			<Stack className="dashboard-shell">
@@ -331,13 +324,35 @@ function Home() {
 					<Grid className="dashboard-grid">
 						<Card className="chart-panel" variant="transparent" padding={0}>
 							<Stack className="chart-panel__inner">
-								<Stack className="panel-heading">
-									<Text color="secondary" className="panel-heading__date">
-										{t("plan.snapshotDate", { year: String(plan.startYear) })}
-									</Text>
-									<Heading level={1}>
-										{onTrack ? t("plan.heading.full.ok") : t("plan.heading.full.risk")}
-									</Heading>
+								<Stack direction="horizontal" vAlign="center" className="chart-toolbar">
+									<Stack direction="horizontal" vAlign="center" role="group" aria-label={t("a11y.chartMetric")} className="metric-switch">
+										<PlainButton
+											className={`metric-switch__item ${metric === "metric.netWorth" ? "is-active" : ""}`}
+											onClick={() => setMetric("metric.netWorth")}
+										>
+											<Text className="metric-indicator metric-indicator--white" aria-hidden="true">{""}</Text>
+											{t("metric.netWorth")}
+										</PlainButton>
+										<PlainButton
+											className={`metric-switch__item ${metric === "metric.cashFlow" ? "is-active" : ""}`}
+											onClick={() => setMetric("metric.cashFlow")}
+										>
+											<Text className="metric-indicator metric-indicator--purple" aria-hidden="true">{""}</Text>
+											{t("metric.cashFlow")}
+										</PlainButton>
+									</Stack>
+									<Stack direction="horizontal" vAlign="center" role="group" aria-label={t("a11y.chartPeriod")} className="period-switch">
+										{HORIZONS.map((item) => (
+											<PlainButton
+												className={`period-switch__item ${horizon === item ? "is-active" : ""}`}
+												key={item}
+												aria-pressed={horizon === item}
+												onClick={() => setHorizon(item)}
+											>
+												{item === "all" ? t("period.all") : `${item}Y`}
+											</PlainButton>
+										))}
+									</Stack>
 								</Stack>
 
 								<Stack className="chart-canvas">
@@ -362,37 +377,6 @@ function Home() {
 									) : null}
 								</Stack>
 
-								<Stack direction="horizontal" vAlign="center" className="chart-toolbar">
-									<Stack direction="horizontal" vAlign="center" role="group" aria-label={t("a11y.chartMetric")} className="metric-switch">
-										<PlainButton
-											className={`metric-switch__item ${metric === "metric.netWorth" ? "is-active" : ""}`}
-											onClick={() => setMetric("metric.netWorth")}
-										>
-											<Text className="metric-indicator metric-indicator--white" aria-hidden="true">{""}</Text>
-											{t("metric.netWorth")}
-										</PlainButton>
-										<PlainButton
-											className={`metric-switch__item ${metric === "metric.cashFlow" ? "is-active" : ""}`}
-											onClick={() => setMetric("metric.cashFlow")}
-										>
-											<Text className="metric-indicator metric-indicator--purple" aria-hidden="true">{""}</Text>
-											{t("metric.cashFlow")}
-										</PlainButton>
-									</Stack>
-								<Stack direction="horizontal" vAlign="center" role="group" aria-label={t("a11y.chartPeriod")} className="period-switch">
-										{HORIZONS.map((item) => (
-											<PlainButton
-												className={`period-switch__item ${horizon === item ? "is-active" : ""}`}
-												key={item}
-												aria-pressed={horizon === item}
-												onClick={() => setHorizon(item)}
-											>
-												{item === "all" ? t("period.all") : `${item}Y`}
-											</PlainButton>
-										))}
-									</Stack>
-								</Stack>
-
 								<Stack direction="horizontal" vAlign="center" role="group" aria-label={t("a11y.leftTabs")} className="left-tab-switch">
 									<PlainButton
 										className={`left-tab-switch__item ${leftTab === "financials" ? "is-active" : ""}`}
@@ -407,7 +391,7 @@ function Home() {
 										onClick={() => setLeftTab("answers")}
 									>
 										{t("tab.answers")}
-									</PlainButton>
+								</PlainButton>
 								</Stack>
 
 								{leftTab === "financials" ? (
@@ -442,16 +426,13 @@ function Home() {
 										patchWallet={patchWallet}
 										t={t}
 									/>
-									{chatOpen && summary.ok ? (
+									{summary.ok ? (
 										<ChatPanel summary={summary.data} t={t} />
 									) : null}
 									<PlanDock
-										chatOpen={chatOpen}
-										onToggleChat={() => setChatOpen((open) => !open)}
 										onAddIncome={() => addRow("incomes")}
 										onAddExpense={() => addRow("expenses")}
 										onEditPlan={() => {
-											setChatOpen(false)
 											inputsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
 										}}
 										t={t}
@@ -834,19 +815,15 @@ function PeriodEditor({
 /* ── Bottom dock ──────────────────────────────────────────────────────────
  * Quick actions pinned to the screen edge so they are always reachable:
  * mobile → fixed to the bottom of the viewport; desktop → bottom of the
- * right (inputs) column, which is the scrollable side. The chat launcher
- * is the primary action and opens the floating chat panel.
+ * right (inputs) column, which is the scrollable side. The chat panel is
+ * always visible above it.
  * ────────────────────────────────────────────────────────────────────── */
 function PlanDock({
-	chatOpen,
-	onToggleChat,
 	onAddIncome,
 	onAddExpense,
 	onEditPlan,
 	t,
 }: {
-	chatOpen: boolean
-	onToggleChat: () => void
 	onAddIncome: () => void
 	onAddExpense: () => void
 	onEditPlan: () => void
@@ -862,14 +839,6 @@ function PlanDock({
 			</PlainButton>
 			<PlainButton className="dock__button dock__button--edit" onClick={onEditPlan}>
 				<Text weight="semibold" className="dock__label">{t("dock.scrollToInputs")}</Text>
-			</PlainButton>
-			<PlainButton
-				className={`dock__button dock__button--chat ${chatOpen ? "is-open" : ""}`}
-				onClick={onToggleChat}
-				aria-pressed={chatOpen}
-			>
-				<ChatIcon className="dock__chat-icon" aria-hidden="true" />
-				<Text weight="semibold" className="dock__label">{t("dock.chat")}</Text>
 			</PlainButton>
 		</Stack>
 	)

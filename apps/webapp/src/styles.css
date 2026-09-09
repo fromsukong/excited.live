@@ -137,7 +137,7 @@ button {
 
 .dashboard-grid {
   display: grid;
-  grid-template-columns: minmax(0, 42.8%) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
   align-items: start;
   height: 100%;
   min-height: 0;
@@ -165,50 +165,6 @@ button {
   height: 100%;
   min-height: 0;
   padding: 46px 44px 42px;
-}
-
-.panel-heading {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.panel-heading__date {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  color: var(--copy-soft);
-  font-size: 16px !important;
-  line-height: 1.4;
-}
-
-/* Mastercard eyebrow: tiny signal-orange dot before the label */
-.panel-heading__date::before {
-  content: "";
-  width: 7px;
-  height: 7px;
-  border-radius: 999px;
-  background: var(--color-icon-orange);
-  flex-shrink: 0;
-}
-
-.panel-heading h1 {
-  margin: 0;
-  color: var(--copy);
-  font-size: 21px !important;
-  font-weight: 500 !important;
-  line-height: 1.2 !important;
-  letter-spacing: -0.02em;
-}
-
-.panel-heading h1 span {
-  color: var(--copy-soft);
-}
-
-.panel-heading h1 > span {
-  font-size: inherit !important;
-  line-height: inherit !important;
-  font-weight: inherit !important;
 }
 
 .chart-canvas {
@@ -860,14 +816,6 @@ button {
     padding: 26px 17px 24px;
   }
 
-  .panel-heading__date {
-    font-size: 14px !important;
-  }
-
-  .panel-heading h1 {
-    font-size: 19px !important;
-  }
-
   .chart-canvas {
     height: 253px;
     margin-top: 16px;
@@ -1165,25 +1113,6 @@ button {
   font-size: 13px;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-.dock__button--chat {
-  flex: 0 0 auto;
-  gap: 5px;
-  padding: 0 14px;
-  color: var(--copy);
-  border-color: var(--panel-border);
-  background: var(--color-neutral);
-}
-
-.dock__button--chat.is-open {
-  background: var(--color-overlay-pressed);
-}
-
-.dock__chat-icon {
-  width: 17px;
-  height: 17px;
-  flex: 0 0 auto;
 }
 
 /* Very narrow phones: scroll-to-inputs is redundant while scrolling, so the
