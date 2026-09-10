@@ -1,0 +1,135 @@
+---
+/**
+ * Blog index — /blog/
+ */
+import { getCollection } from 'astro:content';
+import Layout from '@/components/layout.astro';
+import '@/styles/global.css';
+
+const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
+	(a, b) => b.data.date.valueOf() - a.data.date.valueOf(),
+);
+---
+
+<Layout title="Blog — excited.live" description="Essays on money, tax, and planning the life you want to live.">
+	<a class="docs-back" href="/">
+		<img src="/logo-mark.png" alt="" width="22" height="22" />
+		<span>excited<span class="brand-dot">.live</span></span>
+		<span class="docs-back-sep">/</span>
+		<span class="docs-back-page">Blog</span>
+	</a>
+
+	<main class="blog-index">
+		<header class="blog-index-header">
+			<h1 class="blog-index-title">
+				<span data-lang-en>Blog</span>
+				<span data-lang-th>บล็อก</span>
+			</h1>
+			<p class="blog-index-sub">
+				<span data-lang-en>Essays on money, tax, and planning the life you want to live.</span>
+				<span data-lang-th>บทความเรื่องเงิน ภาษี และการวางแผนชีวิตที่คุณอยากใช้</span>
+			</p>
+		</header>
+
+		<div class="blog-list">
+			{
+				posts.map((post) => (
+					<a class="blog-card" href={`/blog/${post.id}`}>
+						<time class="blog-card-date" datetime={post.data.date.toISOString()}>
+							{post.data.date.toLocaleDateString('en-GB', {
+								day: 'numeric',
+								month: 'long',
+								year: 'numeric',
+							})}
+						</time>
+						<h2 class="blog-card-title">{post.data.title}</h2>
+						{post.data.description && <p class="blog-card-desc">{post.data.description}</p>}
+						<span class="blog-card-cta">
+							<span data-lang-en>Read →</span>
+							<span data-lang-th>อ่านต่อ →</span>
+						</span>
+					</a>
+				))
+			}
+			{
+				posts.length === 0 && (
+					<p class="blog-empty">
+						<span data-lang-en>Nothing here yet — first post is being written.</span>
+						<span data-lang-th>ยังไม่มีบทความ — กำลังเขียนโพสต์แรกอยู่</span>
+					</p>
+				)
+			}
+		</div>
+	</main>
+
+	<style>
+		.blog-index {
+			max-width: 720px;
+			margin: 0 auto;
+			padding: 24px 24px 96px;
+		}
+		.blog-index-header {
+			margin: 40px 0 32px;
+		}
+		.blog-index-title {
+			font-size: clamp(30px, 5vw, 44px);
+			letter-spacing: -0.02em;
+			font-weight: 700;
+			color: var(--ink);
+			margin: 0;
+		}
+		.blog-index-sub {
+			font-size: 17px;
+			color: var(--slate);
+			margin: 10px 0 0;
+		}
+		.blog-list {
+			display: flex;
+			flex-direction: column;
+			gap: 16px;
+		}
+		.blog-card {
+			display: block;
+			background: var(--lifted);
+			border: 1px solid var(--dust);
+			border-radius: 20px;
+			padding: 20px 22px;
+			text-decoration: none;
+			transition: box-shadow 0.15s ease, transform 0.15s ease;
+		}
+		.blog-card:hover {
+			box-shadow: var(--shadow-halo);
+			transform: translateY(-1px);
+		}
+		.blog-card-date {
+			font-size: 12.5px;
+			font-weight: 600;
+			letter-spacing: 0.02em;
+			text-transform: uppercase;
+			color: var(--slate);
+		}
+		.blog-card-title {
+			font-size: 21px;
+			letter-spacing: -0.01em;
+			color: var(--ink);
+			margin: 6px 0 0;
+		}
+		.blog-card-desc {
+			font-size: 15px;
+			line-height: 1.55;
+			color: var(--charcoal);
+			margin: 8px 0 0;
+		}
+		.blog-card-cta {
+			display: inline-block;
+			margin-top: 12px;
+			font-size: 14px;
+			font-weight: 600;
+			color: var(--orange);
+		}
+		.blog-empty {
+			color: var(--slate);
+			font-size: 15px;
+		}
+	</style>
+</Layout>
