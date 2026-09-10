@@ -13,6 +13,11 @@
  * negative, x labels every 10 years plus the final year. Colors are read
  * from the Astryx theme CSS variables at render time (canvas cannot resolve
  * `var(...)` or `light-dark(...)` on its own), with light-theme fallbacks.
+ * The Astryx root Theme sets `data-astryx-theme` on <html> in a layout
+ * effect AFTER our first commit — resolving colors before that moment picks
+ * up the library-default palette (blue accent) and flashed blue on first
+ * load. So chart init and option building are deferred until the theme
+ * attribute exists (the container stays blank cream, matching the card).
  */
 import { useEffect, useMemo, useRef, useState } from "react"
 import * as echarts from "echarts/core"
@@ -67,6 +72,33 @@ function resolveColor(varName: string, fallback: string): string {
 	return resolved || fallback
 }
 
+/** The five theme colors the chart is drawn with. */
+interface ChartPalette {
+	accent: string
+	secondary: string
+	border: string
+	orange: string
+	onAccent: string
+}
+
+/**
+ * Read the palette from live CSS variables. Returns null until the Astryx
+ * root Theme provider has stamped `data-astryx-theme` on <html> — before
+ * that the cascade still resolves to the library-default palette (blue
+ * accent), which is exactly the first-load flash this guards against.
+ */
+function readPalette(): ChartPalette | null {
+	if (typeof document === "undefined") return null
+	if (!document.documentElement.hasAttribute("data-astryx-theme")) return null
+	return {
+		accent: resolveColor("--color-accent", "#141413"),
+		secondary: resolveColor("--color-text-secondary", "#696969"),
+		border: resolveColor("--color-border", "rgba(20, 20, 19, 0.1)"),
+		orange: resolveColor("--color-text-orange", "#9A3A0A"),
+		onAccent: resolveColor("--color-on-accent", "#F3F0EE"),
+	}
+}
+
 /** Inject an alpha channel into a resolved rgb()/rgba() color string. */
 function withAlpha(color: string, alpha: number): string {
 	const match = /rgba?\(\s*([\d.]+)[\s,]+([\d.]+)[\s,]+([\d.]+)/.exec(color)
@@ -84,6 +116,10 @@ export function ProjectionChart({
 	const containerRef = useRef<HTMLElement | null>(null)
 	const chartRef = useRef<EChartsType | null>(null)
 	const [active, setActive] = useState<SimulationYear | null>(null)
+	// Flips once the Astryx root Theme provider has stamped its scope
+	// attribute on <html>; before that the chart palette is not trustworthy.
+	const [themeReady, setThemeReady] = useState(false)
+
 	const onActiveYearRef = useRef(onActiveYearChange)
 
 	// Keep the latest callback without re-initializing the chart on rerenders.
@@ -92,32 +128,66 @@ export function ProjectionChart({
 	}, [onActiveYearChange])
 
 	// One-time init/teardown: chart instance, crisp resize, hover-leave reset.
+	// Deferred until the theme palette is readable: the Astryx root Theme
+	// stamps `data-astryx-theme` on <html> in its layout effect, which runs
+	// AFTER this component's first commit. Initializing before that moment
+	// resolved colors against the library-default palette (blue accent) and
+	// flashed blue on first load. The MutationObserver below fires exactly
+	// when the attribute lands; the palette/option memos then rebuild and
+	// the option effect replays into the freshly created instance.
 	useEffect(() => {
 		const container = containerRef.current
 		if (!container) return
-		const chart = echarts.init(container, undefined, { renderer: "canvas" })
-		chartRef.current = chart
-		const observer = new ResizeObserver(() => chart.resize())
-		observer.observe(container)
-		const handleGlobalOut = () => {
-			setActive(null)
-			onActiveYearRef.current?.(null)
+		let observer: ResizeObserver | null = null
+		let mutation: MutationObserver | null = null
+		const start = (chart: EChartsType) => {
+			observer = new ResizeObserver(() => chart.resize())
+			observer.observe(container)
+			const handleGlobalOut = () => {
+				setActive(null)
+				onActiveYearRef.current?.(null)
+			}
+			chart.getZr().on("globalout", handleGlobalOut)
 		}
-		chart.getZr().on("globalout", handleGlobalOut)
-		return () => {
-			observer.disconnect()
-			chart.getZr().off("globalout", handleGlobalOut)
-			chart.dispose()
+		const teardown = () => {
+			mutation?.disconnect()
+			mutation = null
+			observer?.disconnect()
+			observer = null
+			chartRef.current?.getZr().off("globalout")
+			chartRef.current?.dispose()
 			chartRef.current = null
 		}
+		const tryStart = () => {
+			if (chartRef.current || !readPalette()) return
+			const chart = echarts.init(container, undefined, { renderer: "canvas" })
+			chartRef.current = chart
+			start(chart)
+			mutation?.disconnect()
+			mutation = null
+			// Unlock the palette/option memos so the themed option is built
+			// and pushed into the instance we just created.
+			setThemeReady(true)
+		}
+		tryStart()
+		if (!chartRef.current) {
+			mutation = new MutationObserver(tryStart)
+			mutation.observe(document.documentElement, {
+				attributes: true,
+				attributeFilter: ["data-astryx-theme"],
+			})
+		}
+		return teardown
 	}, [])
 
-	const option = useMemo<echarts.EChartsCoreOption>(() => {
-		const accent = resolveColor("--color-accent", "#141413")
-		const secondary = resolveColor("--color-text-secondary", "#696969")
-		const border = resolveColor("--color-border", "rgba(20, 20, 19, 0.1)")
-		const orange = resolveColor("--color-text-orange", "#9A3A0A")
-		const onAccent = resolveColor("--color-on-accent", "#F3F0EE")
+	// Option is built only once the theme palette is readable. Until then
+	// palette is null and the memo yields null — nothing is pushed to a
+	// chart that does not exist yet, and no default-palette option is
+	// ever constructed.
+	const palette = useMemo(() => (themeReady ? readPalette() : null), [themeReady])
+	const option = useMemo<echarts.EChartsCoreOption | null>(() => {
+		if (!palette) return null
+		const { accent, secondary, border, orange, onAccent } = palette
 
 		const values = years.map((year) => valueOf(year, metric))
 		// Band edges widen the scale so the shaded area always fits. The band
@@ -256,10 +326,13 @@ export function ProjectionChart({
 				},
 			],
 		}
-	}, [years, metric, band])
+	}, [palette, years, metric, band])
 
 	// Push option updates (metric switch, horizon change, band recompute).
+	// Also the replay path for deferred init: when the chart instance is
+	// created after the theme lands, this effect pushes the current option.
 	useEffect(() => {
+		if (!option) return
 		chartRef.current?.setOption(option, { notMerge: true })
 	}, [option])
 
