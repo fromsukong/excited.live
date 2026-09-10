@@ -137,8 +137,8 @@ button {
 
 .dashboard-grid {
   display: grid;
-  grid-template-columns: minmax(0, 42.8%) minmax(0, 1fr);
-  align-items: stretch;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  align-items: start;
   height: 100%;
   min-height: 0;
   gap: 31px;
@@ -171,50 +171,6 @@ button {
   height: 100%;
   min-height: 0;
   padding: 46px 44px 42px;
-}
-
-.panel-heading {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.panel-heading__date {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  color: var(--copy-soft);
-  font-size: 16px !important;
-  line-height: 1.4;
-}
-
-/* Mastercard eyebrow: tiny signal-orange dot before the label */
-.panel-heading__date::before {
-  content: "";
-  width: 7px;
-  height: 7px;
-  border-radius: 999px;
-  background: var(--color-icon-orange);
-  flex-shrink: 0;
-}
-
-.panel-heading h1 {
-  margin: 0;
-  color: var(--copy);
-  font-size: 21px !important;
-  font-weight: 500 !important;
-  line-height: 1.2 !important;
-  letter-spacing: -0.02em;
-}
-
-.panel-heading h1 span {
-  color: var(--copy-soft);
-}
-
-.panel-heading h1 > span {
-  font-size: inherit !important;
-  line-height: inherit !important;
-  font-weight: inherit !important;
 }
 
 .chart-canvas {
@@ -811,14 +767,6 @@ button {
     overflow: visible;
   }
 
-  /* Keep the last input rows reachable above the fixed dock. (The open chat
-     panel is a one-tap-dismiss overlay that may cover them — deliberate.) */
-  .plan-column::after {
-    content: "";
-    display: block;
-    height: 168px;
-  }
-
   .plan-summary-card,
   .plan-summary-card__inner {
     min-height: 230px;
@@ -880,14 +828,6 @@ button {
 
   .chart-panel__inner {
     padding: 26px 17px 24px;
-  }
-
-  .panel-heading__date {
-    font-size: 14px !important;
-  }
-
-  .panel-heading h1 {
-    font-size: 19px !important;
   }
 
   .chart-canvas {

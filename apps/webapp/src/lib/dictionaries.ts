@@ -14,16 +14,8 @@ export const strings: Dictionary = {
 	"nav.hello": { en: "Your plan, live", th: "แผนของคุณ สด ๆ" },
 	"nav.synced": { en: "Numbers update as you type", th: "ตัวเลขอัปเดตทันทีที่แก้" },
 	"locale.toggle": { en: "Switch language", th: "เปลี่ยนภาษา" },
-	"plan.heading.full.ok": { en: "Your plan is on track", th: "แผนของคุณกำลังไปได้ดี" },
-	"plan.heading.full.risk": { en: "Your plan needs work", th: "แผนของคุณต้องปรับ" },
 	"locale.en": { en: "EN", th: "EN" },
 	"locale.th": { en: "ไทย", th: "ไทย" },
-
-	// Old-layout chrome (kept per Prame — chart left, plan info right)
-	"plan.snapshotDate": { en: "Plan snapshot · this year", th: "ภาพรวมแผน · ปีนี้" },
-	"plan.heading.prefix": { en: "Your plan is", th: "แผนของคุณ" },
-	"plan.heading.status": { en: "on track", th: "กำลังไปได้ดี" },
-	"plan.heading.needsWork": { en: "needs attention", th: "ควรปรับ" },
 	"metric.netWorth": { en: "Net worth", th: "มูลค่าสุทธิ" },
 	"metric.cashFlow": { en: "Cash flow", th: "กระแสเงินสด" },
 	"period.all": { en: "All", th: "ทั้งหมด" },

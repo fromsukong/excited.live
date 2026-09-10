@@ -314,9 +314,6 @@ function Home() {
 		setPlan((current) => ({ ...current, [field]: { ...current[field], [id]: value } }))
 	}
 
-	const onTrack =
-		summary.ok && summary.data.retirement.funded && summary.data.runsOutYear === null
-
 	return (
 		<Theme theme={mastercardTheme} mode="light">
 			<Stack className="dashboard-shell">
@@ -342,13 +339,35 @@ function Home() {
 					<Grid className={`dashboard-grid ${chatOpen ? "" : "dashboard-grid--full"}`}>
 						<Card className="chart-panel" variant="transparent" padding={0}>
 							<Stack className="chart-panel__inner">
-								<Stack className="panel-heading">
-									<Text color="secondary" className="panel-heading__date">
-										{t("plan.snapshotDate", { year: String(plan.startYear) })}
-									</Text>
-									<Heading level={1}>
-										{onTrack ? t("plan.heading.full.ok") : t("plan.heading.full.risk")}
-									</Heading>
+								<Stack direction="horizontal" vAlign="center" className="chart-toolbar">
+									<Stack direction="horizontal" vAlign="center" role="group" aria-label={t("a11y.chartMetric")} className="metric-switch">
+										<PlainButton
+											className={`metric-switch__item ${metric === "metric.netWorth" ? "is-active" : ""}`}
+											onClick={() => setMetric("metric.netWorth")}
+										>
+											<Text className="metric-indicator metric-indicator--white" aria-hidden="true">{""}</Text>
+											{t("metric.netWorth")}
+										</PlainButton>
+										<PlainButton
+											className={`metric-switch__item ${metric === "metric.cashFlow" ? "is-active" : ""}`}
+											onClick={() => setMetric("metric.cashFlow")}
+										>
+											<Text className="metric-indicator metric-indicator--purple" aria-hidden="true">{""}</Text>
+											{t("metric.cashFlow")}
+										</PlainButton>
+									</Stack>
+									<Stack direction="horizontal" vAlign="center" role="group" aria-label={t("a11y.chartPeriod")} className="period-switch">
+										{HORIZONS.map((item) => (
+											<PlainButton
+												className={`period-switch__item ${horizon === item ? "is-active" : ""}`}
+												key={item}
+												aria-pressed={horizon === item}
+												onClick={() => setHorizon(item)}
+											>
+												{item === "all" ? t("period.all") : `${item}Y`}
+											</PlainButton>
+										))}
+									</Stack>
 								</Stack>
 
 								<Stack className="chart-canvas">
@@ -371,37 +390,6 @@ function Home() {
 												: ""}
 										</Text>
 									) : null}
-								</Stack>
-
-								<Stack direction="horizontal" vAlign="center" className="chart-toolbar">
-									<Stack direction="horizontal" vAlign="center" role="group" aria-label={t("a11y.chartMetric")} className="metric-switch">
-										<PlainButton
-											className={`metric-switch__item ${metric === "metric.netWorth" ? "is-active" : ""}`}
-											onClick={() => setMetric("metric.netWorth")}
-										>
-											<Text className="metric-indicator metric-indicator--white" aria-hidden="true">{""}</Text>
-											{t("metric.netWorth")}
-										</PlainButton>
-										<PlainButton
-											className={`metric-switch__item ${metric === "metric.cashFlow" ? "is-active" : ""}`}
-											onClick={() => setMetric("metric.cashFlow")}
-										>
-											<Text className="metric-indicator metric-indicator--purple" aria-hidden="true">{""}</Text>
-											{t("metric.cashFlow")}
-										</PlainButton>
-									</Stack>
-								<Stack direction="horizontal" vAlign="center" role="group" aria-label={t("a11y.chartPeriod")} className="period-switch">
-										{HORIZONS.map((item) => (
-											<PlainButton
-												className={`period-switch__item ${horizon === item ? "is-active" : ""}`}
-												key={item}
-												aria-pressed={horizon === item}
-												onClick={() => setHorizon(item)}
-											>
-												{item === "all" ? t("period.all") : `${item}Y`}
-											</PlainButton>
-										))}
-									</Stack>
 								</Stack>
 
 								<Stack direction="horizontal" vAlign="center" role="group" aria-label={t("a11y.leftTabs")} className="left-tab-switch">
