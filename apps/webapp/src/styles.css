@@ -144,6 +144,12 @@ button {
   gap: 31px;
 }
 
+/* Full-app mode (assistant minimized): left panel takes the whole row. */
+.dashboard-grid--full {
+  grid-template-columns: minmax(0, 1fr) 0px;
+  gap: 0;
+}
+
 .chart-panel,
 .plan-summary-card,
 .actions-card {
@@ -669,6 +675,11 @@ button {
     gap: 22px;
   }
 
+  .dashboard-grid--full {
+    grid-template-columns: minmax(0, 1fr) 0px;
+    gap: 0;
+  }
+
   .chart-panel__inner,
   .plan-summary-card__inner,
   .actions-card__inner {
@@ -716,8 +727,19 @@ button {
   }
 
   .chart-panel,
-  .plan-column {
+  .plan-column,
+  .assistant-rail {
     width: 100%;
+  }
+
+  .assistant-rail {
+    height: auto;
+    min-height: 320px;
+  }
+
+  /* Mobile: the rail is a normal block above the dock (which stays fixed). */
+  .assistant-rail__log {
+    max-height: 40vh;
   }
 
   .chart-panel,
@@ -1036,9 +1058,108 @@ button {
   cursor: default;
 }
 
-/* ── Assistant rail (right column) ────────────────────────────────────────
- * The whole right side is the chat: Astryx chat components (message list,
- * bubbles, tool-call rows, composer) inside a single panel.
+/* Right column: one card per input section. */
+.plan-inputs {
+  width: 100%;
+  min-width: 0;
+}
+
+.input-section {
+  width: 100%;
+  min-width: 0;
+}
+
+/* Period row cards inside Income/Expenses sections. */
+.input-section .astryx-card {
+  min-width: 0;
+}
+
+/* The right column scrolls as one list of cards (desktop keeps the old
+   independent-scroll behavior via .plan-column). */
+
+/* ── Bottom dock ──────────────────────────────────────────────────────────
+ * Mobile: fixed to the bottom of the screen — always visible, above the
+ * chat panel. Desktop (≥1021px): pinned to the bottom of the right column
+ * (the scrollable side), so the dock is the last thing that scrolls past
+ * and the chat launcher is always reachable.
+ * ────────────────────────────────────────────────────────────────────── */
+.dock {
+  position: fixed;
+  right: max(12px, env(safe-area-inset-right, 0px));
+  bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+  left: max(12px, env(safe-area-inset-left, 0px));
+  z-index: 60;
+  display: flex;
+  gap: 6px;
+  padding: 6px;
+  border: 1px solid var(--panel-border);
+  border-radius: 999px;
+  background: var(--panel-bg);
+  box-shadow: 0 8px 28px var(--shadow-color, rgba(0, 0, 0, 0.28));
+}
+
+.dock__button {
+  display: flex;
+  flex: 1 1 0;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  height: 42px;
+  padding: 0 10px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  color: var(--copy-muted);
+  background: transparent;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.dock__button:hover {
+  color: var(--copy);
+  background: var(--color-overlay-hover);
+}
+
+.dock__button:active {
+  background: var(--color-overlay-pressed);
+}
+
+.dock__label {
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dock__button--chat {
+  flex: 0 0 auto;
+  gap: 5px;
+  padding: 0 14px;
+  color: var(--copy);
+  border-color: var(--panel-border);
+  background: var(--color-neutral);
+}
+
+.dock__button--chat.is-open {
+  background: var(--color-overlay-pressed);
+}
+
+.dock__chat-icon {
+  width: 17px;
+  height: 17px;
+  flex: 0 0 auto;
+}
+
+/* Very narrow phones: scroll-to-inputs is redundant while scrolling, so the
+   dock fits three buttons without truncating labels. */
+@media (max-width: 379px) {
+  .dock__button--edit {
+    display: none;
+  }
+}
+
+/* ── Assistant rail (right column) ─────────────────────────────────────────
+ * Astryx ai-chat style: full-height panel, "Today" separator, user bubbles
+ * right / assistant turns with avatar left, floating composer card with
+ * circular send button. Minimizing swaps it for a launcher pill.
  * ────────────────────────────────────────────────────────────────────── */
 .assistant-rail {
   display: flex;
@@ -1056,6 +1177,29 @@ button {
   flex: 0 0 auto;
   padding-bottom: 14px;
   border-bottom: 1px solid var(--panel-border);
+}
+
+.assistant-rail__minimize {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--panel-border);
+  border-radius: 999px;
+  color: var(--copy-muted);
+  background: transparent;
+  cursor: pointer;
+}
+
+.assistant-rail__minimize:hover {
+  color: var(--copy);
+  background: var(--color-overlay-hover);
+}
+
+.assistant-rail__minimize-icon {
+  width: 16px;
+  height: 16px;
 }
 
 .assistant-rail__log {
@@ -1103,9 +1247,129 @@ button {
   margin-top: 12px;
 }
 
+/* Minimized assistant: the dock alone provides the Chat launcher; the left
+   panel stretches to the full row via .dashboard-grid--full. */
+.assistant-minimized {
+  display: none;
+  min-width: 0;
+}
+
+.dashboard-grid--full .assistant-minimized {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+/* Inputs tab (full-app mode): the input sections scroll inside the tab
+   body like the financial list does. */
+.app-inputs {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 18px;
+  min-height: 0;
+  margin-top: 17px;
+  padding: 0 8px;
+  overflow-y: auto;
+  border-radius: 20px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
+}
+
+/* Floating chat panel (mock) — sits just above the dock. */
+.chat-panel {
+  position: fixed;
+  right: max(12px, env(safe-area-inset-right, 0px));
+  bottom: calc(70px + env(safe-area-inset-bottom, 0px));
+  left: max(12px, env(safe-area-inset-left, 0px));
+  z-index: 55;
+  max-height: min(58vh, 430px);
+  border: 1px solid var(--panel-border);
+  border-radius: 24px;
+  background: var(--panel-bg);
+  box-shadow: 0 16px 44px var(--shadow-color, rgba(0, 0, 0, 0.3));
+}
+
+.chat-panel__head {
+  padding: 14px 18px 10px;
+  border-bottom: 1px solid var(--panel-border);
+}
+
+.chat-panel__log {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+  padding: 12px 18px;
+  overflow-y: auto;
+}
+
+.chat-panel__composer {
+  padding: 10px 12px calc(12px + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--panel-border);
+}
+
+.chat-panel__input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.chat-bubble {
+  width: fit-content;
+  max-width: 88%;
+  padding: 8px 12px;
+  border: 1px solid var(--panel-border);
+  border-radius: 16px;
+}
+
+.chat-bubble--user {
+  align-self: flex-end;
+  color: var(--copy);
+  background: var(--color-overlay-pressed);
+  border-bottom-right-radius: 6px;
+}
+
+.chat-bubble--assistant {
+  align-self: flex-start;
+  background: var(--color-neutral);
+  border-bottom-left-radius: 6px;
+}
+
 @media (min-width: 1021px) {
-  .assistant-rail {
+  /* Desktop: dock + chat live at the bottom of the right (inputs) column —
+     sticky so they stay visible while the column scrolls. */
+  .dock {
     position: sticky;
-    top: 0;
+    right: auto;
+    bottom: 12px;
+    left: auto;
+  }
+
+  .chat-panel {
+    position: sticky;
+    right: auto;
+    bottom: 74px;
+    left: auto;
+  }
+
+  /* Full-app mode: no right column to host the dock, so it floats at the
+     bottom-right corner of the viewport instead. */
+  .dashboard-grid--full .assistant-minimized .dock {
+    position: fixed;
+    right: 18px;
+    bottom: 18px;
+    left: auto;
+    width: min(460px, calc(100vw - 36px));
+  }
+
+  /* Keep the last rows readable above the floating dock. */
+  .dashboard-grid--full .financial-list,
+  .dashboard-grid--full .plan-actions-list,
+  .dashboard-grid--full .app-inputs {
+    padding-bottom: 88px;
   }
 }
+
