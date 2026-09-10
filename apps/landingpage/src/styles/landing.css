@@ -31,6 +31,12 @@
 	--shadow-halo: rgba(0, 0, 0, 0.08) 0 24px 48px;
 	--shadow-nav: rgba(0, 0, 0, 0.04) 0 4px 24px 0;
 
+	/* The Astryx Theme island (LangSelect) syncs data-astryx-theme onto <html>,
+	   which leaks its theme tokens to headings page-wide: --font-family-heading
+	   (Figtree) replaced Sofia Sans on every h1-h4, and light-dark() heading
+	   colors fought the dark footer. Re-pin the house font via the leaked token;
+	   heading colors are pinned explicitly on each heading rule below. */
+	--font-family-heading: 'Sofia Sans', Arial, sans-serif;
 	font-family: var(--font-family-body, 'Sofia Sans', Arial, sans-serif);
 }
 
@@ -51,26 +57,15 @@ html[data-lang='en'] [data-lang-th] {
 	display: none !important;
 }
 
-.lang-select {
-	appearance: none;
-	-webkit-appearance: none;
-	font: inherit;
-	font-size: 13.5px;
-	font-weight: 600;
-	letter-spacing: -0.13px;
-	color: var(--ink);
-	background: var(--white)
-		url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23141413' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
-		no-repeat right 12px center;
-	border: 1px solid rgba(20, 20, 19, 0.15);
-	border-radius: 999px;
-	padding: 8px 30px 8px 14px;
-	cursor: pointer;
+.lang-island {
+	display: inline-flex;
+	align-items: center;
 }
 
-.lang-select:focus-visible {
-	outline: 2px solid var(--orange);
-	outline-offset: 1px;
+.lang-island--dark .astryx-selector {
+	border-color: rgba(255, 255, 255, 0.4);
+	background: transparent;
+	color: #ffffff;
 }
 
 /* ---------- nav ---------- */
@@ -153,6 +148,14 @@ html[data-lang='en'] [data-lang-th] {
 	}
 }
 
+/* Below ~480px logo + wordmark + selector + CTA cannot fit on one row (live
+   truncates the wordmark mid-glyph); drop the wordmark, keep the mark. */
+@media (max-width: 480px) {
+	.nav-brand > span {
+		display: none;
+	}
+}
+
 /* ---------- buttons ---------- */
 
 .btn-ink {
@@ -231,9 +234,9 @@ html[data-lang='en'] [data-lang-th] {
 
 .hero-graph {
 	position: absolute;
-	right: -10px;
+	right: 0;
 	bottom: -20px;
-	width: min(460px, 44vw);
+	width: min(560px, 45vw);
 	z-index: 0;
 	pointer-events: none;
 }
@@ -400,7 +403,7 @@ html[data-lang='en'] [data-lang-th] {
 	background: #1e9e6a;
 }
 
-@media (max-width: 1199px) {
+@media (max-width: 559px) {
 	.hero-graph {
 		display: none;
 	}
@@ -442,6 +445,8 @@ html[data-lang='en'] [data-lang-th] {
 	font-weight: 500;
 	letter-spacing: -0.02em;
 	margin: 24px 0 0;
+	/* explicit: Astryx Theme island leaks light-dark() heading colors via <html> */
+	color: var(--ink);
 }
 
 .hero h1 .accent {
@@ -584,11 +589,6 @@ html[data-lang='en'] [data-lang-th] {
 		font-size: 14px;
 	}
 
-	.lang-select {
-		padding: 8px 30px 8px 12px;
-		min-height: 44px;
-	}
-
 	.waitlist-row {
 		flex-direction: column;
 		gap: 12px;
@@ -648,6 +648,8 @@ html[data-lang='en'] [data-lang-th] {
 	font-weight: 500;
 	letter-spacing: -0.02em;
 	margin: 20px 0 0;
+	/* explicit: Astryx Theme island leaks light-dark() heading colors via <html> */
+	color: var(--ink);
 }
 
 .section-head p {
@@ -794,6 +796,8 @@ html[data-lang='en'] [data-lang-th] {
 	font-weight: 500;
 	letter-spacing: -0.02em;
 	margin: 8px 0 0;
+	/* explicit: Astryx Theme island leaks light-dark() heading colors via <html> */
+	color: var(--ink);
 }
 
 .perk-card p {
@@ -1129,6 +1133,14 @@ html[data-lang='en'] [data-lang-th] {
 	max-width: 1200px;
 	margin: 0 auto;
 	padding: 96px 24px 48px;
+	display: grid;
+	grid-template-columns: 1.4fr 1fr;
+	column-gap: 64px;
+	align-items: start;
+}
+
+.footer-main {
+	min-width: 0;
 }
 
 .footer h2 {
@@ -1137,6 +1149,8 @@ html[data-lang='en'] [data-lang-th] {
 	letter-spacing: -0.02em;
 	margin: 0 0 32px;
 	max-width: 560px;
+	/* explicit white: Astryx Theme island leaks light-dark() heading colors via <html> */
+	color: var(--white);
 }
 
 .footer .waitlist-row {
@@ -1171,12 +1185,9 @@ html[data-lang='en'] [data-lang-th] {
 
 .footer-cols {
 	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+	grid-template-columns: 1fr 1fr;
 	gap: 32px;
-	max-width: 680px;
-	margin-top: 96px;
-	padding-top: 48px;
-	border-top: 1px solid rgba(255, 255, 255, 0.2);
+	min-width: 0;
 }
 
 .footer-col h4 {
@@ -1204,6 +1215,7 @@ html[data-lang='en'] [data-lang-th] {
 }
 
 .footer-bottom {
+	grid-column: 1 / -1;
 	display: flex;
 	flex-wrap: wrap;
 	justify-content: space-between;
@@ -1231,21 +1243,26 @@ html[data-lang='en'] [data-lang-th] {
 	color: var(--orange-light);
 }
 
-.footer-bottom .lang-select {
-	color: rgba(255, 255, 255, 0.85);
-	background-color: transparent;
-	border-color: rgba(255, 255, 255, 0.4);
-	background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23ffffff' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-}
-
-.footer-bottom .lang-select option {
-	color: var(--ink);
-	background: var(--white);
-}
-
 @media (max-width: 860px) {
+	.footer-inner {
+		display: block;
+	}
+
 	.footer-cols {
 		grid-template-columns: 1fr 1fr;
+		gap: 32px;
+		max-width: 680px;
+		margin-top: 56px;
+		padding-top: 40px;
+		border-top: 1px solid rgba(255, 255, 255, 0.2);
+	}
+}
+
+@media (max-width: 560px) {
+	.footer-bottom {
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 16px;
 	}
 }
 
@@ -1253,35 +1270,4 @@ html[data-lang='en'] [data-lang-th] {
 
 .docs-body {
 	background: var(--canvas);
-}
-
-.docs-back {
-	display: inline-flex;
-	align-items: center;
-	gap: 8px;
-	margin: 24px 24px 0;
-	font-size: 14px;
-	font-weight: 500;
-	color: var(--ink);
-	text-decoration: none;
-}
-
-.docs-back img {
-	width: 22px;
-	height: 22px;
-	display: block;
-	border-radius: 6px;
-}
-
-.docs-back:hover span {
-	color: var(--orange);
-}
-
-.docs-back-sep {
-	color: rgba(20, 20, 19, 0.35);
-	margin: 0 2px;
-}
-
-.docs-back-page {
-	font-weight: 600;
 }
