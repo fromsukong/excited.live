@@ -1,6 +1,7 @@
 ---
 import Layout from '@/components/layout.astro';
 import WaitlistForm from '@/components/WaitlistForm';
+import LangSelect from '@/components/LangSelect';
 
 const title = 'excited.live — Plan the life you want to live';
 const description =
@@ -11,7 +12,7 @@ const description =
 	<!-- ============ NAV ============ -->
 	<div class="nav-wrap">
 		<nav class="nav-pill" aria-label="Main">
-			<a class="nav-brand" href="/">
+			<a class="nav-brand" href="/" aria-label="excited.live">
 				<img src="/logo-mark.png" alt="" width="28" height="28" />
 				<span>excited<span class="brand-dot">.live</span></span>
 			</a>
@@ -30,10 +31,7 @@ const description =
 				</a>
 			</div>
 			<div class="nav-actions">
-				<select class="lang-select" aria-label="Language">
-					<option value="en">🇬🇧 English</option>
-					<option value="th">🇹🇭 ไทย</option>
-				</select>
+				<LangSelect client:load />
 				<a class="btn-ink" href="#waitlist">
 					<span data-lang-en>Join waitlist</span>
 					<span data-lang-th>ลงทะเบียน</span>
@@ -312,46 +310,48 @@ const description =
 	<!-- ============ FOOTER ============ -->
 	<footer class="footer">
 		<div class="footer-inner">
-			<h2>
-				<span data-lang-en>Ready to live the life you're excited about?</span>
-				<span data-lang-th>พร้อมใช้ชีวิตแบบที่คุณตั้งตารอแล้วหรือยัง?</span>
-			</h2>
-			<WaitlistForm client:visible dark />
+			<div class="footer-main">
+				<h2>
+					<span data-lang-en>Ready to live the life you're excited about?</span>
+					<span data-lang-th>พร้อมใช้ชีวิตแบบที่คุณตั้งตารอแล้วหรือยัง?</span>
+				</h2>
+				<WaitlistForm client:visible dark />
 
-			<div class="journey">
-				<p class="eyebrow">
-					<span data-lang-en>Follow the journey</span>
-					<span data-lang-th>ติดตามเส้นทางของเรา</span>
-				</p>
-				<div class="journey-links">
-					<a
-						class="journey-link is-live"
-						href="https://www.instagram.com/excited.live/"
-						rel="noopener noreferrer"
-					>
-						Instagram
-					</a>
-					<span class="journey-link is-soon">
-						YouTube
-						<em>
-							<span data-lang-en>soon</span>
-							<span data-lang-th>เร็ว ๆ นี้</span>
-						</em>
-					</span>
-					<span class="journey-link is-soon">
-						X
-						<em>
-							<span data-lang-en>soon</span>
-							<span data-lang-th>เร็ว ๆ นี้</span>
-						</em>
-					</span>
-					<span class="journey-link is-soon">
-						Threads
-						<em>
-							<span data-lang-en>soon</span>
-							<span data-lang-th>เร็ว ๆ นี้</span>
-						</em>
-					</span>
+				<div class="journey">
+					<p class="eyebrow">
+						<span data-lang-en>Follow the journey</span>
+						<span data-lang-th>ติดตามเส้นทางของเรา</span>
+					</p>
+					<div class="journey-links">
+						<a
+							class="journey-link is-live"
+							href="https://www.instagram.com/excited.live/"
+							rel="noopener noreferrer"
+						>
+							Instagram
+						</a>
+						<span class="journey-link is-soon">
+							YouTube
+							<em>
+								<span data-lang-en>soon</span>
+								<span data-lang-th>เร็ว ๆ นี้</span>
+							</em>
+						</span>
+						<span class="journey-link is-soon">
+							X
+							<em>
+								<span data-lang-en>soon</span>
+								<span data-lang-th>เร็ว ๆ นี้</span>
+							</em>
+						</span>
+						<span class="journey-link is-soon">
+							Threads
+							<em>
+								<span data-lang-en>soon</span>
+								<span data-lang-th>เร็ว ๆ นี้</span>
+							</em>
+						</span>
+					</div>
 				</div>
 			</div>
 
@@ -399,22 +399,13 @@ const description =
 						<span data-lang-th>เงื่อนไข</span>
 					</a>
 				</span>
-				<select class="lang-select" aria-label="Language">
-					<option value="en">🇬🇧 English</option>
-					<option value="th">🇹🇭 ไทย</option>
-				</select>
+				<LangSelect client:load variant="dark" />
 			</div>
 		</div>
 	</footer>
 
 	<script is:inline data-astro-rerun>
 		// Pure-CSS bilingual toggle: flips <html data-lang>, persists to localStorage.
-		function syncLangSelects() {
-			const lang = document.documentElement.dataset.lang;
-			document.querySelectorAll('select.lang-select').forEach((s) => {
-				s.value = lang;
-			});
-		}
 		document.addEventListener('click', function (event) {
 			const target = event.target.closest('[data-set-lang]');
 			if (!target) return;
@@ -426,17 +417,6 @@ const description =
 				/* private mode — toggle still works for this page view */
 			}
 		});
-		document.addEventListener('change', function (event) {
-			const select = event.target.closest('select.lang-select');
-			if (!select) return;
-			document.documentElement.dataset.lang = select.value;
-			try {
-				localStorage.setItem('exl-lang', select.value);
-			} catch {
-				/* private mode — toggle still works for this page view */
-			}
-		});
-		syncLangSelects();
 	</script>
 
 	<script is:inline data-astro-rerun>
