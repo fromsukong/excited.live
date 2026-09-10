@@ -2,13 +2,14 @@
 /**
  * Blog post page — /blog/[slug]/
  *
- * Renders the FULL markdown (every paragraph). Slide-worthy blocks (the
- * `:::slide` fences) stay in flow, styled as callout cards so the blog reads
- * naturally. A link to /blog/[slug]/slides offers the presentation view.
+ * CONTENT MODEL: blog = full article in prose, deck-only beats stripped.
+ * `:::slide` fences never render here — the blog is prose + images/formulas;
+ * slide copy lives only in /blog/[slug]/slides (no duplication).
  */
-import { getCollection, render } from 'astro:content';
+import { getCollection } from 'astro:content';
 import Layout from '@/components/layout.astro';
-import { countSlideFences } from '@/lib/blog-pipeline';
+import { renderBlogMarkdown } from '@/lib/blog-pipeline';
+import { splitSlides } from '@/lib/slides';
 import '@/styles/global.css';
 
 export async function getStaticPaths() {
@@ -20,8 +21,9 @@ export async function getStaticPaths() {
 }
 
 const { post } = Astro.props;
-const { Content } = await render(post);
-const slideCount = countSlideFences(post.body);
+// Render through the shared pipeline and strip deck-only blocks from the blog.
+const rendered = await renderBlogMarkdown(post.body ?? '');
+const { blogHtml, slideCount } = splitSlides(rendered);
 const hasVideo = Boolean(post.data.youtube);
 ---
 
@@ -80,7 +82,7 @@ const hasVideo = Boolean(post.data.youtube);
 			}
 
 			<div class="blog-prose">
-				<Content />
+				<Fragment set:html={blogHtml} />
 			</div>
 		</article>
 	</main>
@@ -206,21 +208,6 @@ const hasVideo = Boolean(post.data.youtube);
 			border-bottom: 1px solid var(--dust);
 			padding: 8px 10px;
 			text-align: left;
-		}
-		/* :::slide blocks inside the blog flow = highlighted callout cards */
-		.blog-prose :global(.slide-block) {
-			background: var(--lifted);
-			border: 1px solid var(--dust);
-			border-radius: 20px;
-			padding: 20px 22px;
-			margin: 24px 0;
-			box-shadow: var(--shadow-nav);
-		}
-		.blog-prose :global(.slide-block h2) {
-			margin-top: 0;
-		}
-		.blog-prose :global(.slide-block :last-child) {
-			margin-bottom: 0;
 		}
 	</style>
 </Layout>

@@ -6,23 +6,25 @@ description: A spreadsheet shows one snapshot. A timeline shows every year at on
 
 Money advice loves snapshots: your balance today, your rate of return, your monthly budget. But a life is not a snapshot — it is a sequence of years, and the interesting questions live in that sequence.
 
-## Snapshots hide the shape of your life
-
-A spreadsheet can tell you that you save 20,000 a year. It cannot easily tell you what that means when school fees arrive in 2031 and your income dips in 2034.
-
 :::slide
 A plan is not a number. **It is a curve across time.**
 :::
 
-When you lay the years side by side, the shape appears: the tight years, the cushion years, the years where one decision cascades into the next decade.
+## Snapshots hide the shape of your life
+
+Open a typical financial plan and you get a table: income here, expenses there, a balance at the bottom. It answers "where am I" but says nothing about "what happens next". Real plans have a shape — the tight years while the kids are small, the cushion years when income peaks, the fragile stretch right after retirement when sequence risk is at its worst.
+
+Two plans with identical ending balances can have completely different shapes, and the shape is where the risk lives. A spreadsheet averages that story away.
 
 ## The question is always "when", not "how much"
 
-Most money questions are secretly timing questions:
+Every real money question is temporal in disguise:
 
-- Can I stop full-time work in 2033 — or is it 2036?
-- What happens to the timeline if school fees come a year earlier?
-- If I take a lower-paying job I love, which years get tight?
+- Can I stop full-time work at 50? — a *when* question.
+- How long can I sustain this spending? — a *when* question.
+- What happens to all of this if my income dips for two years? — a *when* question.
+
+"How much" questions fit spreadsheets because a cell holds a number. "When" questions don't fit, because the answer depends on every year before it and every year after it.
 
 :::slide
 Every money question is really a **when** question.
@@ -30,7 +32,7 @@ Every money question is really a **when** question.
 
 ## Simulation beats prediction
 
-Nobody can predict markets. But you do not need a prediction to answer a timing question — you need to see your own numbers move over time, under assumptions you control.
+You cannot predict your future returns, your future health costs, or the next market crash. What you can do is simulate: lay out your years as a timeline, apply your events in order, and watch how one change cascades.
 
 The math underneath is simple compounding. Each year:
 
@@ -38,7 +40,7 @@ $$
 B_{t+1} = (B_t + S_t)(1 + r)
 $$
 
-where $B_t$ is your balance, $S_t$ what you save that year, and $r$ the return you assume. The power is not in the formula — it is in watching every year of the curve respond when you change one input.
+where *B*ₜ is your balance, *S*ₜ what you save that year, and *r* the return you assume. The power is not in the formula — it is in watching every year of the curve respond when you change one input.
 
 :::slide
 $$
@@ -54,12 +56,10 @@ You describe your life as events on a timeline — income, expenses, one-off sho
 
 ![The excited.live simulator draws your plan year by year](/demo/app-01.webp)
 
-Change an assumption and the whole curve re-draws instantly, so you can feel the trade-off instead of imagining it.
+Change an assumption and the whole curve re-draws instantly, so you can feel the trade-off instead of imagining it. That is the idea this whole product is built on. The rest is interface.
 
 :::slide
 ![The excited.live simulator draws your plan year by year](/demo/app-01.webp)
 
 See every year of your plan at once — **before** you live it.
 :::
-
-That is the idea this whole product is built on. The rest is interface.
