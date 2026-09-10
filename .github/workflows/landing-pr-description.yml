@@ -1,0 +1,66 @@
+name: Landing PR Description Update
+
+on:
+  workflow_run:
+    workflows: ["Landing PR Previews"]
+    types: [completed]
+
+jobs:
+  update-pr:
+    if: >-
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Update PR description with preview URL
+        uses: actions/github-script@v9
+        with:
+          script: |
+            // Must mirror the sanitization in landing-preview.yml exactly:
+            // ASCII-lowercase, non-[a-z0-9-] -> '-', trim dashes, cut to 23
+            // codepoints, re-trim trailing dashes, fallback 'pr'.
+            // landing-preview.yml deploys with that value as the --branch
+            // alias (<= 28 chars, Cloudflare's alias limit), so the URL is
+            // always valid and matches the deployed alias verbatim.
+            const sanitizeBranch = (b) => {
+              // Python slices by codepoint; astral chars are 2 UTF-16 units
+              // in JS — pre-replace them so both sides emit one dash.
+              let s = String(b || '').replace(/[\u{10000}-\u{10FFFF}]/gu, '-');
+              s = s.replace(/[A-Z]/g, (c) => c.toLowerCase());
+              s = s.replace(/[^a-z0-9-]/g, '-').replace(/^-+|-+$/g, '');
+              s = Array.from(s).slice(0, 23).join('').replace(/-+$/g, '');
+              if (!s) s = 'pr';
+              return s;
+            };
+            const prNumber = context.payload.workflow_run.pull_requests[0]?.number;
+            if (!prNumber) { core.info('No PR found for this run'); return; }
+            const head = context.payload.workflow_run.head_branch;
+            const url = `https://${sanitizeBranch(head)}.excited-live-landing-preview.pages.dev`;
+            const { data: pr } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber,
+            });
+            let body = pr.body || '';
+            const markerStart = '<!-- AUTO-LANDING-PREVIEWS:START -->';
+            const markerEnd = '<!-- AUTO-LANDING-PREVIEWS:END -->';
+            const block = [
+              markerStart,
+              '### 🌐 Landing live preview (auto-updated)',
+              '- **Preview**: ' + url,
+              markerEnd,
+            ].join('\n');
+            if (body.includes(markerStart)) {
+              body = body.replace(new RegExp(markerStart + '[\\s\\S]*?' + markerEnd), block);
+            } else {
+              body = body + '\n\n' + block;
+            }
+            await github.rest.pulls.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber,
+              body: body,
+            });
+            core.info('Updated PR #' + prNumber + ' with landing preview URL');
