@@ -9,9 +9,9 @@ Most people who use AI rent a chatbot. You open a tab, type a question, read the
 For the past few weeks I've been running something different on a tiny server: an agent with a terminal, a memory, a schedule, and its own opinions about my calendar. It is closer to hiring an employee than to subscribing to a chatbot. This post is the setup, the job description, and the payslip.
 
 :::slide
-![excited.live — the app the agent helps ship](/blog/hermes-talk/excited-app.png)
+![An employee, not a chatbot](/blog/hermes-talk/excited-app.png)
 
-**An employee, not a chatbot.**
+An employee, **not a chatbot.**
 :::
 
 ## What it actually is
@@ -24,9 +24,33 @@ The product is [Hermes Agent](https://hermes-agent.nousresearch.com/docs) — an
 
 The closest comparisons are coding-agent clouds like Cursor's or Claude Code's remote agents — those are genuinely useful, but they are rented hands for one job: code. What I wanted was a full-time operator across code, email, ops, and personal life, and that is a different category. It's the difference between a contractor you brief every morning and a coworker who was already here when you woke up.
 
+:::slide
+![Hermes Agent](/blog/hermes-talk/hermes-logo-card.png)
+
+This is Hermes. **It works for me.**
+:::
+
+:::slide
+![A chatbot answers, an agent acts](/blog/hermes-talk/img-cron.png)
+
+A chatbot answers. An agent **acts.**
+:::
+
+:::slide
+![It remembers tomorrow](/blog/hermes-talk/img-memory.png)
+
+It **remembers** tomorrow.
+:::
+
 ## The setup, minimum cost
 
 There is no exotic infrastructure here. One small VPS with 4 GB of RAM runs the agent, its memory database, a handful of long-running helpers, and still has headroom.
+
+:::slide
+![One tiny server](/blog/hermes-talk/img-vps.png)
+
+The setup: **one tiny server.**
+:::
 
 The real cost decision is the model, and there is a clean ladder:
 
@@ -38,12 +62,44 @@ The real cost decision is the model, and there is a clean ladder:
 | Claude Max | the premium lane, frontier models | ~$100/mo |
 
 :::slide
-A tiny server + cheap tokens. **$0 to $20/month.**
+![Ollama](/blog/hermes-talk/logos/brand-ollama.png)
+
+**$0** to start. Fully local.
+:::
+
+:::slide
+![OpenCode Go](/blog/hermes-talk/logos/brand-opencode.png)
+
+**~$6/mo** — flat subscription.
+:::
+
+:::slide
+![CommandCode](/blog/hermes-talk/logos/brand-commandcode.png)
+
+**~$20/mo** — bring your own keys.
+:::
+
+:::slide
+![Claude Max](/blog/hermes-talk/logos/brand-claude.png)
+
+**~$100/mo** — the premium lane.
 :::
 
 You can genuinely start at $0: Ollama runs open models on hardware you already own. I ran the mid lanes for a while and settled on **GLM-5.3-Flash** — $0.15 per million input tokens, $0.50 per million output, one million context, MIT-licensed open weights. For daily agent work it is startlingly good, and it is the reason the whole payroll is under the price of a coffee. The premium lane exists for the days a task actually needs frontier intelligence; the trick is that those days are rarer than pricing pages suggest.
 
 Open weights matter more than they first appear, too. When a model is downloadable, the agent's brain is not rented — if a provider dies, prices spike, or a policy changes, you swap a config line and keep running.
+
+:::slide
+![GLM-5.3-Flash by Z.ai](/blog/hermes-talk/logos/brand-zai.png)
+
+My pick: **GLM-5.3-Flash.**
+:::
+
+:::slide
+![The whole payroll, less than a coffee a month](/blog/hermes-talk/img-coffee.png)
+
+The whole payroll: **less than a coffee a month.**
+:::
 
 ## The job description
 
@@ -56,9 +112,9 @@ I gave it three jobs, and it does all three every week.
 **It tracks my life.** The fun one. I'm on a public 365-day weight-loss challenge — 104.4 kg down to a target of 85 kg — and the agent runs the whole scoreboard. I reply to one Discord message a day with a number; it does everything else.
 
 :::slide
-![Road to 85kg — the tracker the agent runs](/blog/hermes-talk/road85-site-mobile.png)
+![I type one number, it does everything else](/blog/hermes-talk/img-discord.png)
 
-**Three jobs. One payroll.**
+Three jobs. **One payroll.**
 :::
 
 ## Proof instead of promises
@@ -67,17 +123,17 @@ The weight challenge became the demo I show people, because it is the thing they
 
 ![The Road to 85kg site — every weigh-in is a commit, meals and workouts live in the diffs](/blog/hermes-talk/road85-site-terminal.png)
 
-:::slide
-![The Road to 85kg site — every weigh-in is a commit, meals and workouts live in the diffs](/blog/hermes-talk/road85-site-terminal.png)
-
-A website that **logs itself.**
-:::
-
 The loop looks trivial and isn't: I type "104.2" into Discord, and the agent parses it, updates the ledger, recomputes the streak, regenerates the chart, applies calorie estimates to the meals I mentioned in passing, and nudges me at 8 a.m. the next morning. There is no app between me and my data — just a conversation.
 
 ![Mobile view of the Road to 85kg tracker the agent maintains](/blog/hermes-talk/road85-site-mobile.png)
 
 And because it never forgets to log, never rounds in its favor, and never skips a day, the numbers are more honest than anything I've kept by hand.
+
+:::slide
+![The scoreboard builds itself](/blog/hermes-talk/img-proof.png)
+
+Proof, **not promises.**
+:::
 
 ## The stat I actually care about
 
@@ -88,7 +144,7 @@ Here is the chart the agent maintains, from real weigh-ins over the first couple
 1.4 kg down in the first 11 days, goal line ahead, projected arrival around January 2027. That dotted line will be wrong — real weight loss zig-zags — and that is fine. The point is that a number I have failed to track a dozen times in my life is now tracked *at* me, daily, by something that does not get bored.
 
 :::slide
-![Weight chart — 104.4 kg on day 1, 103.0 by day 11, goal 85 kg, projected arrival January 2027](/blog/hermes-talk/weight-chart.png)
+![Minus 1.4 kg in 11 days](/blog/hermes-talk/weight-chart.png)
 
 −1.4 kg in 11 days. **The machine keeps me honest.**
 :::
@@ -102,7 +158,9 @@ When I started, I assumed the valuable thing would be what the agent *produces* 
 The assistant is the product. Everything else is what it happens to make along the way.
 
 :::slide
-**470 sessions · 19k tool runs · 15 cron jobs · <$20 a month.**
+![One month, the honest receipt](/blog/hermes-talk/img-receipt.png)
+
+**The assistant is the product.**
 :::
 
 If you want to build your own, the ladder above is the whole secret: start at $0, let it earn the upgrade, and give it one small real job before you give it a big one. Mine started as a reminder bot. Employees get promoted too.
