@@ -63,6 +63,12 @@ The weight challenge became the demo I show people, because it is the thing they
 
 ![The Road to 85kg site — every weigh-in is a commit, meals and workouts live in the diffs](/blog/hermes-talk/road85-site-terminal.png)
 
+:::slide
+![The Road to 85kg site — every weigh-in is a commit, meals and workouts live in the diffs](/blog/hermes-talk/road85-site-terminal.png)
+
+A website that **logs itself.**
+:::
+
 The loop looks trivial and isn't: I type "104.2" into Discord, and the agent parses it, updates the ledger, recomputes the streak, regenerates the chart, applies calorie estimates to the meals I mentioned in passing, and nudges me at 8 a.m. the next morning. There is no app between me and my data — just a conversation.
 
 ![Mobile view of the Road to 85kg tracker the agent maintains](/blog/hermes-talk/road85-site-mobile.png)
@@ -78,6 +84,8 @@ Here is the chart the agent maintains, from real weigh-ins over the first couple
 1.4 kg down in the first 11 days, goal line ahead, projected arrival around January 2027. That dotted line will be wrong — real weight loss zig-zags — and that is fine. The point is that a number I have failed to track a dozen times in my life is now tracked *at* me, daily, by something that does not get bored.
 
 :::slide
+![Weight chart — 104.4 kg on day 1, 103.0 by day 11, goal 85 kg, projected arrival January 2027](/blog/hermes-talk/weight-chart.png)
+
 −1.4 kg in 11 days. **The machine keeps me honest.**
 :::
 
