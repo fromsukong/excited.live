@@ -9,7 +9,9 @@ Most people who use AI rent a chatbot. You open a tab, type a question, read the
 For the past few weeks I've been running something different on a tiny server: an agent with a terminal, a memory, a schedule, and its own opinions about my calendar. It is closer to hiring an employee than to subscribing to a chatbot. This post is the setup, the job description, and the payslip.
 
 :::slide
-Not a chatbot. **An employee.**
+![excited.live — the app the agent helps ship](/blog/hermes-talk/excited-app.png)
+
+**An employee, not a chatbot.**
 :::
 
 ## What it actually is
@@ -54,7 +56,9 @@ I gave it three jobs, and it does all three every week.
 **It tracks my life.** The fun one. I'm on a public 365-day weight-loss challenge — 104.4 kg down to a target of 85 kg — and the agent runs the whole scoreboard. I reply to one Discord message a day with a number; it does everything else.
 
 :::slide
-DEV · OPS · LIFE — **three jobs, one payroll.**
+![Road to 85kg — the tracker the agent runs](/blog/hermes-talk/road85-site-mobile.png)
+
+**Three jobs. One payroll.**
 :::
 
 ## Proof instead of promises
