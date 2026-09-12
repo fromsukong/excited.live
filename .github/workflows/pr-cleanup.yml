@@ -47,37 +47,59 @@ jobs:
           if branch != mock_base:
               targets['excited-live'] |= {branch + '-mock', branch + '-live'}
 
+          # Accepted caveats (both shared with the deploy workflows, which
+          # collide identically): distinct branch names can sanitize to the
+          # same alias, including the shared 'pr' fallback for empty-sanitize
+          # names — cleaning the alias cleans whichever PR deployed there
+          # last. And this scan is capped at 10 pages (250 deployments) per
+          # project; a branch's own deployments sit near the top at close.
           headers = {'Authorization': 'Bearer ' + token}
+
+          def list_page(base, page):
+              req = urllib.request.Request(f'{base}?page={page}&per_page=25', headers=headers)
+              for attempt in (1, 2):
+                  try:
+                      with urllib.request.urlopen(req, timeout=30) as r:
+                          return json.loads(r.read().decode()).get('result') or []
+                  except (urllib.error.HTTPError, urllib.error.URLError) as e:
+                      if attempt == 2:
+                          raise
+                      code = getattr(e, 'code', None) or type(e).__name__
+                      print(f'WARN listing retry ({code}) page {page}')
+
           deleted = 0
           for project, project_targets in targets.items():
               base = f'https://api.cloudflare.com/client/v4/accounts/{account}/pages/projects/{project}/deployments'
-              page = 1
-              while page <= 10:
-                  req = urllib.request.Request(f'{base}?page={page}&per_page=25', headers=headers)
-                  with urllib.request.urlopen(req, timeout=30) as r:
-                      data = json.loads(r.read().decode())
-                  results = data.get('result') or []
-                  if not results:
-                      break
-                  deleted_on_page = 0
-                  for d in results:
-                      env_branch = (d.get('deployment_trigger') or {}).get('metadata', {}).get('branch', '')
-                      if env_branch in project_targets:
-                          did = d['id']
-                          try:
-                              # aliased deployments (branch/PR preview URLs) require force=true
-                              del_req = urllib.request.Request(f'{base}/{did}?force=true', method='DELETE', headers=headers)
-                              with urllib.request.urlopen(del_req, timeout=30) as r:
-                                  ok = json.loads(r.read().decode()).get('success')
-                              print(f'deleted {project} [{env_branch}]: {did} success={ok}')
-                              deleted += 1
-                              deleted_on_page += 1
-                          except (urllib.error.HTTPError, urllib.error.URLError) as e:
-                              code = getattr(e, 'code', None) or type(e).__name__
-                              body = e.read().decode(errors='replace')[:300] if hasattr(e, 'read') else str(e)[:300]
-                              print(f'WARN delete failed {project} [{env_branch}]: {did} HTTP {code}: {body}')
-                  if deleted_on_page == 0:
-                      page += 1  # deletions shift remaining items back a page, so re-scan same page
+              try:
+                  page = 1
+                  while page <= 10:
+                      results = list_page(base, page)
+                      if not results:
+                          break
+                      removed_on_page = 0
+                      for d in results:
+                          env_branch = (d.get('deployment_trigger') or {}).get('metadata', {}).get('branch', '')
+                          if env_branch in project_targets:
+                              did = d['id']
+                              try:
+                                  # aliased deployments (branch/PR preview URLs) require force=true
+                                  del_req = urllib.request.Request(f'{base}/{did}?force=true', method='DELETE', headers=headers)
+                                  with urllib.request.urlopen(del_req, timeout=30) as r:
+                                      ok = json.loads(r.read().decode()).get('success')
+                                  print(f'deleted {project} [{env_branch}]: {did} success={ok}')
+                                  if ok:
+                                      deleted += 1
+                                      removed_on_page += 1
+                              except (urllib.error.HTTPError, urllib.error.URLError) as e:
+                                  code = getattr(e, 'code', None) or type(e).__name__
+                                  body = e.read().decode(errors='replace')[:300] if hasattr(e, 'read') else str(e)[:300]
+                                  print(f'WARN delete failed {project} [{env_branch}]: {did} HTTP {code}: {body}')
+                      if removed_on_page == 0:
+                          page += 1  # deletions shift remaining items back a page, so re-scan same page
+              except (urllib.error.HTTPError, urllib.error.URLError) as e:
+                  code = getattr(e, 'code', None) or type(e).__name__
+                  body = e.read().decode(errors='replace')[:300] if hasattr(e, 'read') else str(e)[:300]
+                  print(f'WARN scan failed {project} HTTP {code}: {body} (continuing with next project)')
           print(f'Cleanup done — {deleted} deployment(s) removed')
           PYEOF
 
