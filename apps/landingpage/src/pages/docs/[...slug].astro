@@ -19,6 +19,10 @@ const { Content, headings } = await render(page);
 const slugs = typeof Astro.params.slug === 'string' ? Astro.params.slug.split('/') : [];
 const docsPage = source.getPage(slugs)!;
 const image = getPageImageUrl(docsPage);
+// Brand suffix, unless the title already carries the name (docs index).
+const pageTitle = page.data.title.includes('excited.live')
+	? page.data.title
+	: `${page.data.title} — excited.live`;
 
 const toc: TOCItemType[] = headings.map((heading) => ({
 	depth: heading.depth,
@@ -27,10 +31,7 @@ const toc: TOCItemType[] = headings.map((heading) => ({
 }));
 ---
 
-<Layout title={page.data.title} description={page.data.description}>
-	<title>{page.data.title}</title>
-	<meta name="description" content={page.data.description} />
-	<meta property="og:image" content={image} />
+<Layout title={pageTitle} description={page.data.description} ogImage={image}>
 	<Docs
 		tree={source.getPageTree()}
 		pathname={Astro.url.pathname}

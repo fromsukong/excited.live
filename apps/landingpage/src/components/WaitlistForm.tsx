@@ -62,6 +62,7 @@ export default function WaitlistForm({ dark = false }: { dark?: boolean }) {
 		if (status === 'sending') return;
 
 		const form = event.currentTarget;
+		const source = dark ? 'footer' : 'hero';
 		const honeypot = (form.elements.namedItem(HP_FIELD) as HTMLInputElement | null)?.value;
 		if (honeypot) {
 			// Silently accept bot submissions without touching the backend.
@@ -82,13 +83,15 @@ export default function WaitlistForm({ dark = false }: { dark?: boolean }) {
 				body: JSON.stringify({
 					email: email.trim(),
 					lang,
-					source: dark ? 'footer' : 'hero',
+					source,
 					page: window.location.pathname,
 					sentAt: new Date().toISOString(),
 				}),
 			});
 			if (!res.ok) throw new Error(`HTTP ${res.status}`);
 			setStatus('success');
+			// GA4 lead event — no-op where GA isn't loaded (previews, localhost).
+			window.gtag?.('event', 'generate_lead', { method: 'waitlist', source });
 		} catch {
 			// Fallback: keep the signup on-device so nobody is lost.
 			try {

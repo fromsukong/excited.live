@@ -39,6 +39,7 @@ export default function LangSelect({ variant = 'light' }: LangSelectProps) {
 	const handleChange = (value: string) => {
 		const nextLang = value === 'th' ? 'th' : 'en';
 		setLang(nextLang);
+		window.gtag?.('event', 'lang_toggle', { lang: nextLang });
 		if (typeof document !== 'undefined') {
 			document.documentElement.dataset.lang = nextLang;
 			try {
