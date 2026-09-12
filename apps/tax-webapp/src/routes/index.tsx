@@ -17,7 +17,7 @@ import { Card } from '@astryxdesign/core/Card'
 import { SegmentedControl, SegmentedControlItem } from '@astryxdesign/core/SegmentedControl'
 import { Text } from '@astryxdesign/core/Text'
 import { Theme } from '@astryxdesign/core/theme'
-import { mastercardTheme } from '@excited-live/design-system'
+import { Img, mastercardTheme } from '@excited-live/design-system'
 import { LocaleProvider, useLocale, type Locale } from '~/i18n'
 
 export const Route = createFileRoute('/')({
@@ -34,7 +34,6 @@ export const Route = createFileRoute('/')({
 
 const COPY = {
   en: {
-    brand: 'excited.live',
     appName: 'Tax',
     heroTitle: 'How much income tax will you pay?',
     heroSubtitle: 'Estimate your individual income tax — live, in your browser.',
@@ -95,7 +94,6 @@ const COPY = {
     engineNote: 'Powered by the excited.live tax engine.',
   },
   th: {
-    brand: 'excited.live',
     appName: 'ภาษี',
     heroTitle: 'คุณจะจ่ายภาษีเท่าไหร่?',
     heroSubtitle: 'คำนวณภาษีเงินได้บุคคลธรรมดา — คำนวณสดในเบราว์เซอร์ของคุณ',
@@ -681,13 +679,14 @@ function TaxContent({
     <div className="tax-shell">
       <header className="tax-header">
         <span className="tax-brand">
-          <span className="tax-brand__mark">
-            <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M4 19.5V4.5M4 19.5h16" />
-              <path d="m7 15 3-3 2.2 1.7 4.8-6.2" />
-            </svg>
-          </span>
-          {copy.brand} <Text color="secondary">{copy.appName}</Text>
+          <Img className="tax-brand__mark" src="/logo-mark.png" alt="" width={30} height={26} />
+          <Img
+            className="tax-brand__wordmark"
+            src="/logo-wordmark.png"
+            alt="excited.live"
+            height={15}
+          />
+          <Text color="secondary">{copy.appName}</Text>
         </span>
         <div className="tax-lang-switch">
           <SegmentedControl
