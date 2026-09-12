@@ -452,7 +452,7 @@ html[data-lang='en'] [data-lang-th] {
 	background: #1e9e6a;
 }
 
-@media (max-width: 559px) {
+@media (max-width: 767px) {
 	.hero-graph {
 		display: none;
 	}
