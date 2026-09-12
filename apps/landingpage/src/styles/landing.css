@@ -32,11 +32,13 @@
 	--shadow-nav: rgba(0, 0, 0, 0.04) 0 4px 24px 0;
 
 	/* The Astryx Theme island (LangSelect) syncs data-astryx-theme onto <html>,
-	   which leaks its theme tokens to headings page-wide: --font-family-heading
-	   (Figtree) replaced Sofia Sans on every h1-h4, and light-dark() heading
-	   colors fought the dark footer. Re-pin the house font via the leaked token;
-	   heading colors are pinned explicitly on each heading rule below. */
+	   which leaks its theme tokens page-wide: --font-family-heading and
+	   --font-family-body (both Figtree) replaced Sofia Sans on headings and
+	   body text, and light-dark() heading colors fought the dark footer.
+	   Re-pin both house-font tokens here; heading colors are pinned explicitly
+	   on each heading rule below. */
 	--font-family-heading: 'Sofia Sans', Arial, sans-serif;
+	--font-family-body: 'Sofia Sans', Arial, sans-serif;
 	font-family: var(--font-family-body, 'Sofia Sans', Arial, sans-serif);
 }
 
