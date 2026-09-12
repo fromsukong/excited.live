@@ -62,10 +62,53 @@ html[data-lang='en'] [data-lang-th] {
 	align-items: center;
 }
 
+/* Language selector — match the original native <select class="lang-select">
+   look from the old landing (pill, 13.5px/600, chevron at right 12px); the
+   Astryx popover keeps its own styled menu. */
+.lang-island .astryx-selector {
+	min-height: 38px;
+	padding: 8px 30px 8px 14px;
+	border: 1px solid rgba(20, 20, 19, 0.15);
+	border-radius: 999px;
+	background-color: var(--white);
+	background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23141413' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+	background-repeat: no-repeat;
+	background-position: right 12px center;
+	color: var(--ink);
+	font-family: 'Sofia Sans', Arial, sans-serif;
+	font-size: 13.5px;
+	font-weight: 600;
+	letter-spacing: -0.13px;
+	cursor: pointer;
+}
+
+.lang-island .astryx-selector [role='combobox'] {
+	font: inherit;
+	color: inherit;
+}
+
+.lang-island .astryx-selector [role='combobox']:focus-visible {
+	outline: 2px solid var(--orange);
+	outline-offset: 1px;
+}
+
+/* The original select's chevron is the background image above. */
+.lang-island .astryx-selector .astryx-selector-indicator-icon {
+	display: none;
+}
+
 .lang-island--dark .astryx-selector {
 	border-color: rgba(255, 255, 255, 0.4);
-	background: transparent;
-	color: #ffffff;
+	background-color: transparent;
+	background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23ffffff' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+	color: rgba(255, 255, 255, 0.85);
+}
+
+@media (max-width: 560px) {
+	.lang-island .astryx-selector {
+		min-height: 44px;
+		padding: 8px 30px 8px 12px;
+	}
 }
 
 /* ---------- nav ---------- */
@@ -235,7 +278,7 @@ html[data-lang='en'] [data-lang-th] {
 .hero-graph {
 	position: absolute;
 	right: 0;
-	bottom: -20px;
+	bottom: 0;
 	width: min(560px, 45vw);
 	z-index: 0;
 	pointer-events: none;
