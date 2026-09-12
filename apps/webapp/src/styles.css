@@ -726,16 +726,6 @@ button {
     min-height: 320px;
   }
 
-  .answers-card {
-    height: 30vh;
-    min-height: 132px;
-  }
-
-  .plan-column__chat {
-    flex: 0 0 auto;
-    height: 70vh;
-  }
-
   .chart-panel,
   .chart-panel__inner {
     height: auto;
@@ -1169,6 +1159,22 @@ button {
 /* Settings page (mock) */
 .settings-panel {
   max-width: 620px;
+}
+
+/* ≤1020px stacks the columns: answers card = 30% of the viewport, chat = 70%.
+ * Declared after the base .answers-card / .plan-column__chat rules so these
+ * win the cascade (same specificity — later source order wins; the earlier
+ * copy inside the big ≤1020px block lost to the base rules). */
+@media (max-width: 1020px) {
+  .answers-card {
+    height: 30vh;
+    min-height: 132px;
+  }
+
+  .plan-column__chat {
+    flex: 0 0 auto;
+    height: 70vh;
+  }
 }
 
 
