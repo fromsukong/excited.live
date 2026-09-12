@@ -55,7 +55,6 @@ button {
 .brand-lockup,
 .metric-switch__item,
 .period-switch__item,
-.financial-row,
 .export-action {
   border: 0;
 }
@@ -334,71 +333,6 @@ button {
   scrollbar-color: var(--color-border) transparent;
 }
 
-.financial-list {
-  display: flex;
-  flex-direction: column;
-  flex: 1 1 auto;
-  min-height: 0;
-  max-height: none;
-  margin-top: 17px;
-  padding: 0 8px;
-  overflow-y: auto;
-  border-radius: 20px;
-  background: var(--color-neutral);
-  scrollbar-width: thin;
-  scrollbar-color: var(--color-border) transparent;
-}
-
-.financial-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 16px;
-  min-height: 41px;
-  /* Horizontal inset so hover/selected pills never hug the text. */
-  padding: 0 10px;
-  border-bottom: 1px solid var(--color-border);
-  color: var(--copy);
-  text-align: left;
-  background: transparent;
-  cursor: pointer;
-}
-
-.financial-row:last-child {
-  border-bottom: 0;
-}
-
-.financial-row:hover,
-.financial-row.is-selected {
-  border-bottom-color: transparent;
-  border-radius: 999px;
-  background: var(--color-overlay-hover);
-}
-
-.financial-row__label,
-.financial-row__value {
-  min-width: 0;
-  font-size: 15px !important;
-  line-height: 1.25 !important;
-}
-
-.financial-row__label {
-  overflow: hidden;
-  font-weight: 600;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-.financial-row__value {
-  color: var(--copy);
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-}
-
-.financial-row.is-selected .financial-row__label {
-  color: var(--copy);
-}
-
 .plan-summary-card,
 .actions-card {
   overflow: hidden;
@@ -673,7 +607,7 @@ button {
     flex: 0 0 auto;
   }
 
-  .financial-list {
+  .tab-inputs {
     flex: 0 1 auto;
     max-height: 421px;
   }
@@ -792,21 +726,11 @@ button {
     font-size: 13px;
   }
 
-  .financial-list {
+  .tab-inputs {
     flex: 0 1 auto;
     max-height: 400px;
     margin-top: 13px;
     padding: 0 8px;
-  }
-
-  .financial-row {
-    min-height: 41px;
-    gap: 9px;
-  }
-
-  .financial-row__label,
-  .financial-row__value {
-    font-size: 13px !important;
   }
 
   .plan-summary-card__inner {
@@ -896,16 +820,6 @@ button {
   .dashboard-shell {
     transition: none;
   }
-}
-
-.input-section {
-  width: 100%;
-  min-width: 0;
-}
-
-/* Period row cards inside Income/Expenses sections. */
-.input-section .astryx-card {
-  min-width: 0;
 }
 
 /* ── Assistant rail (right column) ─────────────────────────────────────────
