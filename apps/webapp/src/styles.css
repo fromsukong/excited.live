@@ -815,16 +815,11 @@ button {
   }
 
   .chart-canvas {
-    height: 253px;
+    /* The ECharts host renders at its own fixed height — let the box fit it so
+       the chart never overlaps the tab strip below (the old 253px box was
+       sized for the hand-rolled SVG chart, which scaled to its container). */
+    height: auto;
     margin-top: 16px;
-  }
-
-  .chart-value--top {
-    top: 18px;
-  }
-
-  .chart-value--bottom {
-    top: 208px;
   }
 
   .chart-toolbar {
