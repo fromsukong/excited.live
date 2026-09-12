@@ -5,13 +5,53 @@ import '../styles/global.css';
 interface Props {
 	title?: string;
 	description?: string;
+	/** 1200x630 social preview image — path or absolute URL. Defaults to /og.png. */
+	ogImage?: string;
+	ogType?: 'website' | 'article';
+	/** Extra JSON-LD node(s) appended to the sitewide schema graph. */
+	schema?: Record<string, unknown> | Record<string, unknown>[];
 }
 
 const {
 	title = 'excited.live — Plan the life you want to live',
 	description =
 		'Simulate your money and life plans before you live them. Tax, expenses, and future scenarios — free for everyone. Join the waitlist.',
+	ogImage = '/og.png',
+	ogType = 'website',
+	schema,
 } = Astro.props;
+
+const site = Astro.site ?? new URL('https://excited.live');
+const canonical = new URL(Astro.url.pathname, site).href;
+const ogImageUrl = new URL(ogImage, site).href;
+
+const orgId = new URL('/#org', site).href;
+const jsonLd = {
+	'@context': 'https://schema.org',
+	'@graph': [
+		{
+			'@type': 'Organization',
+			'@id': orgId,
+			name: 'FromSukong',
+			url: 'https://fromsukong.com',
+			logo: new URL('/logo-mark.png', site).href,
+			sameAs: [
+				'https://www.instagram.com/excited.live/',
+				'https://github.com/fromsukong/excited.live',
+			],
+		},
+		{
+			'@type': 'WebSite',
+			'@id': new URL('/#website', site).href,
+			name: 'excited.live',
+			url: new URL('/', site).href,
+			description,
+			publisher: { '@id': orgId },
+			inLanguage: ['en', 'th'],
+		},
+		...(schema ? (Array.isArray(schema) ? schema : [schema]) : []),
+	],
+};
 ---
 
 <!doctype html>
@@ -21,6 +61,19 @@ const {
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<title>{title}</title>
 		<meta name="description" content={description} />
+		<link rel="canonical" href={canonical} />
+		<meta property="og:type" content={ogType} />
+		<meta property="og:site_name" content="excited.live" />
+		<meta property="og:title" content={title} />
+		<meta property="og:description" content={description} />
+		<meta property="og:url" content={canonical} />
+		<meta property="og:image" content={ogImageUrl} />
+		<meta property="og:image:width" content="1200" />
+		<meta property="og:image:height" content="630" />
+		<meta name="twitter:card" content="summary_large_image" />
+		<meta name="twitter:title" content={title} />
+		<meta name="twitter:description" content={description} />
+		<meta name="twitter:image" content={ogImageUrl} />
 		<meta name="theme-color" content="#F3F0EE" />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
@@ -31,6 +84,34 @@ const {
 			href="https://fonts.googleapis.com/css2?family=Sofia+Sans:wght@400;450;500;600;700&display=swap"
 			rel="stylesheet"
 		/>
+		<script is:inline type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+		<script is:inline>
+			// Google Analytics 4 — production hostname only (localhost + *.pages.dev
+			// previews excluded). Tag loads async; page_view counted per route because
+			// ClientRouter serves client-side navigations.
+			(() => {
+				if (location.hostname !== 'excited.live') return;
+				if (window.__exlGaInit) return;
+				window.__exlGaInit = true;
+				const GA_ID = 'G-PENDING-SEO-SETUP';
+				window.dataLayer = window.dataLayer || [];
+				window.gtag = function (...args) {
+					window.dataLayer.push(args);
+				};
+				window.gtag('js', new Date());
+				window.gtag('config', GA_ID, { send_page_view: false });
+				const s = document.createElement('script');
+				s.async = true;
+				s.src = 'https://www.googletagmanager.com/gtag/js?id=' + GA_ID;
+				document.head.appendChild(s);
+				document.addEventListener('astro:page-load', function () {
+					window.gtag('event', 'page_view', {
+						page_location: location.href,
+						page_title: document.title,
+					});
+				});
+			})();
+		</script>
 		<script is:inline>
 			// Restore language before first paint (EN first per repo rule).
 			(() => {

@@ -25,9 +25,33 @@ const { post } = Astro.props;
 const rendered = await renderBlogMarkdown(post.body ?? '');
 const { blogHtml, slideCount } = splitSlides(rendered);
 const hasVideo = Boolean(post.data.youtube);
+
+// SEO: canonical + per-post OG card + BlogPosting structured data.
+const canonicalUrl = new URL(`/blog/${post.id}/`, 'https://excited.live').href;
+const ogImagePath = `/og/blog/${post.id}/image.png`;
+const articleSchema = {
+	'@type': 'BlogPosting',
+	'@id': `${canonicalUrl}#article`,
+	headline: post.data.title,
+	description: post.data.description,
+	url: canonicalUrl,
+	mainEntityOfPage: { '@type': 'WebPage', '@id': canonicalUrl },
+	image: new URL(ogImagePath, 'https://excited.live').href,
+	datePublished: post.data.date.toISOString(),
+	dateModified: post.data.date.toISOString(),
+	author: { '@type': 'Organization', name: 'FromSukong', url: 'https://fromsukong.com' },
+	publisher: { '@id': 'https://excited.live/#org' },
+	inLanguage: 'en',
+};
 ---
 
-<Layout title={`${post.data.title} — excited.live`} description={post.data.description}>
+<Layout
+	title={`${post.data.title} — excited.live`}
+	description={post.data.description}
+	ogImage={ogImagePath}
+	ogType="article"
+	schema={articleSchema}
+>
 	<link rel="stylesheet" href="/katex.min.css" />
 	<a class="docs-back" href="/blog">
 		<img src="/logo-mark.png" alt="" width="22" height="22" />

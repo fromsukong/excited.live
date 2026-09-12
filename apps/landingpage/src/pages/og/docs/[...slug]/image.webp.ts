@@ -2,6 +2,7 @@ import type { APIRoute } from 'astro';
 import { createElement } from 'react';
 import { ImageResponse } from 'takumi-js/response';
 import { generate as DefaultImage } from 'fumadocs-ui/og/takumi';
+import { clampText, OG_COLORS } from '@/lib/og';
 import { source } from '@/lib/source';
 
 export function getStaticPaths() {
@@ -20,9 +21,10 @@ export const GET: APIRoute = ({ params }) => {
 
 	return new ImageResponse(
 		createElement(DefaultImage, {
-			title: page.data.title,
-			description: page.data.description,
+			title: clampText(page.data.title, 75),
+			description: page.data.description ? clampText(page.data.description, 110) : undefined,
 			site: 'excited.live',
+			...OG_COLORS,
 		}),
 		{
 			width: 1200,
