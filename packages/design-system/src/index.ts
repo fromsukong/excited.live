@@ -72,9 +72,11 @@ export {
 	Table,
 	proportional,
 	pixel,
+	useTableRowExpansion,
 	type TableColumn,
 	type TableProps,
 	type TableDensity,
+	type UseTableRowExpansionConfig,
 } from "@astryxdesign/core/Table";
 export { TabList, type TabListProps } from "@astryxdesign/core/TabList";
 export { Tab, type TabProps } from "@astryxdesign/core/TabList";

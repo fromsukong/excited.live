@@ -86,6 +86,7 @@ export const strings: Dictionary = {
 	"table.metric": { en: "Metric", th: "ตัวชี้วัด" },
 	"table.value": { en: "Value", th: "มูลค่า" },
 	"table.wallet": { en: "Wallet", th: "กระเป๋า" },
+	"row.period": { en: "Period", th: "ช่วงเวลา" },
 	"row.amount": { en: "Per year (฿)", th: "ต่อปี (บาท)" },
 	"row.startYear": { en: "Start", th: "เริ่ม" },
 	"row.endYear": { en: "End (blank = forever)", th: "จบ (ว่าง = ตลอดไป)" },

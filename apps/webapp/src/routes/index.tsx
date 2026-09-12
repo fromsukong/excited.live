@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import {
-	Button,
 	Card,
 	ChatComposer,
 	ChatMessage,
@@ -26,6 +25,7 @@ import {
 	mastercardTheme,
 	pixel,
 	proportional,
+	useTableRowExpansion,
 	type ChatToolCallItem,
 	type DateInputProps,
 	type TableColumn,
@@ -428,71 +428,7 @@ function Home() {
 									) : (
 										<Stack id="left-panel-wallet" className="tab-inputs" aria-label={t("wallets.heading")}>
 											<Heading level={3}>{t("wallets.heading")}</Heading>
-											<Table
-												data={WALLETS.map((id) => ({ id, label: t(`wallet.${id}`) }))}
-												idKey="id"
-												density="compact"
-												dividers="grid"
-												columns={[
-													{
-														key: "label",
-														header: t("table.wallet"),
-														width: proportional(1),
-														renderCell: (row) => <Text weight="semibold">{row.label}</Text>,
-													},
-													{
-														key: "split",
-														header: t("wallets.split"),
-														width: pixel(160),
-														renderCell: (row) => (
-															<NumberInput
-																label={t("wallets.split")}
-																isLabelHidden
-																value={Math.round(plan.savingsSplit[row.id] * 100 * 100) / 100}
-																onChange={(value) => patchWallet("savingsSplit", row.id, value / 100)}
-																min={0}
-																max={100}
-																step={5}
-																units="%"
-															/>
-														),
-													},
-													{
-														key: "rate",
-														header: t("wallets.rates"),
-														width: pixel(160),
-														renderCell: (row) => (
-															<NumberInput
-																label={t("wallets.rates")}
-																isLabelHidden
-																value={Math.round(plan.walletRates[row.id] * 100 * 100) / 100}
-																onChange={(value) => patchWallet("walletRates", row.id, value / 100)}
-																min={0}
-																max={30}
-																step={0.5}
-																units="%"
-															/>
-														),
-													},
-													{
-														key: "starting",
-														header: t("wallets.starting"),
-														width: pixel(180),
-														renderCell: (row) => (
-															<NumberInput
-																label={t("wallets.starting")}
-																isLabelHidden
-																value={plan.startingWallets[row.id]}
-																onChange={(value) => patchWallet("startingWallets", row.id, value)}
-																min={0}
-																max={100_000_000}
-																step={10_000}
-																units="฿"
-															/>
-														),
-													},
-												]}
-											/>
+											<WalletTable plan={plan} onPatch={patchWallet} t={t} />
 										</Stack>
 									)}
 								</Stack>
@@ -588,7 +524,107 @@ function MonthYearPicker({
 	)
 }
 
-/** Editable period-row table (income or expenses) — one Astryx Table per list. */
+/** Row id for the synthetic "+ Add row" line at the bottom of an editor table. */
+const ADD_ROW_ID = "__add__"
+
+/** Detail editor for one period row — rendered in the expanded panel below its row. */
+function PeriodRowEditor({
+	row,
+	showDeductible,
+	onPatch,
+	onRemove,
+	t,
+}: {
+	row: PeriodRow
+	showDeductible?: boolean
+	onPatch: (id: string, patch: Partial<PeriodRow>) => void
+	onRemove: (id: string) => void
+	t: (key: string, vars?: Record<string, string>) => string
+}) {
+	return (
+		<Stack className="row-detail">
+			<Grid columns={{ minWidth: showDeductible ? 150 : 185, max: showDeductible ? 6 : 5 }} gap={1.5}>
+				<TextInput
+					label={t("row.label")}
+					value={row.label}
+					onChange={(value) => onPatch(row.id, { label: value })}
+				/>
+				<NumberInput
+					label={t("row.amount")}
+					value={row.amount}
+					onChange={(value) => onPatch(row.id, { amount: value })}
+					min={0}
+					step={10_000}
+					units="฿"
+				/>
+				<MonthYearPicker
+					label={t("row.startYear")}
+					year={row.startYear}
+					month={row.startMonth}
+					onChange={(year, month) =>
+						onPatch(row.id, { startYear: year ?? row.startYear, startMonth: month })
+					}
+					t={t}
+				/>
+				<MonthYearPicker
+					label={t("row.endYear")}
+					year={row.endYear}
+					month={row.endMonth}
+					allowForever
+					onChange={(year, month) => onPatch(row.id, { endYear: year, endMonth: month })}
+					t={t}
+				/>
+				<Stack gap={1}>
+					<SegmentedControl
+						value={row.growthMode}
+						onChange={(value) => onPatch(row.id, { growthMode: value as PeriodRow["growthMode"] })}
+						label={t("row.growth")}
+						layout="fill"
+						size="sm"
+					>
+						<SegmentedControlItem value="inflation" label={t("growth.inflation")} />
+						<SegmentedControlItem value="fixed" label={t("growth.fixed")} />
+						<SegmentedControlItem value="override" label={t("growth.override")} />
+					</SegmentedControl>
+					{row.growthMode === "override" ? (
+						<NumberInput
+							label={t("row.growthRate")}
+							value={row.growthRate * 100}
+							onChange={(value) => onPatch(row.id, { growthRate: value / 100 })}
+							min={-10}
+							max={50}
+							step={0.5}
+							units="%"
+						/>
+					) : null}
+				</Stack>
+				{showDeductible ? (
+					<Stack gap={1}>
+						<SegmentedControl
+							value={row.deductible ?? "none"}
+							onChange={(value) =>
+								onPatch(row.id, {
+									deductible: value === "mortgageInterest" ? "mortgageInterest" : "none",
+								})
+							}
+							label={t("row.deductible")}
+							layout="fill"
+							size="sm"
+						>
+							<SegmentedControlItem value="none" label={t("deductible.none")} />
+							<SegmentedControlItem value="mortgageInterest" label={t("deductible.mortgageInterest")} />
+						</SegmentedControl>
+						<PlainButton onClick={() => onRemove(row.id)}>{t("row.remove")}</PlainButton>
+					</Stack>
+				) : (
+					<PlainButton onClick={() => onRemove(row.id)}>{t("row.remove")}</PlainButton>
+				)}
+			</Grid>
+		</Stack>
+	)
+}
+
+/** Period-row table (income or expenses): clean read-only rows; expand a row to edit it. */
 type PeriodRowData = PeriodRow & Record<string, unknown>
 
 function PeriodTable({
@@ -608,143 +644,162 @@ function PeriodTable({
 	onRemove: (id: string) => void
 	t: (key: string, vars?: Record<string, string>) => string
 }) {
+	const [expandedKeys, setExpandedKeys] = useState<Set<string>>(new Set())
+	const expansion = useTableRowExpansion<PeriodRowData>({
+		expandedKeys,
+		onToggle: (key) =>
+			setExpandedKeys((prev) => {
+				const next = new Set(prev)
+				if (next.has(key)) next.delete(key)
+				else next.add(key)
+				return next
+			}),
+		getRowKey: (item) => item.id,
+		getIsItemExpandable: (item) => item.id !== ADD_ROW_ID,
+		renderExpanded: (item) => (
+			<PeriodRowEditor row={item} showDeductible={showDeductible} onPatch={onPatch} onRemove={onRemove} t={t} />
+		),
+	})
+
+	const addMarker: PeriodRowData = {
+		id: ADD_ROW_ID,
+		label: "",
+		startYear: rows[0]?.startYear ?? 2026,
+		startMonth: 0,
+		endYear: null,
+		endMonth: 11,
+		amount: 0,
+		growthMode: "inflation",
+		growthRate: 0,
+	}
+	const data: PeriodRowData[] = [...(rows as PeriodRowData[]), addMarker]
+
 	const columns: TableColumn<PeriodRowData>[] = [
 		{
 			key: "label",
 			header: t("row.label"),
 			width: proportional(2),
-			renderCell: (row) => (
-				<TextInput
-					label={t("row.label")}
-					isLabelHidden
-					value={row.label}
-					onChange={(value) => onPatch(row.id, { label: value })}
-				/>
-			),
+			renderCell: (row) =>
+				row.id === ADD_ROW_ID ? (
+					<PlainButton className="row-add" onClick={onAdd}>
+						+ {t("row.add")}
+					</PlainButton>
+				) : (
+					<Text weight="semibold">{row.label}</Text>
+				),
 		},
 		{
 			key: "amount",
 			header: t("row.amount"),
 			width: pixel(150),
-			renderCell: (row) => (
-				<NumberInput
-					label={t("row.amount")}
-					isLabelHidden
-					value={row.amount}
-					onChange={(value) => onPatch(row.id, { amount: value })}
-					min={0}
-					step={10_000}
-					units="฿"
-				/>
-			),
+			align: "end",
+			renderCell: (row) =>
+				row.id === ADD_ROW_ID ? null : <Text hasTabularNumbers>{formatBaht(row.amount)}</Text>,
 		},
 		{
-			key: "start",
-			header: t("row.startYear"),
-			width: pixel(215),
-			renderCell: (row) => (
-				<MonthYearPicker
-					label={t("row.startYear")}
-					year={row.startYear}
-					month={row.startMonth}
-					onChange={(year, month) =>
-						onPatch(row.id, { startYear: year ?? row.startYear, startMonth: month })
-					}
-					t={t}
-				/>
-			),
-		},
-		{
-			key: "end",
-			header: t("row.endYear"),
-			width: pixel(215),
-			renderCell: (row) => (
-				<MonthYearPicker
-					label={t("row.endYear")}
-					year={row.endYear}
-					month={row.endMonth}
-					allowForever
-					onChange={(year, month) => onPatch(row.id, { endYear: year, endMonth: month })}
-					t={t}
-				/>
-			),
-		},
-		{
-			key: "growth",
-			header: t("row.growth"),
-			width: pixel(215),
-			renderCell: (row) => (
-				<Stack gap={1}>
-					<SegmentedControl
-						value={row.growthMode}
-						onChange={(value) => onPatch(row.id, { growthMode: value as PeriodRow["growthMode"] })}
-						label={t("row.growth")}
-						layout="fill"
-						size="sm"
-					>
-						<SegmentedControlItem value="inflation" label={t("growth.inflation")} />
-						<SegmentedControlItem value="fixed" label={t("growth.fixed")} />
-						<SegmentedControlItem value="override" label={t("growth.override")} />
-					</SegmentedControl>
-					{row.growthMode === "override" ? (
-						<NumberInput
-							label={t("row.growthRate")}
-							isLabelHidden
-							value={row.growthRate * 100}
-							onChange={(value) => onPatch(row.id, { growthRate: value / 100 })}
-							min={-10}
-							max={50}
-							step={0.5}
-							units="%"
-						/>
-					) : null}
-				</Stack>
-			),
+			key: "period",
+			header: t("row.period"),
+			width: pixel(140),
+			align: "end",
+			renderCell: (row) =>
+				row.id === ADD_ROW_ID ? null : (
+					<Text color="secondary" hasTabularNumbers>
+						{row.startYear} – {row.endYear ?? "∞"}
+					</Text>
+				),
 		},
 	]
-	if (showDeductible) {
-		columns.push({
-			key: "deductible",
-			header: t("row.deductible"),
-			width: pixel(190),
-			renderCell: (row) => (
-				<SegmentedControl
-					value={row.deductible ?? "none"}
-					onChange={(value) =>
-						onPatch(row.id, {
-							deductible: value === "mortgageInterest" ? "mortgageInterest" : "none",
-						})
-					}
-					label={t("row.deductible")}
-					layout="fill"
-					size="sm"
-				>
-					<SegmentedControlItem value="none" label={t("deductible.none")} />
-					<SegmentedControlItem value="mortgageInterest" label={t("deductible.mortgageInterest")} />
-				</SegmentedControl>
-			),
-		})
-	}
-	columns.push({
-		key: "remove",
-		header: "",
-		width: pixel(56),
-		renderCell: (row) => (
-			<PlainButton onClick={() => onRemove(row.id)} aria-label={t("row.remove")}>
-				×
-			</PlainButton>
-		),
-	})
 
 	return (
 		<Stack gap={2}>
-			<Stack direction="horizontal" justify="between" align="center">
-				<Heading level={3}>{heading}</Heading>
-				<Button variant="secondary" size="sm" label={t("row.add")} onClick={onAdd} />
-			</Stack>
-			<Table data={rows as PeriodRowData[]} idKey="id" density="compact" dividers="grid" columns={columns} />
+			<Heading level={3}>{heading}</Heading>
+			<Table data={data} idKey="id" density="compact" dividers="rows" hasHover columns={columns} plugins={{ expansion }} />
 		</Stack>
 	)
+}
+
+/** Wallet table: read-only split/rate rows; expand a row to edit split, rate, starting balance. */
+type WalletRowData = { id: WalletId; label: string }
+
+function WalletTable({
+	plan,
+	onPatch,
+	t,
+}: {
+	plan: PlanInput
+	onPatch: (field: "savingsSplit" | "walletRates" | "startingWallets", id: WalletId, value: number) => void
+	t: (key: string, vars?: Record<string, string>) => string
+}) {
+	const [expandedKeys, setExpandedKeys] = useState<Set<string>>(new Set())
+	const data: WalletRowData[] = WALLETS.map((id) => ({ id, label: t(`wallet.${id}`) }))
+	const expansion = useTableRowExpansion<WalletRowData>({
+		expandedKeys,
+		onToggle: (key) =>
+			setExpandedKeys((prev) => {
+				const next = new Set(prev)
+				if (next.has(key)) next.delete(key)
+				else next.add(key)
+				return next
+			}),
+		getRowKey: (item) => item.id,
+		renderExpanded: (item) => (
+			<Stack className="row-detail">
+				<Grid columns={{ minWidth: 170, max: 3 }} gap={2}>
+					<NumberInput
+						label={t("wallets.split")}
+						value={Math.round(plan.savingsSplit[item.id] * 100 * 100) / 100}
+						onChange={(value) => onPatch("savingsSplit", item.id, value / 100)}
+						min={0}
+						max={100}
+						step={5}
+						units="%"
+					/>
+					<NumberInput
+						label={t("wallets.rates")}
+						value={Math.round(plan.walletRates[item.id] * 100 * 100) / 100}
+						onChange={(value) => onPatch("walletRates", item.id, value / 100)}
+						min={0}
+						max={30}
+						step={0.5}
+						units="%"
+					/>
+					<NumberInput
+						label={t("wallets.starting")}
+						value={plan.startingWallets[item.id]}
+						onChange={(value) => onPatch("startingWallets", item.id, value)}
+						min={0}
+						max={100_000_000}
+						step={10_000}
+						units="฿"
+					/>
+				</Grid>
+			</Stack>
+		),
+	})
+	const columns: TableColumn<WalletRowData>[] = [
+		{
+			key: "label",
+			header: t("table.wallet"),
+			width: proportional(1),
+			renderCell: (row) => <Text weight="semibold">{row.label}</Text>,
+		},
+		{
+			key: "split",
+			header: t("wallets.split"),
+			width: pixel(140),
+			align: "end",
+			renderCell: (row) => <Text hasTabularNumbers>{formatPercent(plan.savingsSplit[row.id])}</Text>,
+		},
+		{
+			key: "rate",
+			header: t("wallets.rates"),
+			width: pixel(140),
+			align: "end",
+			renderCell: (row) => <Text hasTabularNumbers>{formatPercent(plan.walletRates[row.id])}</Text>,
+		},
+	]
+
+	return <Table data={data} idKey="id" density="compact" dividers="rows" hasHover columns={columns} plugins={{ expansion }} />
 }
 
 /* ── Assistant rail (right column) ────────────────────────────────────────

@@ -329,8 +329,6 @@ button {
   padding-right: 6px;
   overflow: hidden;
   gap: 18px;
-  scrollbar-width: thin;
-  scrollbar-color: var(--color-border) transparent;
 }
 
 .plan-summary-card,
@@ -956,6 +954,24 @@ button {
   .market-status::before {
     content: none;
   }
+}
+
+/* Editor tables: subtle in-table "+ Add row" line and the expanded detail panel. */
+.row-add {
+  color: var(--copy-muted);
+  font-size: 14px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.row-add:hover {
+  color: var(--copy);
+}
+
+.row-detail {
+  min-width: 0;
+  width: 100%;
 }
 
 
