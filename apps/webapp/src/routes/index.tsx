@@ -203,23 +203,31 @@ function Home() {
 	}
 
 	const addRow = (kind: "incomes" | "expenses") => {
-		setPlan((current) => ({
-			...current,
-			[kind]: [
-				...current[kind],
-				{
-					id: `${kind}-${current[kind].length + 1}-${current[kind].length}`,
-					label: kind === "incomes" ? "New income" : "New expense",
-					startYear: current.startYear,
-					startMonth: 0,
-					endYear: null,
-					endMonth: 11,
-					amount: 0,
-					growthMode: "inflation",
-					growthRate: 0,
-				},
-			],
-		}))
+		setPlan((current) => {
+			let n = current[kind].length
+			let id = ""
+			do {
+				n += 1
+				id = `${kind}-${n}`
+			} while (current[kind].some((row) => row.id === id))
+			return {
+				...current,
+				[kind]: [
+					...current[kind],
+					{
+						id,
+						label: kind === "incomes" ? t("row.newIncome") : t("row.newExpense"),
+						startYear: current.startYear,
+						startMonth: 0,
+						endYear: null,
+						endMonth: 11,
+						amount: 0,
+						growthMode: "inflation",
+						growthRate: 0,
+					},
+				],
+			}
+		})
 	}
 
 	const removeRow = (kind: "incomes" | "expenses", id: string) => {
@@ -407,6 +415,7 @@ function Home() {
 									) : leftTab === "incomes" ? (
 										<Stack id="left-panel-incomes" className="tab-inputs" aria-label={t("incomes.heading")}>
 											<PeriodTable
+												key="incomes"
 												rows={plan.incomes}
 												heading={t("incomes.heading")}
 												onPatch={(id, patch) => patchRow("incomes", id, patch)}
@@ -418,6 +427,7 @@ function Home() {
 									) : leftTab === "expenses" ? (
 										<Stack id="left-panel-expenses" className="tab-inputs" aria-label={t("expenses.heading")}>
 											<PeriodTable
+												key="expenses"
 												rows={plan.expenses}
 												heading={t("expenses.heading")}
 												showDeductible
@@ -647,6 +657,14 @@ function PeriodTable({
 	t: (key: string, vars?: Record<string, string>) => string
 }) {
 	const [expandedKeys, setExpandedKeys] = useState<Set<string>>(new Set())
+	const handleRemove = (id: string) => {
+		onRemove(id)
+		setExpandedKeys((prev) => {
+			const next = new Set(prev)
+			next.delete(id)
+			return next
+		})
+	}
 	const expansion = useTableRowExpansion<PeriodRowData>({
 		expandedKeys,
 		onToggle: (key) =>
@@ -659,7 +677,7 @@ function PeriodTable({
 		getRowKey: (item) => item.id,
 		getIsItemExpandable: (item) => item.id !== ADD_ROW_ID,
 		renderExpanded: (item) => (
-			<PeriodRowEditor row={item} showDeductible={showDeductible} onPatch={onPatch} onRemove={onRemove} t={t} />
+			<PeriodRowEditor row={item} showDeductible={showDeductible} onPatch={onPatch} onRemove={handleRemove} t={t} />
 		),
 	})
 

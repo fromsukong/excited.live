@@ -99,6 +99,8 @@ export const strings: Dictionary = {
 	"deductible.none": { en: "No", th: "ไม่" },
 	"deductible.mortgageInterest": { en: "Mortgage", th: "ดอกเบี้ยบ้าน" },
 	"row.add": { en: "Add row", th: "เพิ่มแถว" },
+	"row.newIncome": { en: "New income", th: "รายได้ใหม่" },
+	"row.newExpense": { en: "New expense", th: "ค่าใช้จ่ายใหม่" },
 	"row.remove": { en: "Remove", th: "ลบ" },
 
 	// Wallets
