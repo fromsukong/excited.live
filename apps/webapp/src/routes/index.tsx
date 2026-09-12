@@ -1,34 +1,34 @@
-import { useEffect, useMemo, useRef, useState, type ComponentType, type SVGProps } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import {
-	BookmarkIcon,
-	Button,
-	CalendarIcon,
 	Card,
-	ChartIcon,
-	ChatIcon,
 	ChatComposer,
 	ChatMessage,
 	ChatMessageBubble,
 	ChatMessageList,
 	ChatToolCalls,
-	CompassIcon,
+	DateInput,
 	Grid,
 	Heading,
 	Img,
-	LinkIcon,
-	MinimizeIcon,
 	NumberInput,
 	PlainButton,
-	PresentationIcon,
 	SegmentedControl,
 	Selector,
 	SegmentedControlItem,
 	Stack,
+	Tab,
+	TabList,
+	Table,
 	Text,
 	TextInput,
 	Theme,
 	mastercardTheme,
+	pixel,
+	proportional,
+	useTableRowExpansion,
 	type ChatToolCallItem,
+	type DateInputProps,
+	type TableColumn,
 } from "@excited-live/design-system"
 import { createFileRoute } from "@tanstack/react-router"
 import { useLocale } from "../lib/locale-context"
@@ -43,27 +43,20 @@ import {
 	type WalletId,
 } from "../lib/plan-service"
 import { ProjectionChart } from "../components/ProjectionChart"
-import { formatBaht, formatBahtMonthly, formatPercent } from "../lib/format"
+import { formatBaht, formatPercent } from "../lib/format"
 
 export const Route = createFileRoute("/")({
 	component: Home,
 })
 
-type IconComponent = ComponentType<SVGProps<SVGSVGElement>>
 type HorizonKey = "10" | "20" | "30" | "40" | "all"
 type MetricKey = "metric.netWorth" | "metric.cashFlow"
+type LeftTab = "financials" | "incomes" | "expenses" | "wallet"
+type PageKey = "plan" | "settings"
 
-interface FinancialMetric {
+interface FinancialMetric extends Record<string, unknown> {
 	key: string
 	value: string
-}
-
-interface PlanInfo {
-	labelKey: string
-	value: string
-	descKey: string
-	descVars?: Record<string, string | undefined>
-	Icon: IconComponent
 }
 
 const HORIZONS: readonly HorizonKey[] = ["10", "20", "30", "40", "all"]
@@ -75,17 +68,13 @@ function Home() {
 	const [plan, setPlan] = useState<PlanInput>(() => defaultPlan())
 	const [horizon, setHorizon] = useState<HorizonKey>("30")
 	const [metric, setMetric] = useState<MetricKey>("metric.netWorth")
-	const [selectedMetricKey, setSelectedMetricKey] = useState<string>("metric.netWorthValue")
-	const [leftTab, setLeftTab] = useState<"financials" | "answers" | "inputs">("financials")
+	const [leftTab, setLeftTab] = useState<LeftTab>("financials")
+	const [page, setPage] = useState<PageKey>("plan")
 	const [hoverYear, setHoverYear] = useState<number | null>(null)
-	// The assistant rail owns the right column and is open by default; when
-	// minimized the left panel becomes the full-width app with action tabs
-	// (mock replies — the real assistant lands later).
-	const [chatOpen, setChatOpen] = useState(true)
-
-	// In chat mode the inputs tab doesn't exist (the rail owns the right
-	// column); a stale "inputs" selection falls back to the numbers list.
-	const effectiveTab = chatOpen && leftTab === "inputs" ? "financials" : leftTab
+	// Settings page (mock): local-only fields, nothing is persisted yet.
+	const [profileName, setProfileName] = useState("")
+	const [birthday, setBirthday] = useState<DateInputProps["value"]>(undefined)
+	const [gender, setGender] = useState("female")
 
 	const summary = useMemo(() => {
 		try {
@@ -206,74 +195,6 @@ function Home() {
 		]
 	}, [summary, shown, hoverYear])
 
-	const planInfos = useMemo<PlanInfo[]>(() => {
-		if (!summary.ok) return []
-		const s = summary.data
-		const v = s.retirement
-		const goalsOk = s.goals.filter((g) => g.onTrack).length
-		const goalsShort = s.goals.length - goalsOk
-		return [
-			{
-				labelKey: "info.retirement",
-				value: v.funded ? t("info.retirement.funded") : t("info.retirement.short"),
-				descKey: v.funded ? "info.retirement.left" : "info.retirement.runsOut",
-				descVars: {
-					amount: formatBaht(v.remainingAtEnd),
-					year: String(v.funded ? v.endYear : (v.unmetYear ?? "")),
-				},
-				Icon: CompassIcon,
-			},
-			{
-				labelKey: "info.maxForever",
-				value: formatBahtMonthly(s.maxForeverMonthly * 12),
-				descKey: "info.maxForever.desc",
-				descVars: { amount: formatBaht(s.maxForeverMonthly) },
-				Icon: ChartIcon,
-			},
-			{
-				labelKey: "info.optimizer",
-				value: formatBaht(s.optimizer.recommended),
-				descKey: "info.optimizer.desc",
-				descVars: {
-					amount: formatBaht(s.optimizer.recommended),
-					tax: formatBaht(s.optimizer.taxSaved),
-				},
-				Icon: PresentationIcon,
-			},
-			{
-				labelKey: "info.paths",
-				value: formatBaht(s.pathCompare.fundValue),
-				descKey:
-					s.pathCompare.gap >= 0 ? "info.paths.desc.fund" : "info.paths.desc.taxable",
-				descVars: {
-					fund: formatBaht(s.pathCompare.fundValue),
-					gap: formatBaht(Math.abs(s.pathCompare.gap)),
-				},
-				Icon: LinkIcon,
-			},
-			{
-				labelKey: "info.runsOut",
-				value:
-					s.runsOutYear === null
-						? t("info.runsOut.never")
-						: String(s.runsOutYear),
-				descKey: s.runsOutYear === null ? "info.runsOut.desc.never" : "info.runsOut.desc.year",
-				descVars: { year: String(s.runsOutYear ?? "") },
-				Icon: CalendarIcon,
-			},
-			{
-				labelKey: "info.goals",
-				value:
-					s.goals.length === 0
-						? "—"
-						: `${goalsOk}/${String(s.goals.length)}`,
-				descKey: s.goals.length === 0 ? "info.goals.desc.none" : "info.goals.sub",
-				descVars: { ok: String(goalsOk), short: String(goalsShort) },
-				Icon: BookmarkIcon,
-			},
-		]
-	}, [summary, t])
-
 	const patchRow = (kind: "incomes" | "expenses", id: string, patch: Partial<PeriodRow>) => {
 		setPlan((current) => ({
 			...current,
@@ -282,21 +203,31 @@ function Home() {
 	}
 
 	const addRow = (kind: "incomes" | "expenses") => {
-		setPlan((current) => ({
-			...current,
-			[kind]: [
-				...current[kind],
-				{
-					id: `${kind}-${current[kind].length + 1}-${current[kind].length}`,
-					label: kind === "incomes" ? "New income" : "New expense",
-					startYear: current.startYear,
-					endYear: null,
-					amount: 0,
-					growthMode: "inflation",
-					growthRate: 0,
-				},
-			],
-		}))
+		setPlan((current) => {
+			let n = current[kind].length
+			let id = ""
+			do {
+				n += 1
+				id = `${kind}-${n}`
+			} while (current[kind].some((row) => row.id === id))
+			return {
+				...current,
+				[kind]: [
+					...current[kind],
+					{
+						id,
+						label: kind === "incomes" ? t("row.newIncome") : t("row.newExpense"),
+						startYear: current.startYear,
+						startMonth: 0,
+						endYear: null,
+						endMonth: 11,
+						amount: 0,
+						growthMode: "inflation",
+						growthRate: 0,
+					},
+				],
+			}
+		})
 	}
 
 	const removeRow = (kind: "incomes" | "expenses", id: string) => {
@@ -323,6 +254,16 @@ function Home() {
 						<Img className="brand-lockup__wordmark" src="/logo-wordmark.png" alt="excited.live" height={15} />
 						<Text size="lg" color="secondary" weight="semibold" className="brand-lockup__hello">{t("nav.hello")}</Text>
 					</Stack>
+					<TabList
+						className="topnav"
+						value={page}
+						onChange={(value) => setPage(value === "settings" ? "settings" : "plan")}
+						size="sm"
+						aria-label={t("a11y.mainNav")}
+					>
+						<Tab value="plan" label={t("nav.plan")} />
+						<Tab value="settings" label={t("nav.settings")} />
+					</TabList>
 					<Stack direction="horizontal" vAlign="center" className="market-status">
 						<Text color="secondary">{t("nav.synced")}</Text>
 						<PlainButton
@@ -336,326 +277,191 @@ function Home() {
 				</Stack>
 
 				<Stack as="main" className="dashboard-main">
-					<Grid className={`dashboard-grid ${chatOpen ? "" : "dashboard-grid--full"}`}>
+					<Grid className="dashboard-grid">
 						<Card className="chart-panel" variant="transparent" padding={0}>
-							<Stack className="chart-panel__inner">
-								<Stack direction="horizontal" vAlign="center" className="chart-toolbar">
-									<Stack direction="horizontal" vAlign="center" role="group" aria-label={t("a11y.chartMetric")} className="metric-switch">
-										<PlainButton
-											className={`metric-switch__item ${metric === "metric.netWorth" ? "is-active" : ""}`}
-											onClick={() => setMetric("metric.netWorth")}
-										>
-											<Text className="metric-indicator metric-indicator--white" aria-hidden="true">{""}</Text>
-											{t("metric.netWorth")}
-										</PlainButton>
-										<PlainButton
-											className={`metric-switch__item ${metric === "metric.cashFlow" ? "is-active" : ""}`}
-											onClick={() => setMetric("metric.cashFlow")}
-										>
-											<Text className="metric-indicator metric-indicator--purple" aria-hidden="true">{""}</Text>
-											{t("metric.cashFlow")}
-										</PlainButton>
+							{page === "settings" ? (
+								<Stack gap={3} className="chart-panel__inner settings-panel">
+									<Stack gap={1}>
+										<Heading level={2}>{t("nav.settings")}</Heading>
+										<Text color="secondary">{t("settings.note")}</Text>
 									</Stack>
-									<Stack direction="horizontal" vAlign="center" role="group" aria-label={t("a11y.chartPeriod")} className="period-switch">
-										{HORIZONS.map((item) => (
-											<PlainButton
-												className={`period-switch__item ${horizon === item ? "is-active" : ""}`}
-												key={item}
-												aria-pressed={horizon === item}
-												onClick={() => setHorizon(item)}
+									<Grid columns={{ minWidth: 220, max: 2 }} gap={2}>
+										<TextInput
+											label={t("settings.name")}
+											value={profileName}
+											onChange={setProfileName}
+										/>
+										<DateInput
+											label={t("settings.birthday")}
+											value={birthday}
+											onChange={setBirthday}
+										/>
+										<Stack gap={1}>
+											<Text size="sm" color="secondary">{t("settings.gender")}</Text>
+											<SegmentedControl
+												value={gender}
+												onChange={setGender}
+												label={t("settings.gender")}
+												layout="fill"
+												size="sm"
 											>
-												{item === "all" ? t("period.all") : `${item}Y`}
+												<SegmentedControlItem value="female" label={t("settings.gender.female")} />
+												<SegmentedControlItem value="male" label={t("settings.gender.male")} />
+												<SegmentedControlItem value="other" label={t("settings.gender.other")} />
+											</SegmentedControl>
+										</Stack>
+									</Grid>
+								</Stack>
+							) : (
+								<Stack className="chart-panel__inner">
+									<Stack direction="horizontal" vAlign="center" className="chart-toolbar">
+										<Stack direction="horizontal" vAlign="center" role="group" aria-label={t("a11y.chartMetric")} className="metric-switch">
+											<PlainButton
+												className={`metric-switch__item ${metric === "metric.netWorth" ? "is-active" : ""}`}
+												onClick={() => setMetric("metric.netWorth")}
+											>
+												<Text className="metric-indicator metric-indicator--white" aria-hidden="true">{""}</Text>
+												{t("metric.netWorth")}
 											</PlainButton>
-										))}
+											<PlainButton
+												className={`metric-switch__item ${metric === "metric.cashFlow" ? "is-active" : ""}`}
+												onClick={() => setMetric("metric.cashFlow")}
+											>
+												<Text className="metric-indicator metric-indicator--purple" aria-hidden="true">{""}</Text>
+												{t("metric.cashFlow")}
+											</PlainButton>
+										</Stack>
+										<Stack direction="horizontal" vAlign="center" role="group" aria-label={t("a11y.chartPeriod")} className="period-switch">
+											{HORIZONS.map((item) => (
+												<PlainButton
+													className={`period-switch__item ${horizon === item ? "is-active" : ""}`}
+													key={item}
+													aria-pressed={horizon === item}
+													onClick={() => setHorizon(item)}
+												>
+													{item === "all" ? t("period.all") : `${item}Y`}
+												</PlainButton>
+											))}
+										</Stack>
 									</Stack>
-								</Stack>
 
-								<Stack className="chart-canvas">
-									{summary.ok && shown ? (
-										<ProjectionChart
-											years={shown}
-											metric={metric === "metric.netWorth" ? "netWorth" : "cashFlow"}
-											ariaLabel={t(metric === "metric.netWorth" ? "chart.aria.netWorth" : "chart.aria.cashFlow")}
-											band={shownBands ?? undefined}
-											onActiveYearChange={setHoverYear}
-										/>
-									) : (
-										<Text color="secondary">{summary.ok ? "" : summary.error.message}</Text>
-									)}
-									{bandCaption ? (
-										<Text size="sm" color="secondary" className="chart-band-caption">
-											{bandCaption.text}
-											{bandCaption.unmetYear !== null
-												? ` · ${t("chart.band.unmet", { year: String(bandCaption.unmetYear) })}`
-												: ""}
-										</Text>
-									) : null}
-								</Stack>
-
-								<Stack direction="horizontal" vAlign="center" role="group" aria-label={t("a11y.leftTabs")} className="left-tab-switch">
-									<PlainButton
-										className={`left-tab-switch__item ${effectiveTab === "financials" ? "is-active" : ""}`}
-										aria-pressed={effectiveTab === "financials"}
-										onClick={() => setLeftTab("financials")}
-									>
-										{chatOpen ? t("tab.financials") : t("appmode.tab.numbers")}
-									</PlainButton>
-									<PlainButton
-										className={`left-tab-switch__item ${effectiveTab === "answers" ? "is-active" : ""}`}
-										aria-pressed={effectiveTab === "answers"}
-										onClick={() => setLeftTab("answers")}
-									>
-										{chatOpen ? t("tab.answers") : t("appmode.tab.answers")}
-									</PlainButton>
-									{chatOpen ? null : (
-										<PlainButton
-											className={`left-tab-switch__item ${effectiveTab === "inputs" ? "is-active" : ""}`}
-											aria-pressed={effectiveTab === "inputs"}
-											onClick={() => setLeftTab("inputs")}
-										>
-											{t("appmode.tab.inputs")}
-										</PlainButton>
-									)}
-								</Stack>
-
-								{effectiveTab === "financials" || (chatOpen && effectiveTab === "inputs") ? (
-									<Stack className="financial-list" aria-label={t("a11y.financialSnapshot")}>
-										{financialMetrics.map((item) => (
-											<FinancialMetricRow
-												key={item.key}
-												metric={item}
-												isSelected={selectedMetricKey === item.key}
-												onSelect={() => setSelectedMetricKey(item.key)}
+									<Stack className="chart-canvas">
+										{summary.ok && shown ? (
+											<ProjectionChart
+												years={shown}
+												metric={metric === "metric.netWorth" ? "netWorth" : "cashFlow"}
+												ariaLabel={t(metric === "metric.netWorth" ? "chart.aria.netWorth" : "chart.aria.cashFlow")}
+												band={shownBands ?? undefined}
+												onActiveYearChange={setHoverYear}
 											/>
-										))}
+										) : (
+											<Text color="secondary">{summary.ok ? "" : summary.error.message}</Text>
+										)}
+										{bandCaption ? (
+											<Text size="sm" color="secondary" className="chart-band-caption">
+												{bandCaption.text}
+												{bandCaption.unmetYear !== null
+													? ` · ${t("chart.band.unmet", { year: String(bandCaption.unmetYear) })}`
+													: ""}
+											</Text>
+										) : null}
 									</Stack>
-								) : leftTab === "answers" ? (
-									<Stack className="plan-actions-list" aria-label={t("a11y.planActions")}>
-										{planInfos.map((info) => (
-											<PlanInfoRow key={info.labelKey} info={info} />
-										))}
-										<Text size="sm" color="secondary" className="assumptions-note">{t("info.export.desc")}</Text>
-									</Stack>
-								) : (
-									<Stack className="app-inputs" aria-label={t("a11y.planInputs")}>
-										<PlanInputs
-											plan={plan}
-											setPlan={setPlan}
-											patchRow={patchRow}
-											addRow={addRow}
-											removeRow={removeRow}
-											patchWallet={patchWallet}
-											t={t}
-										/>
-									</Stack>
-								)}
-								</Stack>
-								</Card>
 
-								{chatOpen && summary.ok ? (
-									<Stack as="section" className="plan-column" aria-label={t("rail.title")}>
-										<AssistantRail summary={summary.data} onMinimize={() => setChatOpen(false)} t={t} />
-									</Stack>
-								) : (
-									<Stack className="assistant-minimized">
-										<PlanDock
-											chatOpen={chatOpen}
-											onToggleChat={() => setChatOpen((open) => !open)}
-											onAddIncome={() => addRow("incomes")}
-											onAddExpense={() => addRow("expenses")}
-											onEditPlan={() => {
-												setLeftTab("inputs")
-											}}
-											t={t}
-										/>
-									</Stack>
-								)}
-								</Grid>
+									<TabList
+										className="left-tabs"
+										value={leftTab}
+										onChange={(value) => {
+											if (value === "incomes" || value === "expenses" || value === "wallet") {
+												setLeftTab(value)
+											} else {
+												setLeftTab("financials")
+											}
+										}}
+										role="tablist"
+										aria-label={t("a11y.leftTabs")}
+										size="sm"
+									>
+										<Tab value="financials" label={t("tab.financials")} panelId="left-panel-financials" />
+										<Tab value="incomes" label={t("tab.income")} panelId="left-panel-incomes" />
+										<Tab value="expenses" label={t("tab.expenses")} panelId="left-panel-expenses" />
+										<Tab value="wallet" label={t("tab.wallet")} panelId="left-panel-wallet" />
+									</TabList>
+
+									{leftTab === "financials" ? (
+										<Stack id="left-panel-financials" className="tab-inputs" aria-label={t("a11y.financialSnapshot")}>
+											<Table
+												data={financialMetrics}
+												idKey="key"
+												density="compact"
+												hasHover
+												textOverflow="wrap"
+												columns={[
+													{
+														key: "key",
+														header: t("table.metric"),
+														width: proportional(2),
+														renderCell: (row) => <Text weight="semibold">{t(row.key)}</Text>,
+													},
+													{
+														key: "value",
+														header: t("table.value"),
+														width: pixel(130),
+														align: "end",
+														renderCell: (row) => <Text hasTabularNumbers>{row.value}</Text>,
+													},
+												]}
+											/>
+										</Stack>
+									) : leftTab === "incomes" ? (
+										<Stack id="left-panel-incomes" className="tab-inputs" aria-label={t("incomes.heading")}>
+											<PeriodTable
+												key="incomes"
+												rows={plan.incomes}
+												heading={t("incomes.heading")}
+												onPatch={(id, patch) => patchRow("incomes", id, patch)}
+												onAdd={() => addRow("incomes")}
+												onRemove={(id) => removeRow("incomes", id)}
+												t={t}
+											/>
+										</Stack>
+									) : leftTab === "expenses" ? (
+										<Stack id="left-panel-expenses" className="tab-inputs" aria-label={t("expenses.heading")}>
+											<PeriodTable
+												key="expenses"
+												rows={plan.expenses}
+												heading={t("expenses.heading")}
+												showDeductible
+												onPatch={(id, patch) => patchRow("expenses", id, patch)}
+												onAdd={() => addRow("expenses")}
+												onRemove={(id) => removeRow("expenses", id)}
+												t={t}
+											/>
+										</Stack>
+									) : (
+										<Stack id="left-panel-wallet" className="tab-inputs" aria-label={t("wallets.heading")}>
+											<Heading level={3}>{t("wallets.heading")}</Heading>
+											<WalletTable plan={plan} onPatch={patchWallet} t={t} />
+										</Stack>
+									)}
+								</Stack>
+							)}
+						</Card>
+
+						<Stack as="section" className="plan-column" aria-label={t("rail.title")}>
+							{summary.ok ? (
+								<Stack className="plan-column__chat">
+									<AssistantRail summary={summary.data} t={t} />
+								</Stack>
+							) : (
+								<Text color="secondary">{summary.error.message}</Text>
+							)}
 						</Stack>
-					</Stack>
-				</Theme>
-			)
-}
-
-									function FinancialMetricRow({
-	metric,
-	isSelected,
-	onSelect,
-}: {
-	metric: FinancialMetric
-	isSelected: boolean
-	onSelect: () => void
-}) {
-	const { t } = useLocale()
-
-	return (
-		<PlainButton
-			className={`financial-row ${isSelected ? "is-selected" : ""}`}
-			aria-pressed={isSelected}
-			onClick={onSelect}
-		>
-			<Text weight="semibold" className="financial-row__label">{t(metric.key)}</Text>
-			<Text hasTabularNumbers className="financial-row__value">{metric.value}</Text>
-		</PlainButton>
+					</Grid>
+				</Stack>
+			</Stack>
+		</Theme>
 	)
 }
-
-function PlanInfoRow({ info }: { info: PlanInfo }) {
-	const { t } = useLocale()
-
-	return (
-		<Stack
-			direction="horizontal"
-			align="center"
-			justify="between"
-			gap={2}
-			className="financial-row financial-row--static"
-		>
-			<Text weight="semibold" className="financial-row__label">{t(info.labelKey)}</Text>
-			<Text hasTabularNumbers className="financial-row__value">{info.value}</Text>
-		</Stack>
-	)
-}
-
-/** Right-column action inputs: every section inline and always visible. */
-function PlanInputs({
-	plan,
-	setPlan,
-	patchRow,
-	addRow,
-	removeRow,
-	patchWallet,
-	t,
-}: {
-	plan: PlanInput
-	setPlan: (updater: (current: PlanInput) => PlanInput) => void
-	patchRow: (kind: "incomes" | "expenses", id: string, patch: Partial<PeriodRow>) => void
-	addRow: (kind: "incomes" | "expenses") => void
-	removeRow: (kind: "incomes" | "expenses", id: string) => void
-	patchWallet: (field: "savingsSplit" | "walletRates" | "startingWallets", id: WalletId, value: number) => void
-	t: (key: string, vars?: Record<string, string>) => string
-}) {
-	return (
-		<Stack gap={3} className="plan-inputs">
-			<Card padding={3} className="input-section">
-				<Stack gap={2}>
-					<Heading level={3}>{t("section.inputs")}</Heading>
-					{/* Responsive: 4-up on wide desktops, 2-up on phones (min-width floor
-					    keeps 1fr tracks from being forced wider by input min-content). */}
-					<Grid columns={{ minWidth: 140, max: 4 }} gap={2}>
-						<NumberInput
-							label={t("input.startYear")}
-							value={plan.startYear}
-							onChange={(value) => setPlan((c) => ({ ...c, startYear: Math.round(value) }))}
-							isIntegerOnly
-							min={2000}
-							max={2100}
-						/>
-						<NumberInput
-							label={t("input.birthYear")}
-							value={plan.birthYear}
-							onChange={(value) => setPlan((c) => ({ ...c, birthYear: Math.round(value) }))}
-							isIntegerOnly
-							min={1920}
-							max={2015}
-						/>
-						<NumberInput
-							label={t("input.inflation")}
-							value={plan.inflation * 100}
-							onChange={(value) => setPlan((c) => ({ ...c, inflation: value / 100 }))}
-							min={0}
-							max={20}
-							step={0.5}
-							units="%"
-						/>
-						<NumberInput
-							label={t("input.efMonths")}
-							value={plan.efMonths}
-							onChange={(value) => setPlan((c) => ({ ...c, efMonths: value }))}
-							min={0}
-							max={24}
-							step={1}
-						/>
-						<NumberInput
-							label={t("input.retirementYear")}
-							value={plan.retirementYear ?? null}
-							onChange={(value) =>
-								setPlan((c) => ({ ...c, retirementYear: value === null ? null : Math.round(value) }))
-							}
-							isIntegerOnly
-							min={1990}
-							max={2100}
-						/>
-						<NumberInput
-							label={t("input.retirementMonthly")}
-							value={plan.retirementMonthlyToday}
-							onChange={(value) => setPlan((c) => ({ ...c, retirementMonthlyToday: value }))}
-							min={0}
-						step={1000}
-						units="฿"
-					/>
-					<NumberInput
-						label={t("input.horizon")}
-						value={plan.horizonYears}
-						onChange={(value) => setPlan((c) => ({ ...c, horizonYears: Math.round(value) }))}
-						isIntegerOnly
-						min={1}
-						max={60}
-					/>
-				</Grid>
-					</Stack>
-			</Card>
-
-			<Card padding={3} className="input-section">
-				<PeriodEditor rows={plan.incomes} heading={t("incomes.heading")} onPatch={(id, patch) => patchRow("incomes", id, patch)} onAdd={() => addRow("incomes")} onRemove={(id) => removeRow("incomes", id)} t={t} />
-			</Card>
-
-			<Card padding={3} className="input-section">
-				<PeriodEditor rows={plan.expenses} heading={t("expenses.heading")} showDeductible onPatch={(id, patch) => patchRow("expenses", id, patch)} onAdd={() => addRow("expenses")} onRemove={(id) => removeRow("expenses", id)} t={t} />
-			</Card>
-
-			<Card padding={3} className="input-section">
-				<Stack gap={2}>
-					<Heading level={3}>{t("wallets.heading")}</Heading>
-					{/* Responsive: 3-up on wide desktops, stacks on narrow cards —
-					    wallet label is a fixed 140px span. */}
-					<Grid columns={{ minWidth: 190, max: 3 }} gap={3}>
-					{(
-						[
-							["wallets.split", "savingsSplit", "%", 0, 100, 5, true],
-							["wallets.rates", "walletRates", "%", 0, 30, 0.5, true],
-							["wallets.starting", "startingWallets", "฿", 0, 100_000_000, 10_000, false],
-						] as const
-					).map(([labelKey, field, units, min, max, step, percentMode]) => (
-						<Stack key={field} gap={1}>
-							<Text color="secondary">{t(labelKey)}</Text>
-							{WALLETS.map((id) => (
-								<Stack key={id} direction="horizontal" align="center" gap={1.5}>
-									<Text size="sm" xstyle={{ width: 140 } as never}>{t(`wallet.${id}`)}</Text>
-									<NumberInput
-										label={t(`wallet.${id}`)}
-										isLabelHidden
-										value={
-											percentMode
-												? Math.round(plan[field][id] * 100 * 100) / 100
-												: plan[field][id]
-										}
-										onChange={(value) => patchWallet(field, id, percentMode ? value / 100 : value)}
-										min={min}
-										max={max}
-										step={step}
-										units={units}
-									/>
-								</Stack>
-								))}
-							</Stack>
-								))}
-							</Grid>
-							</Stack>
-							</Card>
-							</Stack>
-							)
-							}
 
 /** Editable period-row editor (income or expenses). */
 const MONTHS_EN = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
@@ -730,8 +536,110 @@ function MonthYearPicker({
 	)
 }
 
-/** Editable period-row editor (income or expenses) — row list. */
-function PeriodEditor({
+/** Row id for the synthetic "+ Add row" line at the bottom of an editor table. */
+const ADD_ROW_ID = "__add__"
+
+/** Detail editor for one period row — rendered in the expanded panel below its row. */
+function PeriodRowEditor({
+	row,
+	showDeductible,
+	onPatch,
+	onRemove,
+	t,
+}: {
+	row: PeriodRow
+	showDeductible?: boolean
+	onPatch: (id: string, patch: Partial<PeriodRow>) => void
+	onRemove: (id: string) => void
+	t: (key: string, vars?: Record<string, string>) => string
+}) {
+	return (
+		<Stack className="row-detail">
+			<Grid columns={{ minWidth: 320, max: 2 }} gap={1.5}>
+				<TextInput
+					label={t("row.label")}
+					value={row.label}
+					onChange={(value) => onPatch(row.id, { label: value })}
+				/>
+				<NumberInput
+					label={t("row.amount")}
+					value={row.amount}
+					onChange={(value) => onPatch(row.id, { amount: value })}
+					min={0}
+					step={10_000}
+					units="฿"
+				/>
+				<MonthYearPicker
+					label={t("row.startYear")}
+					year={row.startYear}
+					month={row.startMonth}
+					onChange={(year, month) =>
+						onPatch(row.id, { startYear: year ?? row.startYear, startMonth: month })
+					}
+					t={t}
+				/>
+				<MonthYearPicker
+					label={t("row.endYear")}
+					year={row.endYear}
+					month={row.endMonth}
+					allowForever
+					onChange={(year, month) => onPatch(row.id, { endYear: year, endMonth: month })}
+					t={t}
+				/>
+				<Stack gap={1}>
+					<SegmentedControl
+						value={row.growthMode}
+						onChange={(value) => onPatch(row.id, { growthMode: value as PeriodRow["growthMode"] })}
+						label={t("row.growth")}
+						layout="fill"
+						size="sm"
+					>
+						<SegmentedControlItem value="inflation" label={t("growth.inflation")} />
+						<SegmentedControlItem value="fixed" label={t("growth.fixed")} />
+						<SegmentedControlItem value="override" label={t("growth.override")} />
+					</SegmentedControl>
+					{row.growthMode === "override" ? (
+						<NumberInput
+							label={t("row.growthRate")}
+							value={row.growthRate * 100}
+							onChange={(value) => onPatch(row.id, { growthRate: value / 100 })}
+							min={-10}
+							max={50}
+							step={0.5}
+							units="%"
+						/>
+					) : null}
+				</Stack>
+				{showDeductible ? (
+					<Stack gap={1}>
+						<SegmentedControl
+							value={row.deductible ?? "none"}
+							onChange={(value) =>
+								onPatch(row.id, {
+									deductible: value === "mortgageInterest" ? "mortgageInterest" : "none",
+								})
+							}
+							label={t("row.deductible")}
+							layout="fill"
+							size="sm"
+						>
+							<SegmentedControlItem value="none" label={t("deductible.none")} />
+							<SegmentedControlItem value="mortgageInterest" label={t("deductible.mortgageInterest")} />
+						</SegmentedControl>
+						<PlainButton onClick={() => onRemove(row.id)}>{t("row.remove")}</PlainButton>
+					</Stack>
+				) : (
+					<PlainButton onClick={() => onRemove(row.id)}>{t("row.remove")}</PlainButton>
+				)}
+			</Grid>
+		</Stack>
+	)
+}
+
+/** Period-row table (income or expenses): clean read-only rows; expand a row to edit it. */
+type PeriodRowData = PeriodRow & Record<string, unknown>
+
+function PeriodTable({
 	rows,
 	heading,
 	showDeductible,
@@ -748,153 +656,179 @@ function PeriodEditor({
 	onRemove: (id: string) => void
 	t: (key: string, vars?: Record<string, string>) => string
 }) {
+	const [expandedKeys, setExpandedKeys] = useState<Set<string>>(new Set())
+	const handleRemove = (id: string) => {
+		onRemove(id)
+		setExpandedKeys((prev) => {
+			const next = new Set(prev)
+			next.delete(id)
+			return next
+		})
+	}
+	const expansion = useTableRowExpansion<PeriodRowData>({
+		expandedKeys,
+		onToggle: (key) =>
+			setExpandedKeys((prev) => {
+				const next = new Set(prev)
+				if (next.has(key)) next.delete(key)
+				else next.add(key)
+				return next
+			}),
+		getRowKey: (item) => item.id,
+		getIsItemExpandable: (item) => item.id !== ADD_ROW_ID,
+		renderExpanded: (item) => (
+			<PeriodRowEditor row={item} showDeductible={showDeductible} onPatch={onPatch} onRemove={handleRemove} t={t} />
+		),
+	})
+
+	const addMarker: PeriodRowData = {
+		id: ADD_ROW_ID,
+		label: "",
+		startYear: rows[0]?.startYear ?? 2026,
+		startMonth: 0,
+		endYear: null,
+		endMonth: 11,
+		amount: 0,
+		growthMode: "inflation",
+		growthRate: 0,
+	}
+	const data: PeriodRowData[] = [...(rows as PeriodRowData[]), addMarker]
+
+	const columns: TableColumn<PeriodRowData>[] = [
+		{
+			key: "label",
+			header: t("row.label"),
+			width: proportional(1),
+			renderCell: (row) =>
+				row.id === ADD_ROW_ID ? (
+					<PlainButton className="row-add" onClick={onAdd}>
+						+ {t("row.add")}
+					</PlainButton>
+				) : (
+					<Text weight="semibold">{row.label}</Text>
+				),
+		},
+		{
+			key: "amount",
+			header: t("row.amount"),
+			width: pixel(130),
+			align: "end",
+			renderCell: (row) =>
+				row.id === ADD_ROW_ID ? null : <Text hasTabularNumbers>{formatBaht(row.amount)}</Text>,
+		},
+		{
+			key: "period",
+			header: t("row.period"),
+			width: pixel(115),
+			align: "end",
+			renderCell: (row) =>
+				row.id === ADD_ROW_ID ? null : (
+					<Text color="secondary" hasTabularNumbers>
+						{row.startYear} – {row.endYear ?? "∞"}
+					</Text>
+				),
+		},
+	]
+
 	return (
 		<Stack gap={2}>
-			<Stack direction="horizontal" justify="between" align="center">
-				<Heading level={3}>{heading}</Heading>
-				<Button variant="secondary" size="sm" label={t("row.add")} onClick={onAdd} />
-			</Stack>
-			{rows.map((row) => (
-				<Card key={row.id} padding={2} variant="muted">
-						{/* Responsive: 5/6-up on wide desktops, wraps to fewer columns on
-						    narrow cards so month+year pickers never overflow (min-content
-						    of a picker row is ~200px). */}
-						<Grid columns={{ minWidth: showDeductible ? 150 : 185, max: showDeductible ? 6 : 5 }} gap={1.5}>
-						<TextInput
-							label={t("row.label")}
-							value={row.label}
-							onChange={(value) => onPatch(row.id, { label: value })}
-						/>
-						<NumberInput
-							label={t("row.amount")}
-							value={row.amount}
-							onChange={(value) => onPatch(row.id, { amount: value })}
-							min={0}
-							step={10_000}
-							units="฿"
-						/>
-						<MonthYearPicker
-							label={t("row.startYear")}
-							year={row.startYear}
-							month={row.startMonth}
-							onChange={(year, month) =>
-								onPatch(row.id, { startYear: year ?? row.startYear, startMonth: month })
-							}
-							t={t}
-						/>
-						<MonthYearPicker
-							label={t("row.endYear")}
-							year={row.endYear}
-							month={row.endMonth}
-							allowForever
-							onChange={(year, month) =>
-								onPatch(row.id, { endYear: year, endMonth: month })
-							}
-							t={t}
-						/>
-						<Stack gap={1}>
-							<SegmentedControl
-								value={row.growthMode}
-								onChange={(value) => onPatch(row.id, { growthMode: value as PeriodRow["growthMode"] })}
-								label={t("row.growth")}
-								layout="fill"
-								size="sm"
-							>
-								<SegmentedControlItem value="inflation" label={t("growth.inflation")} />
-								<SegmentedControlItem value="fixed" label={t("growth.fixed")} />
-								<SegmentedControlItem value="override" label={t("growth.override")} />
-							</SegmentedControl>
-							{row.growthMode === "override" ? (
-								<NumberInput
-									label={t("row.growthRate")}
-									value={row.growthRate * 100}
-									onChange={(value) => onPatch(row.id, { growthRate: value / 100 })}
-									min={-10}
-									max={50}
-									step={0.5}
-									units="%"
-								/>
-							) : null}
-						</Stack>
-						{showDeductible ? (
-							<Stack gap={1}>
-								<SegmentedControl
-									value={row.deductible ?? "none"}
-									onChange={(value) =>
-										onPatch(row.id, {
-											deductible: value === "mortgageInterest" ? "mortgageInterest" : "none",
-										})
-									}
-									label={t("row.deductible")}
-									layout="fill"
-									size="sm"
-								>
-									<SegmentedControlItem value="none" label={t("deductible.none")} />
-									<SegmentedControlItem value="mortgageInterest" label={t("deductible.mortgageInterest")} />
-								</SegmentedControl>
-								<PlainButton onClick={() => onRemove(row.id)}>{t("row.remove")}</PlainButton>
-							</Stack>
-						) : (
-							<PlainButton onClick={() => onRemove(row.id)}>{t("row.remove")}</PlainButton>
-						)}
-					</Grid>
-				</Card>
-			))}
+			<Heading level={3}>{heading}</Heading>
+			<Table data={data} idKey="id" density="compact" dividers="rows" hasHover columns={columns} plugins={{ expansion }} />
 		</Stack>
 	)
 }
 
-/* ── Bottom dock ──────────────────────────────────────────────────────────
- * Quick actions pinned to the screen edge so they are always reachable:
- * mobile → fixed to the bottom of the viewport; desktop → bottom of the
- * right (inputs) column, which is the scrollable side. The chat launcher
- * is the primary action and opens the floating chat panel.
- * ────────────────────────────────────────────────────────────────────── */
-function PlanDock({
-	chatOpen,
-	onToggleChat,
-	onAddIncome,
-	onAddExpense,
-	onEditPlan,
+/** Wallet table: read-only split/rate rows; expand a row to edit split, rate, starting balance. */
+type WalletRowData = { id: WalletId; label: string }
+
+function WalletTable({
+	plan,
+	onPatch,
 	t,
 }: {
-	chatOpen: boolean
-	onToggleChat: () => void
-	onAddIncome: () => void
-	onAddExpense: () => void
-	onEditPlan: () => void
+	plan: PlanInput
+	onPatch: (field: "savingsSplit" | "walletRates" | "startingWallets", id: WalletId, value: number) => void
 	t: (key: string, vars?: Record<string, string>) => string
 }) {
-	return (
-		<Stack as="nav" direction="horizontal" className="dock" aria-label={t("a11y.dock")}>
-			<PlainButton className="dock__button" onClick={onAddIncome}>
-				<Text weight="semibold" className="dock__label">{t("dock.addIncome")}</Text>
-			</PlainButton>
-			<PlainButton className="dock__button" onClick={onAddExpense}>
-				<Text weight="semibold" className="dock__label">{t("dock.addExpense")}</Text>
-			</PlainButton>
-			<PlainButton className="dock__button dock__button--edit" onClick={onEditPlan}>
-				<Text weight="semibold" className="dock__label">{t("dock.scrollToInputs")}</Text>
-			</PlainButton>
-			<PlainButton
-				className={`dock__button dock__button--chat ${chatOpen ? "is-open" : ""}`}
-				onClick={onToggleChat}
-				aria-pressed={chatOpen}
-			>
-				<ChatIcon className="dock__chat-icon" aria-hidden="true" />
-				<Text weight="semibold" className="dock__label">{t("dock.chat")}</Text>
-			</PlainButton>
-		</Stack>
-	)
+	const [expandedKeys, setExpandedKeys] = useState<Set<string>>(new Set())
+	const data: WalletRowData[] = WALLETS.map((id) => ({ id, label: t(`wallet.${id}`) }))
+	const expansion = useTableRowExpansion<WalletRowData>({
+		expandedKeys,
+		onToggle: (key) =>
+			setExpandedKeys((prev) => {
+				const next = new Set(prev)
+				if (next.has(key)) next.delete(key)
+				else next.add(key)
+				return next
+			}),
+		getRowKey: (item) => item.id,
+		renderExpanded: (item) => (
+			<Stack className="row-detail">
+				<Grid columns={{ minWidth: 170, max: 3 }} gap={2}>
+					<NumberInput
+						label={t("wallets.split")}
+						value={Math.round(plan.savingsSplit[item.id] * 100 * 100) / 100}
+						onChange={(value) => onPatch("savingsSplit", item.id, value / 100)}
+						min={0}
+						max={100}
+						step={5}
+						units="%"
+					/>
+					<NumberInput
+						label={t("wallets.rates")}
+						value={Math.round(plan.walletRates[item.id] * 100 * 100) / 100}
+						onChange={(value) => onPatch("walletRates", item.id, value / 100)}
+						min={0}
+						max={30}
+						step={0.5}
+						units="%"
+					/>
+					<NumberInput
+						label={t("wallets.starting")}
+						value={plan.startingWallets[item.id]}
+						onChange={(value) => onPatch("startingWallets", item.id, value)}
+						min={0}
+						max={100_000_000}
+						step={10_000}
+						units="฿"
+					/>
+				</Grid>
+			</Stack>
+		),
+	})
+	const columns: TableColumn<WalletRowData>[] = [
+		{
+			key: "label",
+			header: t("table.wallet"),
+			width: proportional(1),
+			renderCell: (row) => <Text weight="semibold">{row.label}</Text>,
+		},
+		{
+			key: "split",
+			header: t("wallets.split"),
+			width: pixel(140),
+			align: "end",
+			renderCell: (row) => <Text hasTabularNumbers>{formatPercent(plan.savingsSplit[row.id])}</Text>,
+		},
+		{
+			key: "rate",
+			header: t("wallets.rates"),
+			width: pixel(140),
+			align: "end",
+			renderCell: (row) => <Text hasTabularNumbers>{formatPercent(plan.walletRates[row.id])}</Text>,
+		},
+	]
+
+	return <Table data={data} idKey="id" density="compact" dividers="rows" hasHover columns={columns} plugins={{ expansion }} />
 }
 
-/* ── Assistant rail (right column, minimizable) ───────────────────────────
+/* ── Assistant rail (right column) ────────────────────────────────────────
  * Modeled on the Astryx "AI Chat Conversation" template: header, "Today"
  * separator, alternating turns (user bubble right / assistant plain text
  * with avatar left), and a floating composer card with an "Ask" selector
- * and a circular send button. Minimizing collapses the rail so the left
- * panel becomes the full app. Replies are canned summaries computed from
- * the plan — the real assistant swaps in behind the same props later.
+ * and a circular send button. The rail is always present. Replies are canned
+ * summaries computed from the plan — the real assistant swaps in behind the
+ * same props later.
  * ────────────────────────────────────────────────────────────────────── */
 interface ChatMessage {
 	id: number
@@ -906,11 +840,9 @@ interface ChatMessage {
 
 function AssistantRail({
 	summary,
-	onMinimize,
 	t,
 }: {
 	summary: PlanSummary
-	onMinimize: () => void
 	t: (key: string, vars?: Record<string, string>) => string
 }) {
 	const [messages, setMessages] = useState<ChatMessage[]>([])
@@ -980,9 +912,6 @@ function AssistantRail({
 					<Text weight="semibold">{t("rail.title")}</Text>
 					<Text size="sm" color="secondary">{t("rail.subtitle")}</Text>
 				</Stack>
-				<PlainButton className="assistant-rail__minimize" aria-label={t("rail.minimize")} onClick={onMinimize}>
-					<MinimizeIcon className="assistant-rail__minimize-icon" aria-hidden="true" />
-				</PlainButton>
 			</Stack>
 
 			<Stack className="assistant-rail__log" ref={logRef}>

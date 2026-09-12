@@ -31,8 +31,3 @@ export function formatPercent(rate: number): string {
 	const rounded = Math.round(pct * 10) / 10
 	return `${Number.isInteger(rounded) ? rounded.toFixed(0) : rounded.toFixed(1)}%`
 }
-
-/** Monthly equivalent of a yearly amount: ฿40,000/mo. */
-export function formatBahtMonthly(yearly: number): string {
-	return `${formatBaht(yearly / 12)}/mo`
-}

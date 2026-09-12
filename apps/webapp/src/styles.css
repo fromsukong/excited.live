@@ -55,8 +55,6 @@ button {
 .brand-lockup,
 .metric-switch__item,
 .period-switch__item,
-.financial-row,
-.plan-action,
 .export-action {
   border: 0;
 }
@@ -142,12 +140,6 @@ button {
   height: 100%;
   min-height: 0;
   gap: 31px;
-}
-
-/* Full-app mode (assistant minimized): left panel takes the whole row. */
-.dashboard-grid--full {
-  grid-template-columns: minmax(0, 1fr) 0px;
-  gap: 0;
 }
 
 .chart-panel,
@@ -335,76 +327,8 @@ button {
   height: 100%;
   min-height: 0;
   padding-right: 6px;
-  overflow-y: auto;
-  gap: 18px;
-  scrollbar-width: thin;
-  scrollbar-color: var(--color-border) transparent;
-}
-
-.financial-list {
-  display: flex;
-  flex-direction: column;
-  flex: 1 1 auto;
-  min-height: 0;
-  max-height: none;
-  margin-top: 17px;
-  padding: 0 8px;
-  overflow-y: auto;
-  border-radius: 20px;
-  background: var(--color-neutral);
-  scrollbar-width: thin;
-  scrollbar-color: var(--color-border) transparent;
-}
-
-.financial-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 16px;
-  min-height: 41px;
-  /* Horizontal inset so hover/selected pills never hug the text (plan-action
-     uses 12px; the tighter 10px suits this denser list). */
-  padding: 0 10px;
-  border-bottom: 1px solid var(--color-border);
-  color: var(--copy);
-  text-align: left;
-  background: transparent;
-  cursor: pointer;
-}
-
-.financial-row:last-child {
-  border-bottom: 0;
-}
-
-.financial-row:hover,
-.financial-row.is-selected {
-  border-bottom-color: transparent;
-  border-radius: 999px;
-  background: var(--color-overlay-hover);
-}
-
-.financial-row__label,
-.financial-row__value {
-  min-width: 0;
-  font-size: 15px !important;
-  line-height: 1.25 !important;
-}
-
-.financial-row__label {
   overflow: hidden;
-  font-weight: 600;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-.financial-row__value {
-  color: var(--copy);
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-}
-
-.financial-row.is-selected .financial-row__label {
-  color: var(--copy);
+  gap: 18px;
 }
 
 .plan-summary-card,
@@ -551,36 +475,6 @@ button {
   font-size: 13px !important;
 }
 
-.plan-actions-list {
-  display: flex;
-  flex-direction: column;
-  border-top: 1px solid var(--color-border);
-}
-
-.plan-action {
-  display: grid;
-  grid-template-columns: 38px minmax(0, 1fr) 19px;
-  align-items: center;
-  gap: 13px;
-  min-height: 68px;
-  /* Roomy inset so the hover/selected pill clears the icon, text and arrow on
-     all sides instead of hugging them (0 left padding made the pill touch the
-     icon badge). */
-  padding: 10px 12px;
-  border-bottom: 1px solid var(--color-border);
-  color: var(--copy);
-  text-align: left;
-  background: transparent;
-  cursor: pointer;
-}
-
-.plan-action:hover,
-.plan-action.is-selected {
-  border-radius: 999px;
-  background: var(--color-overlay-hover);
-}
-
-.plan-action__icon,
 .export-action__icon {
   display: inline-flex !important;
   align-items: center;
@@ -589,41 +483,6 @@ button {
   height: 34px;
   border-radius: 999px;
   background: var(--color-background-orange);
-}
-
-.plan-action__icon {
-  color: var(--color-icon-orange);
-}
-
-.plan-action__copy {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  gap: 3px;
-}
-
-.plan-action__label {
-  color: var(--copy);
-  font-size: 15px !important;
-  font-weight: 700;
-}
-
-.plan-action__description {
-  overflow: hidden;
-  color: var(--copy-muted);
-  font-size: 13px !important;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-.plan-action__arrow {
-  display: inline-flex !important;
-  color: var(--copy-muted);
-}
-
-.plan-action:hover .plan-action__arrow,
-.plan-action.is-selected .plan-action__arrow {
-  color: var(--copy);
 }
 
 .export-action {
@@ -673,11 +532,6 @@ button {
   .dashboard-grid {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1.17fr);
     gap: 22px;
-  }
-
-  .dashboard-grid--full {
-    grid-template-columns: minmax(0, 1fr) 0px;
-    gap: 0;
   }
 
   .chart-panel__inner,
@@ -737,11 +591,6 @@ button {
     min-height: 320px;
   }
 
-  /* Mobile: the rail is a normal block above the dock (which stays fixed). */
-  .assistant-rail__log {
-    max-height: 40vh;
-  }
-
   .chart-panel,
   .chart-panel__inner {
     height: auto;
@@ -756,7 +605,7 @@ button {
     flex: 0 0 auto;
   }
 
-  .financial-list {
+  .tab-inputs {
     flex: 0 1 auto;
     max-height: 421px;
   }
@@ -831,16 +680,11 @@ button {
   }
 
   .chart-canvas {
-    height: 253px;
+    /* The ECharts host renders at its own fixed height — let the box fit it so
+       the chart never overlaps the tab strip below (the old 253px box was
+       sized for the hand-rolled SVG chart, which scaled to its container). */
+    height: auto;
     margin-top: 16px;
-  }
-
-  .chart-value--top {
-    top: 18px;
-  }
-
-  .chart-value--bottom {
-    top: 208px;
   }
 
   .chart-toolbar {
@@ -880,21 +724,11 @@ button {
     font-size: 13px;
   }
 
-  .financial-list {
+  .tab-inputs {
     flex: 0 1 auto;
     max-height: 400px;
     margin-top: 13px;
     padding: 0 8px;
-  }
-
-  .financial-row {
-    min-height: 41px;
-    gap: 9px;
-  }
-
-  .financial-row__label,
-  .financial-row__value {
-    font-size: 13px !important;
   }
 
   .plan-summary-card__inner {
@@ -959,28 +793,6 @@ button {
     font-size: 11px !important;
   }
 
-  .plan-action {
-    grid-template-columns: 34px minmax(0, 1fr) 18px;
-    gap: 10px;
-    min-height: 63px;
-    /* Match the desktop pill inset (scaled down for the 640px layout). */
-    padding: 9px 10px;
-  }
-
-  .plan-action__icon {
-    width: 31px;
-    height: 31px;
-    border-radius: 999px;
-  }
-
-  .plan-action__label {
-    font-size: 14px !important;
-  }
-
-  .plan-action__description {
-    font-size: 12px !important;
-  }
-
   .export-action {
     padding-top: 18px;
     font-size: 13px;
@@ -1008,158 +820,10 @@ button {
   }
 }
 
-/* Plan editor below the dashboard grid (toggle via Edit plan). */
-.plan-editor {
-  margin-top: 24px;
-}
-
-.assumptions-note {
-  margin-top: 8px;
-}
-
-/* Left panel tabs: By the numbers / What the plan says (same look as the
-   metric switch, placed under the chart toolbar). */
-.left-tab-switch {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  margin-top: 4px;
-}
-
-.left-tab-switch__item {
-  padding: 6px 14px;
-  border-radius: 999px;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--copy-muted);
-  background: transparent;
-  border: 1px solid transparent;
-  cursor: pointer;
-}
-
-.left-tab-switch__item:hover {
-  color: var(--copy);
-}
-
-.left-tab-switch__item.is-active {
-  color: var(--copy);
-  background: var(--panel-bg);
-  border-color: var(--panel-border);
-}
-
-/* The answers list inside the tab reuses plan-action rows without hover. */
-.plan-actions-list .plan-action--static {
-  cursor: default;
-}
-
-/* Static (non-clickable) rows in the "What the plan says" tab — identical
-   metrics to .financial-row but no hover/selected affordance. */
-.financial-row--static {
-  cursor: default;
-}
-
-/* Right column: one card per input section. */
-.plan-inputs {
-  width: 100%;
-  min-width: 0;
-}
-
-.input-section {
-  width: 100%;
-  min-width: 0;
-}
-
-/* Period row cards inside Income/Expenses sections. */
-.input-section .astryx-card {
-  min-width: 0;
-}
-
-/* The right column scrolls as one list of cards (desktop keeps the old
-   independent-scroll behavior via .plan-column). */
-
-/* ── Bottom dock ──────────────────────────────────────────────────────────
- * Mobile: fixed to the bottom of the screen — always visible, above the
- * chat panel. Desktop (≥1021px): pinned to the bottom of the right column
- * (the scrollable side), so the dock is the last thing that scrolls past
- * and the chat launcher is always reachable.
- * ────────────────────────────────────────────────────────────────────── */
-.dock {
-  position: fixed;
-  right: max(12px, env(safe-area-inset-right, 0px));
-  bottom: calc(10px + env(safe-area-inset-bottom, 0px));
-  left: max(12px, env(safe-area-inset-left, 0px));
-  z-index: 60;
-  display: flex;
-  gap: 6px;
-  padding: 6px;
-  border: 1px solid var(--panel-border);
-  border-radius: 999px;
-  background: var(--panel-bg);
-  box-shadow: 0 8px 28px var(--shadow-color, rgba(0, 0, 0, 0.28));
-}
-
-.dock__button {
-  display: flex;
-  flex: 1 1 0;
-  align-items: center;
-  justify-content: center;
-  min-width: 0;
-  height: 42px;
-  padding: 0 10px;
-  border: 1px solid transparent;
-  border-radius: 999px;
-  color: var(--copy-muted);
-  background: transparent;
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.dock__button:hover {
-  color: var(--copy);
-  background: var(--color-overlay-hover);
-}
-
-.dock__button:active {
-  background: var(--color-overlay-pressed);
-}
-
-.dock__label {
-  font-size: 13px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.dock__button--chat {
-  flex: 0 0 auto;
-  gap: 5px;
-  padding: 0 14px;
-  color: var(--copy);
-  border-color: var(--panel-border);
-  background: var(--color-neutral);
-}
-
-.dock__button--chat.is-open {
-  background: var(--color-overlay-pressed);
-}
-
-.dock__chat-icon {
-  width: 17px;
-  height: 17px;
-  flex: 0 0 auto;
-}
-
-/* Very narrow phones: scroll-to-inputs is redundant while scrolling, so the
-   dock fits three buttons without truncating labels. */
-@media (max-width: 379px) {
-  .dock__button--edit {
-    display: none;
-  }
-}
-
 /* ── Assistant rail (right column) ─────────────────────────────────────────
  * Astryx ai-chat style: full-height panel, "Today" separator, user bubbles
  * right / assistant turns with avatar left, floating composer card with
- * circular send button. Minimizing swaps it for a launcher pill.
+ * circular send button.
  * ────────────────────────────────────────────────────────────────────── */
 .assistant-rail {
   display: flex;
@@ -1177,29 +841,6 @@ button {
   flex: 0 0 auto;
   padding-bottom: 14px;
   border-bottom: 1px solid var(--panel-border);
-}
-
-.assistant-rail__minimize {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 34px;
-  height: 34px;
-  border: 1px solid var(--panel-border);
-  border-radius: 999px;
-  color: var(--copy-muted);
-  background: transparent;
-  cursor: pointer;
-}
-
-.assistant-rail__minimize:hover {
-  color: var(--copy);
-  background: var(--color-overlay-hover);
-}
-
-.assistant-rail__minimize-icon {
-  width: 16px;
-  height: 16px;
 }
 
 .assistant-rail__log {
@@ -1247,24 +888,8 @@ button {
   margin-top: 12px;
 }
 
-/* Minimized assistant: the dock alone provides the Chat launcher; the left
-   panel stretches to the full row via .dashboard-grid--full. */
-.assistant-minimized {
-  display: none;
-  min-width: 0;
-}
-
-.dashboard-grid--full .assistant-minimized {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  justify-content: flex-end;
-  gap: 10px;
-}
-
-/* Inputs tab (full-app mode): the input sections scroll inside the tab
-   body like the financial list does. */
-.app-inputs {
+/* Scroll body of the Income/Expenses/Wallet tabs. */
+.tab-inputs {
   display: flex;
   flex: 1 1 auto;
   flex-direction: column;
@@ -1278,98 +903,86 @@ button {
   scrollbar-color: var(--color-border) transparent;
 }
 
-/* Floating chat panel (mock) — sits just above the dock. */
-.chat-panel {
-  position: fixed;
-  right: max(12px, env(safe-area-inset-right, 0px));
-  bottom: calc(70px + env(safe-area-inset-bottom, 0px));
-  left: max(12px, env(safe-area-inset-left, 0px));
-  z-index: 55;
-  max-height: min(58vh, 430px);
-  border: 1px solid var(--panel-border);
-  border-radius: 24px;
-  background: var(--panel-bg);
-  box-shadow: 0 16px 44px var(--shadow-color, rgba(0, 0, 0, 0.3));
+/* Main nav in the top bar (Plan / Settings). */
+.topnav {
+  flex: 0 1 auto;
 }
 
-.chat-panel__head {
-  padding: 14px 18px 10px;
-  border-bottom: 1px solid var(--panel-border);
+/* Left panel tabs (Astryx TabList) under the chart. */
+.left-tabs {
+  margin-top: 8px;
 }
 
-.chat-panel__log {
+/* Chat owns the full right column height. */
+.plan-column__chat {
   display: flex;
-  flex: 1 1 auto;
   flex-direction: column;
-  gap: 8px;
-  min-height: 0;
-  padding: 12px 18px;
-  overflow-y: auto;
-}
-
-.chat-panel__composer {
-  padding: 10px 12px calc(12px + env(safe-area-inset-bottom, 0px));
-  border-top: 1px solid var(--panel-border);
-}
-
-.chat-panel__input {
   flex: 1 1 auto;
-  min-width: 0;
+  min-height: 0;
 }
 
-.chat-bubble {
-  width: fit-content;
-  max-width: 88%;
-  padding: 8px 12px;
-  border: 1px solid var(--panel-border);
-  border-radius: 16px;
+.plan-column__chat .assistant-rail {
+  flex: 1 1 auto;
+  height: auto;
 }
 
-.chat-bubble--user {
-  align-self: flex-end;
+/* Settings page (mock) */
+.settings-panel {
+  max-width: 620px;
+}
+
+/* ≤1020px stacks the columns: the chat gets a phone-height block under the
+ * chart. Declared after the base .plan-column__chat rule so it wins the
+ * cascade (same specificity — later source order wins). */
+@media (max-width: 1020px) {
+  .plan-column__chat {
+    flex: 0 0 auto;
+    height: 70vh;
+  }
+}
+
+/* Narrow phones: keep a minimum gap between brand / nav / status so the
+ * wordmark never touches the "Plan | Settings" menu, and drop the decorative
+ * "Synced" text below 400px so the top bar keeps breathing room. */
+@media (max-width: 640px) {
+  .topbar {
+    column-gap: 10px;
+  }
+}
+
+@media (max-width: 400px) {
+  .market-status::before {
+    content: none;
+  }
+}
+
+/* Editor tables: subtle in-table "+ Add row" line and the expanded detail panel. */
+.row-add {
+  color: var(--copy-muted);
+  font-size: 14px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.row-add:hover {
   color: var(--copy);
-  background: var(--color-overlay-pressed);
-  border-bottom-right-radius: 6px;
 }
 
-.chat-bubble--assistant {
-  align-self: flex-start;
-  background: var(--color-neutral);
-  border-bottom-left-radius: 6px;
+.row-detail {
+  min-width: 0;
+  width: 100%;
 }
 
-@media (min-width: 1021px) {
-  /* Desktop: dock + chat live at the bottom of the right (inputs) column —
-     sticky so they stay visible while the column scrolls. */
-  .dock {
-    position: sticky;
-    right: auto;
-    bottom: 12px;
-    left: auto;
-  }
-
-  .chat-panel {
-    position: sticky;
-    right: auto;
-    bottom: 74px;
-    left: auto;
-  }
-
-  /* Full-app mode: no right column to host the dock, so it floats at the
-     bottom-right corner of the viewport instead. */
-  .dashboard-grid--full .assistant-minimized .dock {
-    position: fixed;
-    right: 18px;
-    bottom: 18px;
-    left: auto;
-    width: min(460px, calc(100vw - 36px));
-  }
-
-  /* Keep the last rows readable above the floating dock. */
-  .dashboard-grid--full .financial-list,
-  .dashboard-grid--full .plan-actions-list,
-  .dashboard-grid--full .app-inputs {
-    padding-bottom: 88px;
+/* ≤640px: hide the Period column of income/expense tables — it stays visible
+   in the expanded editor below each row. Column 1 is the expansion chevron. */
+@media (max-width: 640px) {
+  #left-panel-incomes [class*="astryx-table"] th:nth-child(4),
+  #left-panel-incomes [class*="astryx-table"] td:nth-child(4),
+  #left-panel-expenses [class*="astryx-table"] th:nth-child(4),
+  #left-panel-expenses [class*="astryx-table"] td:nth-child(4) {
+    display: none;
   }
 }
+
 

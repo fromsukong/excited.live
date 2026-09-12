@@ -13,6 +13,8 @@ export const strings: Dictionary = {
 
 	"nav.hello": { en: "Your plan, live", th: "แผนของคุณ สด ๆ" },
 	"nav.synced": { en: "Numbers update as you type", th: "ตัวเลขอัปเดตทันทีที่แก้" },
+	"nav.plan": { en: "Plan", th: "แผน" },
+	"nav.settings": { en: "Settings", th: "ตั้งค่า" },
 	"locale.toggle": { en: "Switch language", th: "เปลี่ยนภาษา" },
 	"locale.en": { en: "EN", th: "EN" },
 	"locale.th": { en: "ไทย", th: "ไทย" },
@@ -24,7 +26,7 @@ export const strings: Dictionary = {
 	"a11y.chartMetric": { en: "Chart metric", th: "ตัวชี้วัดของแผนภูมิ" },
 	"a11y.chartPeriod": { en: "Chart period", th: "ช่วงเวลาของแผนภูมิ" },
 	"a11y.financialSnapshot": { en: "Financial snapshot", th: "ภาพรวมการเงิน" },
-	"a11y.planActions": { en: "Plan details", th: "รายละเอียดแผน" },
+	"a11y.mainNav": { en: "Main pages", th: "หน้าหลัก" },
 
 	// US-110 — Monte Carlo market band
 	"chart.band.caption": {
@@ -60,32 +62,10 @@ export const strings: Dictionary = {
 		th: "แก้ตัวเลขด้านล่างได้เลย กราฟ ตัวเลข และแผนจะอัปเดตทันที",
 	},
 
-	// Right column — info rows (engine answers)
-	"info.eyebrow": { en: "What the plan says", th: "แผนบอกอะไร" },
-	"info.heading": { en: "Your answers", th: "คำตอบของคุณ" },
-	"info.count": { en: "6 answers", th: "6 คำตอบ" },
-	"info.retirement": { en: "Retirement", th: "เกษียณ" },
-	"info.retirement.funded": { en: "funded", th: "พอ" },
-	"info.retirement.short": { en: "short", th: "ไม่พอ" },
+	// Engine answers (used by the chat replies)
 	"info.retirement.left": { en: "{amount} left at {year}", th: "เหลือ {amount} ถึงปี {year}" },
 	"info.retirement.runsOut": { en: "money runs out {year}", th: "เงินหมดปี {year}" },
-	"info.runsOut": { en: "Money runs out", th: "เงินหมดปี" },
 	"info.runsOut.never": { en: "never", th: "ไม่หมด" },
-	"info.runsOut.desc.never": { en: "covers the whole plan", th: "พอตลอดทั้งแผน" },
-	"info.runsOut.desc.year": { en: "first short year", th: "ปีแรกที่เงินไม่พอ" },
-	"info.maxForever": { en: "Max forever spend", th: "ใช้ได้ตลอดไปสูงสุด" },
-	"info.maxForever.desc": { en: "per month, forever, from today", th: "ต่อเดือน ตลอดไป จากวันนี้" },
-	"info.optimizer": { en: "ThaiESG / RMF this year", th: "ThaiESG / RMF ปีนี้" },
-	"info.optimizer.desc": { en: "recommended · saves {tax} tax", th: "แนะนำ · ประหยัดภาษี {tax}" },
-	"info.paths": { en: "Fund vs taxable", th: "กองทุน vs เสียภาษี" },
-	"info.paths.desc.fund": { en: "{fund} wins by {gap}", th: "{fund} ได้เปรียบ {gap}" },
-	"info.paths.desc.taxable": { en: "taxable wins by {gap}", th: "เสียภาษี ได้เปรียบ {gap}" },
-	"info.goals": { en: "Goal checks", th: "ตรวจเป้าหมาย" },
-	"info.goals.desc.ok": { en: "{ok} of {total} goals on track", th: "{ok} จาก {total} เป้าหมายกำลังไปได้ดี" },
-	"info.goals.desc.none": { en: "no goals set yet", th: "ยังไม่มีเป้าหมาย" },
-	"info.goals.sub": { en: "{ok} on track · {short} short", th: "{ok} กำลังไปได้ดี · {short} ขาด" },
-	"info.export": { en: "Assumptions", th: "สมมติฐาน" },
-	"info.export.desc": { en: "TH 2026 tax · nominal averages · demo", th: "ภาษีไทย 2569 · ค่าเฉลี่ยระยะยาว · ตัวอย่าง" },
 
 	// Editor (inline section below the grid)
 	"editor.heading": { en: "Plan inputs", th: "ตัวเลขของแผน" },
@@ -95,28 +75,18 @@ export const strings: Dictionary = {
 	},
 
 	// Sections
-	"section.inputs": { en: "Your plan", th: "แผนของคุณ" },
-	"section.inputs.desc": {
-		en: "Every number below is editable — the chart and summary update instantly.",
-		th: "ตัวเลขทุกช่องแก้ได้ กราฟและสรุปจะอัปเดตทันที",
-	},
 	"section.chart": { en: "Net worth over time", th: "มูลค่าสุทธิตลอดเวลา" },
 	"section.summaryLong": { en: "Long term", th: "ระยะยาว" },
 	"section.summaryThisYear": { en: "This year", th: "ปีนี้" },
-
-	// Global inputs
-	"input.startYear": { en: "Start year", th: "ปีเริ่มต้น" },
-	"input.birthYear": { en: "Birth year", th: "ปีเกิด" },
-	"input.inflation": { en: "Inflation", th: "เงินเฟ้อ" },
-	"input.efMonths": { en: "Emergency fund (months)", th: "เงินสำรองฉุกเฉิน (เดือน)" },
-	"input.retirementYear": { en: "Retirement year", th: "ปีเกษียณ" },
-	"input.retirementMonthly": { en: "Retirement spend (monthly, today's money)", th: "ค่าใช้จ่ายหลังเกษียณ (ต่อเดือน)" },
-	"input.horizon": { en: "Years to project", th: "จำนวนปีที่คำนวณ" },
 
 	// Rows
 	"incomes.heading": { en: "Income", th: "รายได้" },
 	"expenses.heading": { en: "Expenses", th: "ค่าใช้จ่าย" },
 	"row.label": { en: "Name", th: "ชื่อ" },
+	"table.metric": { en: "Metric", th: "ตัวชี้วัด" },
+	"table.value": { en: "Value", th: "มูลค่า" },
+	"table.wallet": { en: "Wallet", th: "กระเป๋า" },
+	"row.period": { en: "Period", th: "ช่วงเวลา" },
 	"row.amount": { en: "Per year (฿)", th: "ต่อปี (บาท)" },
 	"row.startYear": { en: "Start", th: "เริ่ม" },
 	"row.endYear": { en: "End (blank = forever)", th: "จบ (ว่าง = ตลอดไป)" },
@@ -129,6 +99,8 @@ export const strings: Dictionary = {
 	"deductible.none": { en: "No", th: "ไม่" },
 	"deductible.mortgageInterest": { en: "Mortgage", th: "ดอกเบี้ยบ้าน" },
 	"row.add": { en: "Add row", th: "เพิ่มแถว" },
+	"row.newIncome": { en: "New income", th: "รายได้ใหม่" },
+	"row.newExpense": { en: "New expense", th: "ค่าใช้จ่ายใหม่" },
 	"row.remove": { en: "Remove", th: "ลบ" },
 
 	// Wallets
@@ -168,35 +140,30 @@ export const strings: Dictionary = {
 	},
 	"a11y.locale": { en: "Language", th: "ภาษา" },
 	"a11y.leftTabs": { en: "Panel view", th: "มุมมองแผง" },
-	"a11y.planInputs": { en: "Plan inputs", th: "ตัวเลขของแผน" },
 	"tab.financials": { en: "By the numbers", th: "ตัวเลข" },
-	"tab.answers": { en: "What the plan says", th: "สิ่งที่แผนบอก" },
+	"tab.income": { en: "Income", th: "รายได้" },
+	"tab.expenses": { en: "Expenses", th: "ค่าใช้จ่าย" },
+	"tab.wallet": { en: "Wallet", th: "กระเป๋าเงิน" },
 	"wallets.heading": { en: "Wallets", th: "กระเป๋าเงิน" },
 	"row.until": { en: "Until", th: "ถึง" },
 	"a11y.netWorthChart": { en: "Net worth projection chart", th: "แผนภูมิมูลค่าสุทธิ" },
 
-	// Bottom dock — quick actions pinned to the screen edge (mobile bottom,
-	// desktop bottom of the right column) with the chat launcher always open.
-	"dock.chat": { en: "Chat", th: "แชท" },
-	"dock.addIncome": { en: "+ Income", th: "+ รายได้" },
-	"dock.addExpense": { en: "+ Expense", th: "+ รายจ่าย" },
-	"dock.scrollToInputs": { en: "Edit plan", th: "แก้แผน" },
-	"a11y.dock": { en: "Quick actions dock", th: "แถบการทำงานด่วน" },
+	// Settings page (mock)
+	"settings.note": { en: "Mock — nothing is saved yet.", th: "ตัวอย่าง — ยังไม่บันทึกจริง" },
+	"settings.name": { en: "Display name", th: "ชื่อที่แสดง" },
+	"settings.birthday": { en: "Birthday", th: "วันเกิด" },
+	"settings.gender": { en: "Gender", th: "เพศ" },
+	"settings.gender.female": { en: "Female", th: "หญิง" },
+	"settings.gender.male": { en: "Male", th: "ชาย" },
+	"settings.gender.other": { en: "Other", th: "อื่น ๆ" },
 
-	// Assistant rail (right column) — Astryx ai-chat style, minimizable.
+	// Assistant rail (right column) — Astryx ai-chat style.
 	"rail.title": { en: "Assistant", th: "ผู้ช่วย" },
 	"rail.subtitle": { en: "Demo — canned replies", th: "ตัวอย่าง — ตอบล่วงหน้า" },
-	"rail.minimize": { en: "Minimize", th: "ย่อ" },
-	"rail.expand": { en: "Open assistant", th: "เปิดผู้ช่วย" },
 	"rail.today": { en: "Today", th: "วันนี้" },
 	"rail.you": { en: "You", th: "คุณ" },
 	"rail.ask": { en: "Ask", th: "ถาม" },
 	"rail.planSummary": { en: "Plan snapshot", th: "ภาพรวมแผน" },
-
-	// Full-app mode (assistant minimized) — action tabs on the left panel.
-	"appmode.tab.numbers": { en: "Numbers", th: "ตัวเลข" },
-	"appmode.tab.answers": { en: "Insights", th: "มุมมอง" },
-	"appmode.tab.inputs": { en: "Plan inputs", th: "ข้อมูลแผน" },
 
 	// Chat panel (mock replies — real assistant lands later)
 	"chat.title": { en: "Assistant", th: "ผู้ช่วย" },
