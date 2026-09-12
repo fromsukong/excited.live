@@ -97,6 +97,13 @@ html[data-lang='en'] [data-lang-th] {
 	display: none;
 }
 
+/* Popovers render in the top layer, where color-scheme falls back to the UA's
+   'light dark' — on dark-mode machines the menu's light-dark() tokens flip to
+   their dark palette. The landing is light-only, so pin popovers to light. */
+[popover] {
+	color-scheme: light;
+}
+
 .lang-island--dark .astryx-selector {
 	border-color: rgba(255, 255, 255, 0.4);
 	background-color: transparent;
@@ -278,7 +285,6 @@ html[data-lang='en'] [data-lang-th] {
 .hero-graph {
 	position: absolute;
 	right: 0;
-	bottom: 0;
 	width: min(560px, 45vw);
 	z-index: 0;
 	pointer-events: none;
