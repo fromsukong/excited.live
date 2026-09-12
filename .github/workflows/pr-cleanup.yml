@@ -18,58 +18,88 @@ jobs:
           PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           python3 - <<'PYEOF'
-          import json, os, urllib.request, urllib.error
+          import json, os, re, urllib.request, urllib.error
 
           token = os.environ['CLOUDFLARE_API_TOKEN']
           account = os.environ['CLOUDFLARE_ACCOUNT_ID']
           branch = os.environ['PR_BRANCH']
 
-          # Must mirror the sanitization in preview.yml exactly: ASCII
-          # lowercase, non-[a-z0-9-] -> '-', trim dashes, cut to 23
-          # codepoints, re-trim trailing dashes, fallback branch-<sha8>.
-          # preview.yml then appends '-mock'/'-live' (total <= 28 chars,
-          # Cloudflare's alias limit).
-          import re
+          # Must mirror the sanitization in preview.yml / landing-preview.yml
+          # exactly: ASCII lowercase, non-[a-z0-9-] -> '-', trim dashes, cut
+          # to 23 codepoints, re-trim trailing dashes.
+          # preview.yml then appends '-mock'/'-live' and deploys to project
+          # `excited-live` (alias base fallback: branch-<sha8>, total <= 28
+          # chars); landing-preview.yml deploys the base as-is to project
+          # `excited-live-landing-preview` (fallback 'pr', no suffix).
           s = re.sub('[A-Z]', lambda m: m.group(0).lower(), branch)
           s = re.sub('[^a-z0-9-]', '-', s).strip('-')[:23].strip('-')
-          if not s:
-              s = 'branch-' + os.environ.get('PR_HEAD_SHA', '')[:8]
-          # sanitized targets, plus legacy raw targets for branches the old
-          # workflow deployed un-sanitized (only when they actually differ;
-          # review finding: avoid pointless/overreaching legacy matching)
-          targets = {s + '-mock', s + '-live'}
-          if branch != s:
-              targets |= {branch + '-mock', branch + '-live'}
-          base = f'https://api.cloudflare.com/client/v4/accounts/{account}/pages/projects/excited-live/deployments'
+          mock_base = s if s else 'branch-' + os.environ.get('PR_HEAD_SHA', '')[:8]
+          landing_alias = s if s else 'pr'
+          targets = {
+              'excited-live': {mock_base + '-mock', mock_base + '-live'},
+              'excited-live-landing-preview': {landing_alias},
+          }
+          # mock/live, legacy: the old workflow deployed raw branch names
+          # un-sanitized — still clean those (only when they actually differ;
+          # review finding: avoid pointless/overreaching legacy matching).
+          # Landing previews have always deployed sanitized, so no legacy
+          # targets are needed there.
+          if branch != mock_base:
+              targets['excited-live'] |= {branch + '-mock', branch + '-live'}
+
+          # Accepted caveats (both shared with the deploy workflows, which
+          # collide identically): distinct branch names can sanitize to the
+          # same alias, including the shared 'pr' fallback for empty-sanitize
+          # names — cleaning the alias cleans whichever PR deployed there
+          # last. And this scan is capped at 10 pages (250 deployments) per
+          # project; a branch's own deployments sit near the top at close.
           headers = {'Authorization': 'Bearer ' + token}
 
-          deleted = 0
-          page = 1
-          while page <= 10:
+          def list_page(base, page):
               req = urllib.request.Request(f'{base}?page={page}&per_page=25', headers=headers)
-              with urllib.request.urlopen(req, timeout=30) as r:
-                  data = json.loads(r.read().decode())
-              results = data.get('result') or []
-              if not results:
-                  break
-              deleted_on_page = 0
-              for d in results:
-                  env_branch = (d.get('deployment_trigger') or {}).get('metadata', {}).get('branch', '')
-                  if env_branch in targets:
-                      did = d['id']
-                      try:
-                          # aliased deployments (branch/PR preview URLs) require force=true
-                          del_req = urllib.request.Request(f'{base}/{did}?force=true', method='DELETE', headers=headers)
-                          with urllib.request.urlopen(del_req, timeout=30) as r:
-                              ok = json.loads(r.read().decode()).get('success')
-                          print(f'deleted {env_branch}: {did} success={ok}')
-                          deleted += 1
-                          deleted_on_page += 1
-                      except (urllib.error.HTTPError, urllib.error.URLError) as e:
-                          body = e.read().decode(errors='replace')[:300] if hasattr(e, 'read') else str(e)[:300]
-                          print(f'WARN delete failed {env_branch}: {did} HTTP {e.code}: {body}')
-              if deleted_on_page == 0:
-                  page += 1  # deletions shift remaining items back a page, so re-scan same page
+              for attempt in (1, 2):
+                  try:
+                      with urllib.request.urlopen(req, timeout=30) as r:
+                          return json.loads(r.read().decode()).get('result') or []
+                  except (urllib.error.HTTPError, urllib.error.URLError) as e:
+                      if attempt == 2:
+                          raise
+                      code = getattr(e, 'code', None) or type(e).__name__
+                      print(f'WARN listing retry ({code}) page {page}')
+
+          deleted = 0
+          for project, project_targets in targets.items():
+              base = f'https://api.cloudflare.com/client/v4/accounts/{account}/pages/projects/{project}/deployments'
+              try:
+                  page = 1
+                  while page <= 10:
+                      results = list_page(base, page)
+                      if not results:
+                          break
+                      removed_on_page = 0
+                      for d in results:
+                          env_branch = (d.get('deployment_trigger') or {}).get('metadata', {}).get('branch', '')
+                          if env_branch in project_targets:
+                              did = d['id']
+                              try:
+                                  # aliased deployments (branch/PR preview URLs) require force=true
+                                  del_req = urllib.request.Request(f'{base}/{did}?force=true', method='DELETE', headers=headers)
+                                  with urllib.request.urlopen(del_req, timeout=30) as r:
+                                      ok = json.loads(r.read().decode()).get('success')
+                                  print(f'deleted {project} [{env_branch}]: {did} success={ok}')
+                                  if ok:
+                                      deleted += 1
+                                      removed_on_page += 1
+                              except (urllib.error.HTTPError, urllib.error.URLError) as e:
+                                  code = getattr(e, 'code', None) or type(e).__name__
+                                  body = e.read().decode(errors='replace')[:300] if hasattr(e, 'read') else str(e)[:300]
+                                  print(f'WARN delete failed {project} [{env_branch}]: {did} HTTP {code}: {body}')
+                      if removed_on_page == 0:
+                          page += 1  # deletions shift remaining items back a page, so re-scan same page
+              except (urllib.error.HTTPError, urllib.error.URLError) as e:
+                  code = getattr(e, 'code', None) or type(e).__name__
+                  body = e.read().decode(errors='replace')[:300] if hasattr(e, 'read') else str(e)[:300]
+                  print(f'WARN scan failed {project} HTTP {code}: {body} (continuing with next project)')
           print(f'Cleanup done — {deleted} deployment(s) removed')
           PYEOF
 
@@ -81,5 +111,5 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.payload.pull_request.number,
-              body: '🧹 Preview deployments for this PR have been cleaned up — the mock/live preview URLs are now offline.'
+              body: '🧹 Preview deployments for this PR have been cleaned up — the mock/live and landing preview URLs are now offline.'
             });
