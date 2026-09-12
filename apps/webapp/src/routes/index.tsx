@@ -1,24 +1,18 @@
-import { useEffect, useMemo, useRef, useState, type ComponentType, type SVGProps } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import {
-	BookmarkIcon,
 	Button,
-	CalendarIcon,
 	Card,
-	ChartIcon,
 	ChatComposer,
 	ChatMessage,
 	ChatMessageBubble,
 	ChatMessageList,
 	ChatToolCalls,
-	CompassIcon,
 	DateInput,
 	Grid,
 	Heading,
 	Img,
-	LinkIcon,
 	NumberInput,
 	PlainButton,
-	PresentationIcon,
 	SegmentedControl,
 	Selector,
 	SegmentedControlItem,
@@ -45,13 +39,12 @@ import {
 	type WalletId,
 } from "../lib/plan-service"
 import { ProjectionChart } from "../components/ProjectionChart"
-import { formatBaht, formatBahtMonthly, formatPercent } from "../lib/format"
+import { formatBaht, formatPercent } from "../lib/format"
 
 export const Route = createFileRoute("/")({
 	component: Home,
 })
 
-type IconComponent = ComponentType<SVGProps<SVGSVGElement>>
 type HorizonKey = "10" | "20" | "30" | "40" | "all"
 type MetricKey = "metric.netWorth" | "metric.cashFlow"
 type LeftTab = "financials" | "incomes" | "expenses" | "wallet"
@@ -60,14 +53,6 @@ type PageKey = "plan" | "settings"
 interface FinancialMetric {
 	key: string
 	value: string
-}
-
-interface PlanInfo {
-	labelKey: string
-	value: string
-	descKey: string
-	descVars?: Record<string, string | undefined>
-	Icon: IconComponent
 }
 
 const HORIZONS: readonly HorizonKey[] = ["10", "20", "30", "40", "all"]
@@ -206,74 +191,6 @@ function Home() {
 			{ key: "metric.taxBalance", value: formatBaht(rateYear.taxResult.balance) },
 		]
 	}, [summary, shown, hoverYear])
-
-	const planInfos = useMemo<PlanInfo[]>(() => {
-		if (!summary.ok) return []
-		const s = summary.data
-		const v = s.retirement
-		const goalsOk = s.goals.filter((g) => g.onTrack).length
-		const goalsShort = s.goals.length - goalsOk
-		return [
-			{
-				labelKey: "info.retirement",
-				value: v.funded ? t("info.retirement.funded") : t("info.retirement.short"),
-				descKey: v.funded ? "info.retirement.left" : "info.retirement.runsOut",
-				descVars: {
-					amount: formatBaht(v.remainingAtEnd),
-					year: String(v.funded ? v.endYear : (v.unmetYear ?? "")),
-				},
-				Icon: CompassIcon,
-			},
-			{
-				labelKey: "info.maxForever",
-				value: formatBahtMonthly(s.maxForeverMonthly * 12),
-				descKey: "info.maxForever.desc",
-				descVars: { amount: formatBaht(s.maxForeverMonthly) },
-				Icon: ChartIcon,
-			},
-			{
-				labelKey: "info.optimizer",
-				value: formatBaht(s.optimizer.recommended),
-				descKey: "info.optimizer.desc",
-				descVars: {
-					amount: formatBaht(s.optimizer.recommended),
-					tax: formatBaht(s.optimizer.taxSaved),
-				},
-				Icon: PresentationIcon,
-			},
-			{
-				labelKey: "info.paths",
-				value: formatBaht(s.pathCompare.fundValue),
-				descKey:
-					s.pathCompare.gap >= 0 ? "info.paths.desc.fund" : "info.paths.desc.taxable",
-				descVars: {
-					fund: formatBaht(s.pathCompare.fundValue),
-					gap: formatBaht(Math.abs(s.pathCompare.gap)),
-				},
-				Icon: LinkIcon,
-			},
-			{
-				labelKey: "info.runsOut",
-				value:
-					s.runsOutYear === null
-						? t("info.runsOut.never")
-						: String(s.runsOutYear),
-				descKey: s.runsOutYear === null ? "info.runsOut.desc.never" : "info.runsOut.desc.year",
-				descVars: { year: String(s.runsOutYear ?? "") },
-				Icon: CalendarIcon,
-			},
-			{
-				labelKey: "info.goals",
-				value:
-					s.goals.length === 0
-						? "—"
-						: `${goalsOk}/${String(s.goals.length)}`,
-				descKey: s.goals.length === 0 ? "info.goals.desc.none" : "info.goals.sub",
-				descVars: { ok: String(goalsOk), short: String(goalsShort) },
-				Icon: BookmarkIcon,
-			},
-		]
-	}, [summary, t])
 
 	const patchRow = (kind: "incomes" | "expenses", id: string, patch: Partial<PeriodRow>) => {
 		setPlan((current) => ({
@@ -540,21 +457,9 @@ function Home() {
 
 						<Stack as="section" className="plan-column" aria-label={t("rail.title")}>
 							{summary.ok ? (
-								<>
-									<Card padding={3} className="answers-card">
-										<Stack gap={1.5} className="answers-card__inner">
-											<Text className="answers-card__eyebrow">{t("info.eyebrow")}</Text>
-											<Stack className="answers-list" aria-label={t("a11y.planActions")}>
-												{planInfos.map((info) => (
-													<PlanInfoRow key={info.labelKey} info={info} />
-												))}
-											</Stack>
-										</Stack>
-									</Card>
-									<Stack className="plan-column__chat">
-										<AssistantRail summary={summary.data} t={t} />
-									</Stack>
-								</>
+								<Stack className="plan-column__chat">
+									<AssistantRail summary={summary.data} t={t} />
+								</Stack>
 							) : (
 								<Text color="secondary">{summary.error.message}</Text>
 							)}
@@ -586,23 +491,6 @@ function FinancialMetricRow({
 			<Text weight="semibold" className="financial-row__label">{t(metric.key)}</Text>
 			<Text hasTabularNumbers className="financial-row__value">{metric.value}</Text>
 		</PlainButton>
-	)
-}
-
-function PlanInfoRow({ info }: { info: PlanInfo }) {
-	const { t } = useLocale()
-
-	return (
-		<Stack
-			direction="horizontal"
-			align="center"
-			justify="between"
-			gap={2}
-			className="financial-row financial-row--static"
-		>
-			<Text weight="semibold" className="financial-row__label">{t(info.labelKey)}</Text>
-			<Text hasTabularNumbers className="financial-row__value">{info.value}</Text>
-		</Stack>
 	)
 }
 

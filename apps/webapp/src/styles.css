@@ -56,7 +56,6 @@ button {
 .metric-switch__item,
 .period-switch__item,
 .financial-row,
-.plan-action,
 .export-action {
   border: 0;
 }
@@ -356,8 +355,7 @@ button {
   align-items: center;
   gap: 16px;
   min-height: 41px;
-  /* Horizontal inset so hover/selected pills never hug the text (plan-action
-     uses 12px; the tighter 10px suits this denser list). */
+  /* Horizontal inset so hover/selected pills never hug the text. */
   padding: 0 10px;
   border-bottom: 1px solid var(--color-border);
   color: var(--copy);
@@ -545,36 +543,6 @@ button {
   font-size: 13px !important;
 }
 
-.plan-actions-list {
-  display: flex;
-  flex-direction: column;
-  border-top: 1px solid var(--color-border);
-}
-
-.plan-action {
-  display: grid;
-  grid-template-columns: 38px minmax(0, 1fr) 19px;
-  align-items: center;
-  gap: 13px;
-  min-height: 68px;
-  /* Roomy inset so the hover/selected pill clears the icon, text and arrow on
-     all sides instead of hugging them (0 left padding made the pill touch the
-     icon badge). */
-  padding: 10px 12px;
-  border-bottom: 1px solid var(--color-border);
-  color: var(--copy);
-  text-align: left;
-  background: transparent;
-  cursor: pointer;
-}
-
-.plan-action:hover,
-.plan-action.is-selected {
-  border-radius: 999px;
-  background: var(--color-overlay-hover);
-}
-
-.plan-action__icon,
 .export-action__icon {
   display: inline-flex !important;
   align-items: center;
@@ -583,41 +551,6 @@ button {
   height: 34px;
   border-radius: 999px;
   background: var(--color-background-orange);
-}
-
-.plan-action__icon {
-  color: var(--color-icon-orange);
-}
-
-.plan-action__copy {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  gap: 3px;
-}
-
-.plan-action__label {
-  color: var(--copy);
-  font-size: 15px !important;
-  font-weight: 700;
-}
-
-.plan-action__description {
-  overflow: hidden;
-  color: var(--copy-muted);
-  font-size: 13px !important;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-.plan-action__arrow {
-  display: inline-flex !important;
-  color: var(--copy-muted);
-}
-
-.plan-action:hover .plan-action__arrow,
-.plan-action.is-selected .plan-action__arrow {
-  color: var(--copy);
 }
 
 .export-action {
@@ -938,28 +871,6 @@ button {
     font-size: 11px !important;
   }
 
-  .plan-action {
-    grid-template-columns: 34px minmax(0, 1fr) 18px;
-    gap: 10px;
-    min-height: 63px;
-    /* Match the desktop pill inset (scaled down for the 640px layout). */
-    padding: 9px 10px;
-  }
-
-  .plan-action__icon {
-    width: 31px;
-    height: 31px;
-    border-radius: 999px;
-  }
-
-  .plan-action__label {
-    font-size: 14px !important;
-  }
-
-  .plan-action__description {
-    font-size: 12px !important;
-  }
-
   .export-action {
     padding-top: 18px;
     font-size: 13px;
@@ -987,18 +898,6 @@ button {
   }
 }
 
-/* Static (non-clickable) rows in the "What the plan says" tab — identical
-   metrics to .financial-row but no hover/selected affordance. */
-.financial-row--static {
-  cursor: default;
-}
-
-/* Right column: one card per input section. */
-.plan-inputs {
-  width: 100%;
-  min-width: 0;
-}
-
 .input-section {
   width: 100%;
   min-width: 0;
@@ -1008,9 +907,6 @@ button {
 .input-section .astryx-card {
   min-width: 0;
 }
-
-/* The right column scrolls as one list of cards (desktop keeps the old
-   independent-scroll behavior via .plan-column). */
 
 /* ── Assistant rail (right column) ─────────────────────────────────────────
  * Astryx ai-chat style: full-height panel, "Today" separator, user bubbles
@@ -1105,40 +1001,7 @@ button {
   margin-top: 8px;
 }
 
-/* "What the plan says" card — 30% of the right column; the chat fills the rest. */
-.answers-card {
-  flex: 0 0 auto;
-  height: calc(30% - 9px);
-  min-height: 150px;
-  background: var(--panel-bg);
-  overflow: hidden;
-}
-
-.answers-card__inner {
-  height: 100%;
-  min-height: 0;
-}
-
-.answers-card__eyebrow {
-  display: block !important;
-  color: var(--copy-muted);
-  font-size: 13px !important;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-}
-
-.answers-list {
-  display: flex;
-  flex-direction: column;
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: var(--color-border) transparent;
-}
-
-/* Chat below the answers card — fills the remaining column height. */
+/* Chat owns the full right column height. */
 .plan-column__chat {
   display: flex;
   flex-direction: column;
@@ -1156,16 +1019,10 @@ button {
   max-width: 620px;
 }
 
-/* ≤1020px stacks the columns: answers card = 30% of the viewport, chat = 70%.
- * Declared after the base .answers-card / .plan-column__chat rules so these
- * win the cascade (same specificity — later source order wins; the earlier
- * copy inside the big ≤1020px block lost to the base rules). */
+/* ≤1020px stacks the columns: the chat gets a phone-height block under the
+ * chart. Declared after the base .plan-column__chat rule so it wins the
+ * cascade (same specificity — later source order wins). */
 @media (max-width: 1020px) {
-  .answers-card {
-    height: 30vh;
-    min-height: 132px;
-  }
-
   .plan-column__chat {
     flex: 0 0 auto;
     height: 70vh;

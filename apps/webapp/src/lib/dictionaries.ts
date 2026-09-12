@@ -26,7 +26,6 @@ export const strings: Dictionary = {
 	"a11y.chartMetric": { en: "Chart metric", th: "ตัวชี้วัดของแผนภูมิ" },
 	"a11y.chartPeriod": { en: "Chart period", th: "ช่วงเวลาของแผนภูมิ" },
 	"a11y.financialSnapshot": { en: "Financial snapshot", th: "ภาพรวมการเงิน" },
-	"a11y.planActions": { en: "Plan details", th: "รายละเอียดแผน" },
 	"a11y.mainNav": { en: "Main pages", th: "หน้าหลัก" },
 
 	// US-110 — Monte Carlo market band
@@ -63,30 +62,10 @@ export const strings: Dictionary = {
 		th: "แก้ตัวเลขด้านล่างได้เลย กราฟ ตัวเลข และแผนจะอัปเดตทันที",
 	},
 
-	// Right column — info rows (engine answers)
-	"info.eyebrow": { en: "What the plan says", th: "แผนบอกอะไร" },
-	"info.heading": { en: "Your answers", th: "คำตอบของคุณ" },
-	"info.count": { en: "6 answers", th: "6 คำตอบ" },
-	"info.retirement": { en: "Retirement", th: "เกษียณ" },
-	"info.retirement.funded": { en: "funded", th: "พอ" },
-	"info.retirement.short": { en: "short", th: "ไม่พอ" },
+	// Engine answers (used by the chat replies)
 	"info.retirement.left": { en: "{amount} left at {year}", th: "เหลือ {amount} ถึงปี {year}" },
 	"info.retirement.runsOut": { en: "money runs out {year}", th: "เงินหมดปี {year}" },
-	"info.runsOut": { en: "Money runs out", th: "เงินหมดปี" },
 	"info.runsOut.never": { en: "never", th: "ไม่หมด" },
-	"info.runsOut.desc.never": { en: "covers the whole plan", th: "พอตลอดทั้งแผน" },
-	"info.runsOut.desc.year": { en: "first short year", th: "ปีแรกที่เงินไม่พอ" },
-	"info.maxForever": { en: "Max forever spend", th: "ใช้ได้ตลอดไปสูงสุด" },
-	"info.maxForever.desc": { en: "per month, forever, from today", th: "ต่อเดือน ตลอดไป จากวันนี้" },
-	"info.optimizer": { en: "ThaiESG / RMF this year", th: "ThaiESG / RMF ปีนี้" },
-	"info.optimizer.desc": { en: "recommended · saves {tax} tax", th: "แนะนำ · ประหยัดภาษี {tax}" },
-	"info.paths": { en: "Fund vs taxable", th: "กองทุน vs เสียภาษี" },
-	"info.paths.desc.fund": { en: "{fund} wins by {gap}", th: "{fund} ได้เปรียบ {gap}" },
-	"info.paths.desc.taxable": { en: "taxable wins by {gap}", th: "เสียภาษี ได้เปรียบ {gap}" },
-	"info.goals": { en: "Goal checks", th: "ตรวจเป้าหมาย" },
-	"info.goals.desc.ok": { en: "{ok} of {total} goals on track", th: "{ok} จาก {total} เป้าหมายกำลังไปได้ดี" },
-	"info.goals.desc.none": { en: "no goals set yet", th: "ยังไม่มีเป้าหมาย" },
-	"info.goals.sub": { en: "{ok} on track · {short} short", th: "{ok} กำลังไปได้ดี · {short} ขาด" },
 
 	// Editor (inline section below the grid)
 	"editor.heading": { en: "Plan inputs", th: "ตัวเลขของแผน" },
