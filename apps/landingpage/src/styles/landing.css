@@ -1296,12 +1296,16 @@ html[data-lang='en'] [data-lang-th] {
 	display: inline-flex;
 	align-items: center;
 	gap: 8px;
-	margin: 24px 24px 0;
+	/* margins + padding keep the wordmark at x=24/y=24 while the padding
+	   gives the pill focus ring and hover hit area breathing room */
+	margin: 20px 16px 0;
+	padding: 4px 8px;
 	font-size: 14px;
 	font-weight: 500;
 	color: var(--ink);
 	text-decoration: none;
 	border-radius: 999px;
+	transition: color 0.15s ease;
 }
 
 .docs-back img {
@@ -1311,7 +1315,13 @@ html[data-lang='en'] [data-lang-th] {
 	border-radius: 6px;
 }
 
-.docs-back:hover span {
+.docs-back .brand-dot {
+	color: var(--orange);
+}
+
+/* Hover colors the text via the container so .docs-back-sep (explicit color)
+   keeps its muted tone instead of turning orange with the old `:hover span`. */
+.docs-back:hover {
 	color: var(--orange);
 }
 
