@@ -211,7 +211,9 @@ function Home() {
 					id: `${kind}-${current[kind].length + 1}-${current[kind].length}`,
 					label: kind === "incomes" ? "New income" : "New expense",
 					startYear: current.startYear,
+					startMonth: 0,
 					endYear: null,
+					endMonth: 11,
 					amount: 0,
 					growthMode: "inflation",
 					growthRate: 0,
@@ -543,7 +545,7 @@ function PeriodRowEditor({
 }) {
 	return (
 		<Stack className="row-detail">
-			<Grid columns={{ minWidth: 200, max: 3 }} gap={1.5}>
+			<Grid columns={{ minWidth: 320, max: 2 }} gap={1.5}>
 				<TextInput
 					label={t("row.label")}
 					value={row.label}
@@ -678,7 +680,7 @@ function PeriodTable({
 		{
 			key: "label",
 			header: t("row.label"),
-			width: proportional(2),
+			width: proportional(1),
 			renderCell: (row) =>
 				row.id === ADD_ROW_ID ? (
 					<PlainButton className="row-add" onClick={onAdd}>
