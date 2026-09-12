@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import {
+	Button,
 	Card,
 	ChatComposer,
 	ChatMessage,
@@ -7,9 +8,15 @@ import {
 	ChatMessageList,
 	ChatToolCalls,
 	DateInput,
+	Dialog,
+	DialogHeader,
 	Grid,
 	Heading,
+	HStack,
 	Img,
+	Layout,
+	LayoutContent,
+	LayoutFooter,
 	NumberInput,
 	PlainButton,
 	SegmentedControl,
@@ -33,14 +40,28 @@ import {
 import { createFileRoute } from "@tanstack/react-router"
 import { useLocale } from "../lib/locale-context"
 import {
+	ASSET_TYPE_IDS,
 	computeMonteCarloBands,
 	computePlanSummary,
 	defaultPlan,
+	EXPENSE_TYPE_DEFAULT_FREQUENCY,
+	EXPENSE_TYPE_IDS,
+	INCOME_TYPE_DEFAULT_FREQUENCY,
+	INCOME_TYPE_IDS,
+	LIABILITY_TYPE_IDS,
+	rowLifetimeTotal,
+	type AmountFrequency,
+	type AssetRow,
+	type AssetTypeId,
+	type ExpenseTypeId,
+	type IncomeTypeId,
+	type LiabilityRow,
+	type LiabilityTypeId,
+	type MilestoneRow,
 	type MonteCarloResult,
+	type PeriodRow,
 	type PlanInput,
 	type PlanSummary,
-	type PeriodRow,
-	type WalletId,
 } from "../lib/plan-service"
 import { ProjectionChart } from "../components/ProjectionChart"
 import { formatBaht, formatPercent } from "../lib/format"
@@ -51,7 +72,7 @@ export const Route = createFileRoute("/")({
 
 type HorizonKey = "10" | "20" | "30" | "40" | "all"
 type MetricKey = "metric.netWorth" | "metric.cashFlow"
-type LeftTab = "financials" | "incomes" | "expenses" | "wallet"
+type LeftTab = "financials" | "milestone" | "incomes" | "expenses" | "assets" | "liabilities"
 type PageKey = "plan" | "settings"
 
 interface FinancialMetric extends Record<string, unknown> {
@@ -61,7 +82,8 @@ interface FinancialMetric extends Record<string, unknown> {
 
 const HORIZONS: readonly HorizonKey[] = ["10", "20", "30", "40", "all"]
 
-const WALLETS: readonly WalletId[] = ["emergency", "goal", "nontax", "taxAdvantaged"]
+/** Deliberate 2026-09-12 product decision: add button opens dialog ONLY for salary; other types land later. */
+const ADD_DIALOG_TYPE_IDS = new Set<string>(["salary"])
 
 function Home() {
 	const { t, locale, setLocale } = useLocale()
@@ -75,6 +97,28 @@ function Home() {
 	const [profileName, setProfileName] = useState("")
 	const [birthday, setBirthday] = useState<DateInputProps["value"]>(undefined)
 	const [gender, setGender] = useState("female")
+
+	const [addedTypes, setAddedTypes] = useState<Record<"incomes" | "expenses" | "assets" | "liabilities", string[]>>(() => {
+		const initial = defaultPlan()
+		return {
+			incomes: Array.from(new Set(initial.incomes.map((r) => r.typeId))),
+			expenses: Array.from(new Set(initial.expenses.map((r) => r.typeId))),
+			assets: [],
+			liabilities: [],
+		}
+	})
+	const [pickerKind, setPickerKind] = useState<"incomes" | "expenses" | "assets" | "liabilities" | null>(null)
+	const [entryDialog, setEntryDialog] = useState<
+		| { mode: "add"; kind: "incomes" | "expenses"; typeId: string }
+		| { mode: "edit"; kind: "incomes" | "expenses"; rowId: string }
+		| null
+	>(null)
+	const [valueDialog, setValueDialog] = useState<
+		| { mode: "add"; kind: "assets" | "liabilities"; typeId: string }
+		| { mode: "edit"; kind: "assets" | "liabilities"; rowId: string }
+		| null
+	>(null)
+	const [milestoneDialog, setMilestoneDialog] = useState<{ id: string | null } | null>(null)
 
 	const summary = useMemo(() => {
 		try {
@@ -195,14 +239,22 @@ function Home() {
 		]
 	}, [summary, shown, hoverYear])
 
-	const patchRow = (kind: "incomes" | "expenses", id: string, patch: Partial<PeriodRow>) => {
-		setPlan((current) => ({
-			...current,
-			[kind]: current[kind].map((row) => (row.id === id ? { ...row, ...patch } : row)),
-		}))
-	}
-
-	const addRow = (kind: "incomes" | "expenses") => {
+	const addEntryRow = (
+		kind: "incomes" | "expenses",
+		typeId: IncomeTypeId | ExpenseTypeId,
+		values: {
+			label: string
+			amount: number
+			frequency: AmountFrequency
+			startYear: number
+			startMonth: number
+			endYear: number | null
+			endMonth: number
+			growthMode: "inflation" | "fixed" | "override"
+			growthRate: number
+			deductible?: "none" | "mortgageInterest"
+		},
+	) => {
 		setPlan((current) => {
 			let n = current[kind].length
 			let id = ""
@@ -212,37 +264,115 @@ function Home() {
 			} while (current[kind].some((row) => row.id === id))
 			return {
 				...current,
-				[kind]: [
-					...current[kind],
-					{
-						id,
-						label: kind === "incomes" ? t("row.newIncome") : t("row.newExpense"),
-						startYear: current.startYear,
-						startMonth: 0,
-						endYear: null,
-						endMonth: 11,
-						amount: 0,
-						growthMode: "inflation",
-						growthRate: 0,
-					},
-				],
+				[kind]: [...current[kind], { id, typeId, ...values }],
 			}
 		})
 	}
 
-	const removeRow = (kind: "incomes" | "expenses", id: string) => {
+	const patchEntryRow = (
+		kind: "incomes" | "expenses",
+		id: string,
+		patch: Partial<PeriodRow>,
+	) => {
+		setPlan((current) => ({
+			...current,
+			[kind]: current[kind].map((row) => (row.id === id ? { ...row, ...patch } : row)),
+		}))
+	}
+
+	const removeEntryRow = (kind: "incomes" | "expenses", id: string) => {
 		setPlan((current) => ({
 			...current,
 			[kind]: current[kind].filter((row) => row.id !== id),
 		}))
 	}
 
-	const patchWallet = (
-		field: "savingsSplit" | "walletRates" | "startingWallets",
-		id: WalletId,
-		value: number,
+	const addMilestone = (values: { label: string; year: number; month: number }) => {
+		setPlan((current) => {
+			let n = current.milestones.length
+			let id = ""
+			do {
+				n += 1
+				id = `milestones-${n}`
+			} while (current.milestones.some((row) => row.id === id))
+			return {
+				...current,
+				milestones: [...current.milestones, { id, ...values }],
+			}
+		})
+	}
+
+	const patchMilestone = (id: string, patch: Partial<MilestoneRow>) => {
+		setPlan((current) => ({
+			...current,
+			milestones: current.milestones.map((row) => (row.id === id ? { ...row, ...patch } : row)),
+		}))
+	}
+
+	const removeMilestone = (id: string) => {
+		setPlan((current) => ({
+			...current,
+			milestones: current.milestones.filter((row) => row.id !== id),
+		}))
+	}
+
+	const addValueRow = (
+		kind: "assets" | "liabilities",
+		typeId: AssetTypeId | LiabilityTypeId,
+		values: { label: string; value: number },
 	) => {
-		setPlan((current) => ({ ...current, [field]: { ...current[field], [id]: value } }))
+		setPlan((current) => {
+			let n = current[kind].length
+			let id = ""
+			do {
+				n += 1
+				id = `${kind}-${n}`
+			} while (current[kind].some((row) => row.id === id))
+			if (kind === "assets") {
+				const newRow: AssetRow = { id, typeId: typeId as AssetTypeId, ...values }
+				return { ...current, assets: [...current.assets, newRow] }
+			}
+			const newRow: LiabilityRow = { id, typeId: typeId as LiabilityTypeId, ...values }
+			return { ...current, liabilities: [...current.liabilities, newRow] }
+		})
+	}
+
+	const patchValueRow = (
+		kind: "assets" | "liabilities",
+		id: string,
+		patch: Partial<AssetRow | LiabilityRow>,
+	) => {
+		setPlan((current) => {
+			if (kind === "assets") {
+				return {
+					...current,
+					assets: current.assets.map((row) =>
+						row.id === id ? ({ ...row, ...patch } as AssetRow) : row,
+					),
+				}
+			}
+			return {
+				...current,
+				liabilities: current.liabilities.map((row) =>
+					row.id === id ? ({ ...row, ...patch } as LiabilityRow) : row,
+				),
+			}
+		})
+	}
+
+	const removeValueRow = (kind: "assets" | "liabilities", id: string) => {
+		setPlan((current) => {
+			if (kind === "assets") {
+				return {
+					...current,
+					assets: current.assets.filter((row) => row.id !== id),
+				}
+			}
+			return {
+				...current,
+				liabilities: current.liabilities.filter((row) => row.id !== id),
+			}
+		})
 	}
 
 	return (
@@ -352,6 +482,7 @@ function Home() {
 												metric={metric === "metric.netWorth" ? "netWorth" : "cashFlow"}
 												ariaLabel={t(metric === "metric.netWorth" ? "chart.aria.netWorth" : "chart.aria.cashFlow")}
 												band={shownBands ?? undefined}
+												milestones={plan.milestones}
 												onActiveYearChange={setHoverYear}
 											/>
 										) : (
@@ -371,7 +502,13 @@ function Home() {
 										className="left-tabs"
 										value={leftTab}
 										onChange={(value) => {
-											if (value === "incomes" || value === "expenses" || value === "wallet") {
+											if (
+												value === "milestone" ||
+												value === "incomes" ||
+												value === "expenses" ||
+												value === "assets" ||
+												value === "liabilities"
+											) {
 												setLeftTab(value)
 											} else {
 												setLeftTab("financials")
@@ -382,9 +519,11 @@ function Home() {
 										size="sm"
 									>
 										<Tab value="financials" label={t("tab.financials")} panelId="left-panel-financials" />
+										<Tab value="milestone" label={t("tab.milestone")} panelId="left-panel-milestone" />
 										<Tab value="incomes" label={t("tab.income")} panelId="left-panel-incomes" />
 										<Tab value="expenses" label={t("tab.expenses")} panelId="left-panel-expenses" />
-										<Tab value="wallet" label={t("tab.wallet")} panelId="left-panel-wallet" />
+										<Tab value="assets" label={t("tab.assets")} panelId="left-panel-assets" />
+										<Tab value="liabilities" label={t("tab.liabilities")} panelId="left-panel-liabilities" />
 									</TabList>
 
 									{leftTab === "financials" ? (
@@ -412,35 +551,70 @@ function Home() {
 												]}
 											/>
 										</Stack>
+									) : leftTab === "milestone" ? (
+										<Stack id="left-panel-milestone" className="tab-inputs" aria-label={t("tab.milestone")}>
+											<MilestoneTable
+												plan={plan}
+												onAdd={() => setMilestoneDialog({ id: null })}
+												onEdit={(id) => setMilestoneDialog({ id })}
+												t={t}
+											/>
+										</Stack>
 									) : leftTab === "incomes" ? (
-										<Stack id="left-panel-incomes" className="tab-inputs" aria-label={t("incomes.heading")}>
-											<PeriodTable
-												key="incomes"
-												rows={plan.incomes}
-												heading={t("incomes.heading")}
-												onPatch={(id, patch) => patchRow("incomes", id, patch)}
-												onAdd={() => addRow("incomes")}
-												onRemove={(id) => removeRow("incomes", id)}
+										<Stack id="left-panel-incomes" className="tab-inputs" aria-label={t("tab.income")}>
+											<GroupedPeriodTable
+												kind="incomes"
+												plan={plan}
+												addedTypeIds={addedTypes.incomes}
+												onAddType={() => setPickerKind("incomes")}
+												onAddItem={(typeId) => {
+													if (ADD_DIALOG_TYPE_IDS.has(typeId)) {
+														setEntryDialog({ mode: "add", kind: "incomes", typeId })
+													}
+												}}
+												onEditItem={(row) => setEntryDialog({ mode: "edit", kind: "incomes", rowId: row.id })}
 												t={t}
 											/>
 										</Stack>
 									) : leftTab === "expenses" ? (
-										<Stack id="left-panel-expenses" className="tab-inputs" aria-label={t("expenses.heading")}>
-											<PeriodTable
-												key="expenses"
-												rows={plan.expenses}
-												heading={t("expenses.heading")}
-												showDeductible
-												onPatch={(id, patch) => patchRow("expenses", id, patch)}
-												onAdd={() => addRow("expenses")}
-												onRemove={(id) => removeRow("expenses", id)}
+										<Stack id="left-panel-expenses" className="tab-inputs" aria-label={t("tab.expenses")}>
+											<GroupedPeriodTable
+												kind="expenses"
+												plan={plan}
+												addedTypeIds={addedTypes.expenses}
+												onAddType={() => setPickerKind("expenses")}
+												onAddItem={(typeId) => {
+													if (ADD_DIALOG_TYPE_IDS.has(typeId)) {
+														setEntryDialog({ mode: "add", kind: "expenses", typeId })
+													}
+												}}
+												onEditItem={(row) => setEntryDialog({ mode: "edit", kind: "expenses", rowId: row.id })}
+												t={t}
+											/>
+										</Stack>
+									) : leftTab === "assets" ? (
+										<Stack id="left-panel-assets" className="tab-inputs" aria-label={t("tab.assets")}>
+											<GroupedValueTable
+												kind="assets"
+												plan={plan}
+												addedTypeIds={addedTypes.assets}
+												onAddType={() => setPickerKind("assets")}
+												onAddItem={(typeId) => setValueDialog({ mode: "add", kind: "assets", typeId })}
+												onEditItem={(row) => setValueDialog({ mode: "edit", kind: "assets", rowId: row.id })}
 												t={t}
 											/>
 										</Stack>
 									) : (
-										<Stack id="left-panel-wallet" className="tab-inputs" aria-label={t("wallets.heading")}>
-											<Heading level={3}>{t("wallets.heading")}</Heading>
-											<WalletTable plan={plan} onPatch={patchWallet} t={t} />
+										<Stack id="left-panel-liabilities" className="tab-inputs" aria-label={t("tab.liabilities")}>
+											<GroupedValueTable
+												kind="liabilities"
+												plan={plan}
+												addedTypeIds={addedTypes.liabilities}
+												onAddType={() => setPickerKind("liabilities")}
+												onAddItem={(typeId) => setValueDialog({ mode: "add", kind: "liabilities", typeId })}
+												onEditItem={(row) => setValueDialog({ mode: "edit", kind: "liabilities", rowId: row.id })}
+												t={t}
+											/>
 										</Stack>
 									)}
 								</Stack>
@@ -458,6 +632,84 @@ function Home() {
 						</Stack>
 					</Grid>
 				</Stack>
+				{entryDialog ? (
+					<EntryDialog
+						key={entryDialog.mode === "edit" ? entryDialog.rowId : entryDialog.typeId}
+						dialog={entryDialog}
+						plan={plan}
+						onSave={(values) => {
+							if (entryDialog.mode === "add") {
+								addEntryRow(entryDialog.kind, entryDialog.typeId as IncomeTypeId | ExpenseTypeId, values)
+							} else {
+								patchEntryRow(entryDialog.kind, entryDialog.rowId, values)
+							}
+							setEntryDialog(null)
+						}}
+						onRemove={(id) => {
+							removeEntryRow(entryDialog.kind, id)
+							setEntryDialog(null)
+						}}
+						onClose={() => setEntryDialog(null)}
+						t={t}
+					/>
+				) : null}
+				{valueDialog ? (
+					<ValueDialog
+						key={valueDialog.mode === "edit" ? valueDialog.rowId : valueDialog.typeId}
+						dialog={valueDialog}
+						plan={plan}
+						onSave={(values) => {
+							if (valueDialog.mode === "add") {
+								addValueRow(valueDialog.kind, valueDialog.typeId as AssetTypeId | LiabilityTypeId, values)
+							} else {
+								patchValueRow(valueDialog.kind, valueDialog.rowId, values)
+							}
+							setValueDialog(null)
+						}}
+						onRemove={(id) => {
+							removeValueRow(valueDialog.kind, id)
+							setValueDialog(null)
+						}}
+						onClose={() => setValueDialog(null)}
+						t={t}
+					/>
+				) : null}
+				{milestoneDialog ? (
+					<MilestoneDialog
+						key={milestoneDialog.id ?? "__add__"}
+						id={milestoneDialog.id}
+						plan={plan}
+						onSave={(values) => {
+							if (milestoneDialog.id === null) {
+								addMilestone(values)
+							} else {
+								patchMilestone(milestoneDialog.id, values)
+							}
+							setMilestoneDialog(null)
+						}}
+						onRemove={(id) => {
+							removeMilestone(id)
+							setMilestoneDialog(null)
+						}}
+						onClose={() => setMilestoneDialog(null)}
+						t={t}
+					/>
+				) : null}
+				{pickerKind ? (
+					<TypePickerDialog
+						kind={pickerKind}
+						addedTypeIds={addedTypes[pickerKind]}
+						onPick={(typeId) => {
+							setAddedTypes((prev) => ({
+								...prev,
+								[pickerKind]: [...prev[pickerKind], typeId],
+							}))
+							setPickerKind(null)
+						}}
+						onClose={() => setPickerKind(null)}
+						t={t}
+					/>
+				) : null}
 			</Stack>
 		</Theme>
 	)
@@ -490,7 +742,7 @@ function MonthYearPicker({
 	const { locale } = useLocale()
 	const monthNames = locale === "th" ? MONTHS_TH : MONTHS_EN
 	const forever = allowForever && year === null
-	const monthOptions = monthNames.map((name, index) => `${index}:${name}`)
+	const monthOptions = monthNames.map((name, index) => ({ value: `${index}:${name}`, label: name }))
 	return (
 		<Stack gap={0.5}>
 			<Text size="sm" color="secondary">{label}</Text>
@@ -539,133 +791,107 @@ function MonthYearPicker({
 /** Row id for the synthetic "+ Add row" line at the bottom of an editor table. */
 const ADD_ROW_ID = "__add__"
 
-/** Detail editor for one period row — rendered in the expanded panel below its row. */
-function PeriodRowEditor({
-	row,
-	showDeductible,
-	onPatch,
-	onRemove,
-	t,
-}: {
-	row: PeriodRow
-	showDeductible?: boolean
-	onPatch: (id: string, patch: Partial<PeriodRow>) => void
-	onRemove: (id: string) => void
-	t: (key: string, vars?: Record<string, string>) => string
-}) {
-	return (
-		<Stack className="row-detail">
-			<Grid columns={{ minWidth: 320, max: 2 }} gap={1.5}>
-				<TextInput
-					label={t("row.label")}
-					value={row.label}
-					onChange={(value) => onPatch(row.id, { label: value })}
-				/>
-				<NumberInput
-					label={t("row.amount")}
-					value={row.amount}
-					onChange={(value) => onPatch(row.id, { amount: value })}
-					min={0}
-					step={10_000}
-					units="฿"
-				/>
-				<MonthYearPicker
-					label={t("row.startYear")}
-					year={row.startYear}
-					month={row.startMonth}
-					onChange={(year, month) =>
-						onPatch(row.id, { startYear: year ?? row.startYear, startMonth: month })
-					}
-					t={t}
-				/>
-				<MonthYearPicker
-					label={t("row.endYear")}
-					year={row.endYear}
-					month={row.endMonth}
-					allowForever
-					onChange={(year, month) => onPatch(row.id, { endYear: year, endMonth: month })}
-					t={t}
-				/>
-				<Stack gap={1}>
-					<SegmentedControl
-						value={row.growthMode}
-						onChange={(value) => onPatch(row.id, { growthMode: value as PeriodRow["growthMode"] })}
-						label={t("row.growth")}
-						layout="fill"
-						size="sm"
-					>
-						<SegmentedControlItem value="inflation" label={t("growth.inflation")} />
-						<SegmentedControlItem value="fixed" label={t("growth.fixed")} />
-						<SegmentedControlItem value="override" label={t("growth.override")} />
-					</SegmentedControl>
-					{row.growthMode === "override" ? (
-						<NumberInput
-							label={t("row.growthRate")}
-							value={row.growthRate * 100}
-							onChange={(value) => onPatch(row.id, { growthRate: value / 100 })}
-							min={-10}
-							max={50}
-							step={0.5}
-							units="%"
-						/>
-					) : null}
-				</Stack>
-				{showDeductible ? (
-					<Stack gap={1}>
-						<SegmentedControl
-							value={row.deductible ?? "none"}
-							onChange={(value) =>
-								onPatch(row.id, {
-									deductible: value === "mortgageInterest" ? "mortgageInterest" : "none",
-								})
-							}
-							label={t("row.deductible")}
-							layout="fill"
-							size="sm"
-						>
-							<SegmentedControlItem value="none" label={t("deductible.none")} />
-							<SegmentedControlItem value="mortgageInterest" label={t("deductible.mortgageInterest")} />
-						</SegmentedControl>
-						<PlainButton onClick={() => onRemove(row.id)}>{t("row.remove")}</PlainButton>
-					</Stack>
-				) : (
-					<PlainButton onClick={() => onRemove(row.id)}>{t("row.remove")}</PlainButton>
-				)}
-			</Grid>
-		</Stack>
-	)
-}
+/** Nested entry table rendered inside an expanded income/expense type group. */
+type PeriodRowItem = PeriodRow & Record<string, unknown>
 
-/** Period-row table (income or expenses): clean read-only rows; expand a row to edit it. */
-type PeriodRowData = PeriodRow & Record<string, unknown>
-
-function PeriodTable({
+function EntryTable({
 	rows,
-	heading,
-	showDeductible,
-	onPatch,
-	onAdd,
-	onRemove,
+	plan,
+	onEditItem,
 	t,
 }: {
 	rows: PeriodRow[]
-	heading: string
-	showDeductible?: boolean
-	onPatch: (id: string, patch: Partial<PeriodRow>) => void
-	onAdd: () => void
-	onRemove: (id: string) => void
+	plan: PlanInput
+	onEditItem: (row: PeriodRow) => void
+	t: (key: string, vars?: Record<string, string>) => string
+}) {
+	const columns: TableColumn<PeriodRowItem>[] = [
+		{
+			key: "label",
+			header: t("row.label"),
+			width: proportional(1),
+			renderCell: (row) => (
+				<PlainButton className="row-add" onClick={() => onEditItem(row)}>
+					{row.label}
+				</PlainButton>
+			),
+		},
+		{
+			key: "period",
+			header: t("row.period"),
+			width: pixel(110),
+			align: "end",
+			renderCell: (row) => (
+				<Text color="secondary" hasTabularNumbers>
+					{row.startYear} – {row.endYear ?? "∞"}
+				</Text>
+			),
+		},
+		{
+			key: "amount",
+			header: t("table.rate"),
+			width: pixel(140),
+			align: "end",
+			renderCell: (row) => (
+				<Text hasTabularNumbers>
+					{formatBaht(row.amount)} {t(row.frequency === "monthly" ? "freq.perMonth" : "freq.perYear")}
+				</Text>
+			),
+		},
+		{
+			key: "lifetime",
+			header: t("table.lifetime"),
+			width: pixel(140),
+			align: "end",
+			renderCell: (row) => (
+				<Text hasTabularNumbers>
+					{formatBaht(rowLifetimeTotal(row, plan))}
+				</Text>
+			),
+		},
+	]
+
+	return (
+		<Table
+			data={rows as PeriodRowItem[]}
+			idKey="id"
+			density="compact"
+			dividers="rows"
+			hasHover
+			columns={columns}
+		/>
+	)
+}
+
+interface PeriodGroupRowData extends Record<string, unknown> {
+	id: string
+	typeId?: IncomeTypeId | ExpenseTypeId
+	total?: number
+	periodText?: string
+}
+
+function GroupedPeriodTable({
+	kind,
+	plan,
+	addedTypeIds,
+	onAddType,
+	onAddItem,
+	onEditItem,
+	t,
+}: {
+	kind: "incomes" | "expenses"
+	plan: PlanInput
+	addedTypeIds: string[]
+	onAddType: () => void
+	onAddItem: (typeId: string) => void
+	onEditItem: (row: PeriodRow) => void
 	t: (key: string, vars?: Record<string, string>) => string
 }) {
 	const [expandedKeys, setExpandedKeys] = useState<Set<string>>(new Set())
-	const handleRemove = (id: string) => {
-		onRemove(id)
-		setExpandedKeys((prev) => {
-			const next = new Set(prev)
-			next.delete(id)
-			return next
-		})
-	}
-	const expansion = useTableRowExpansion<PeriodRowData>({
+	const catalog = kind === "incomes" ? INCOME_TYPE_IDS : EXPENSE_TYPE_IDS
+	const activeTypeIds = catalog.filter((id) => addedTypeIds.includes(id))
+
+	const expansion = useTableRowExpansion<PeriodGroupRowData>({
 		expandedKeys,
 		onToggle: (key) =>
 			setExpandedKeys((prev) => {
@@ -676,83 +902,129 @@ function PeriodTable({
 			}),
 		getRowKey: (item) => item.id,
 		getIsItemExpandable: (item) => item.id !== ADD_ROW_ID,
-		renderExpanded: (item) => (
-			<PeriodRowEditor row={item} showDeductible={showDeductible} onPatch={onPatch} onRemove={handleRemove} t={t} />
-		),
+		renderExpanded: (item) => {
+			const typeId = item.typeId!
+			const entries = plan[kind].filter((r) => r.typeId === typeId)
+			return (
+				<Stack className="row-detail" gap={1.5}>
+					{entries.length > 0 ? (
+						<EntryTable rows={entries} plan={plan} onEditItem={onEditItem} t={t} />
+					) : (
+						<Text color="secondary">{t("group.empty")}</Text>
+					)}
+					<PlainButton className="row-add" onClick={() => onAddItem(typeId)}>
+						+ {t("group.addItem", { label: t(`type.${typeId}`) })}
+					</PlainButton>
+				</Stack>
+			)
+		},
 	})
 
-	const addMarker: PeriodRowData = {
-		id: ADD_ROW_ID,
-		label: "",
-		startYear: rows[0]?.startYear ?? 2026,
-		startMonth: 0,
-		endYear: null,
-		endMonth: 11,
-		amount: 0,
-		growthMode: "inflation",
-		growthRate: 0,
-	}
-	const data: PeriodRowData[] = [...(rows as PeriodRowData[]), addMarker]
+	const rows: PeriodGroupRowData[] = activeTypeIds.map((typeId) => {
+		const entries = plan[kind].filter((r) => r.typeId === typeId)
+		const total = entries.reduce((acc, r) => acc + rowLifetimeTotal(r, plan), 0)
+		let periodText = "—"
+		if (entries.length > 0) {
+			const minStart = Math.min(...entries.map((r) => r.startYear))
+			const hasForever = entries.some((r) => r.endYear === null)
+			const maxEnd = hasForever ? "∞" : Math.max(...entries.map((r) => r.endYear as number))
+			periodText = `${minStart} – ${maxEnd}`
+		}
+		return {
+			id: typeId,
+			typeId,
+			total,
+			periodText,
+		}
+	})
 
-	const columns: TableColumn<PeriodRowData>[] = [
+	const addMarker: PeriodGroupRowData = {
+		id: ADD_ROW_ID,
+	}
+
+	const data: PeriodGroupRowData[] = [...rows, addMarker]
+
+	const columns: TableColumn<PeriodGroupRowData>[] = [
 		{
-			key: "label",
+			key: "name",
 			header: t("row.label"),
 			width: proportional(1),
 			renderCell: (row) =>
 				row.id === ADD_ROW_ID ? (
-					<PlainButton className="row-add" onClick={onAdd}>
-						+ {t("row.add")}
+					<PlainButton className="row-add" onClick={onAddType}>
+						+ {t("row.addType")}
 					</PlainButton>
 				) : (
-					<Text weight="semibold">{row.label}</Text>
+					<Text weight="semibold">{t(`type.${row.typeId}`)}</Text>
 				),
 		},
 		{
-			key: "amount",
-			header: t("row.amount"),
-			width: pixel(130),
+			key: "total",
+			header: t("table.total"),
+			width: pixel(140),
 			align: "end",
 			renderCell: (row) =>
-				row.id === ADD_ROW_ID ? null : <Text hasTabularNumbers>{formatBaht(row.amount)}</Text>,
+				row.id === ADD_ROW_ID ? null : (
+					<Text hasTabularNumbers>{formatBaht(row.total ?? 0)}</Text>
+				),
 		},
 		{
 			key: "period",
 			header: t("row.period"),
-			width: pixel(115),
+			width: pixel(120),
 			align: "end",
 			renderCell: (row) =>
 				row.id === ADD_ROW_ID ? null : (
 					<Text color="secondary" hasTabularNumbers>
-						{row.startYear} – {row.endYear ?? "∞"}
+						{row.periodText}
 					</Text>
 				),
 		},
 	]
 
 	return (
-		<Stack gap={2}>
-			<Heading level={3}>{heading}</Heading>
-			<Table data={data} idKey="id" density="compact" dividers="rows" hasHover columns={columns} plugins={{ expansion }} />
-		</Stack>
+		<Table
+			data={data}
+			idKey="id"
+			density="compact"
+			dividers="rows"
+			hasHover
+			columns={columns}
+			plugins={{ expansion }}
+		/>
 	)
 }
 
-/** Wallet table: read-only split/rate rows; expand a row to edit split, rate, starting balance. */
-type WalletRowData = { id: WalletId; label: string }
+interface ValueGroupRowData extends Record<string, unknown> {
+	id: string
+	typeId?: AssetTypeId | LiabilityTypeId
+	total?: number
+}
 
-function WalletTable({
+type ValueEntryItem = (AssetRow | LiabilityRow) & Record<string, unknown>
+
+function GroupedValueTable({
+	kind,
 	plan,
-	onPatch,
+	addedTypeIds,
+	onAddType,
+	onAddItem,
+	onEditItem,
 	t,
 }: {
+	kind: "assets" | "liabilities"
 	plan: PlanInput
-	onPatch: (field: "savingsSplit" | "walletRates" | "startingWallets", id: WalletId, value: number) => void
+	addedTypeIds: string[]
+	onAddType: () => void
+	onAddItem: (typeId: string) => void
+	onEditItem: (row: AssetRow | LiabilityRow) => void
 	t: (key: string, vars?: Record<string, string>) => string
 }) {
 	const [expandedKeys, setExpandedKeys] = useState<Set<string>>(new Set())
-	const data: WalletRowData[] = WALLETS.map((id) => ({ id, label: t(`wallet.${id}`) }))
-	const expansion = useTableRowExpansion<WalletRowData>({
+	const catalog = kind === "assets" ? ASSET_TYPE_IDS : LIABILITY_TYPE_IDS
+	const activeTypeIds = catalog.filter((id) => addedTypeIds.includes(id))
+
+	const expansion = useTableRowExpansion<ValueGroupRowData>({
 		expandedKeys,
 		onToggle: (key) =>
 			setExpandedKeys((prev) => {
@@ -762,64 +1034,566 @@ function WalletTable({
 				return next
 			}),
 		getRowKey: (item) => item.id,
-		renderExpanded: (item) => (
-			<Stack className="row-detail">
-				<Grid columns={{ minWidth: 170, max: 3 }} gap={2}>
-					<NumberInput
-						label={t("wallets.split")}
-						value={Math.round(plan.savingsSplit[item.id] * 100 * 100) / 100}
-						onChange={(value) => onPatch("savingsSplit", item.id, value / 100)}
-						min={0}
-						max={100}
-						step={5}
-						units="%"
-					/>
-					<NumberInput
-						label={t("wallets.rates")}
-						value={Math.round(plan.walletRates[item.id] * 100 * 100) / 100}
-						onChange={(value) => onPatch("walletRates", item.id, value / 100)}
-						min={0}
-						max={30}
-						step={0.5}
-						units="%"
-					/>
-					<NumberInput
-						label={t("wallets.starting")}
-						value={plan.startingWallets[item.id]}
-						onChange={(value) => onPatch("startingWallets", item.id, value)}
-						min={0}
-						max={100_000_000}
-						step={10_000}
-						units="฿"
-					/>
-				</Grid>
-			</Stack>
-		),
+		getIsItemExpandable: (item) => item.id !== ADD_ROW_ID,
+		renderExpanded: (item) => {
+			const typeId = item.typeId!
+			const entries = (plan[kind] as Array<AssetRow | LiabilityRow>).filter((r) => r.typeId === typeId)
+			return (
+				<Stack className="row-detail" gap={1.5}>
+					{entries.length > 0 ? (
+						<Table
+							data={entries as ValueEntryItem[]}
+							idKey="id"
+							density="compact"
+							dividers="rows"
+							hasHover
+							columns={[
+								{
+									key: "label",
+									header: t("row.label"),
+									width: proportional(1),
+									renderCell: (entry) => (
+										<PlainButton className="row-add" onClick={() => onEditItem(entry)}>
+											{entry.label}
+										</PlainButton>
+									),
+								},
+								{
+									key: "value",
+									header: t("table.value"),
+									width: pixel(140),
+									align: "end",
+									renderCell: (entry) => <Text hasTabularNumbers>{formatBaht(entry.value)}</Text>,
+								},
+							]}
+						/>
+					) : (
+						<Text color="secondary">{t("group.empty")}</Text>
+					)}
+					<PlainButton className="row-add" onClick={() => onAddItem(typeId)}>
+						+ {t("group.addItem", { label: t(`type.${typeId}`) })}
+					</PlainButton>
+				</Stack>
+			)
+		},
 	})
-	const columns: TableColumn<WalletRowData>[] = [
+
+	const rows: ValueGroupRowData[] = activeTypeIds.map((typeId) => {
+		const entries = (plan[kind] as Array<AssetRow | LiabilityRow>).filter((r) => r.typeId === typeId)
+		const total = entries.reduce((acc, r) => acc + r.value, 0)
+		return {
+			id: typeId,
+			typeId,
+			total,
+		}
+	})
+
+	const addMarker: ValueGroupRowData = {
+		id: ADD_ROW_ID,
+	}
+
+	const data: ValueGroupRowData[] = [...rows, addMarker]
+
+	const columns: TableColumn<ValueGroupRowData>[] = [
 		{
-			key: "label",
-			header: t("table.wallet"),
+			key: "name",
+			header: t("row.label"),
 			width: proportional(1),
-			renderCell: (row) => <Text weight="semibold">{row.label}</Text>,
+			renderCell: (row) =>
+				row.id === ADD_ROW_ID ? (
+					<PlainButton className="row-add" onClick={onAddType}>
+						+ {t("row.addType")}
+					</PlainButton>
+				) : (
+					<Text weight="semibold">{t(`type.${row.typeId}`)}</Text>
+				),
 		},
 		{
-			key: "split",
-			header: t("wallets.split"),
+			key: "total",
+			header: t("table.total"),
 			width: pixel(140),
 			align: "end",
-			renderCell: (row) => <Text hasTabularNumbers>{formatPercent(plan.savingsSplit[row.id])}</Text>,
-		},
-		{
-			key: "rate",
-			header: t("wallets.rates"),
-			width: pixel(140),
-			align: "end",
-			renderCell: (row) => <Text hasTabularNumbers>{formatPercent(plan.walletRates[row.id])}</Text>,
+			renderCell: (row) =>
+				row.id === ADD_ROW_ID ? null : (
+					<Text hasTabularNumbers>{formatBaht(row.total ?? 0)}</Text>
+				),
 		},
 	]
 
-	return <Table data={data} idKey="id" density="compact" dividers="rows" hasHover columns={columns} plugins={{ expansion }} />
+	return (
+		<Table
+			data={data}
+			idKey="id"
+			density="compact"
+			dividers="rows"
+			hasHover
+			columns={columns}
+			plugins={{ expansion }}
+		/>
+	)
+}
+
+interface MilestoneRowData extends Record<string, unknown> {
+	id: string
+	label: string
+	year?: number
+	month?: number
+}
+
+function MilestoneTable({
+	plan,
+	onAdd,
+	onEdit,
+	t,
+}: {
+	plan: PlanInput
+	onAdd: () => void
+	onEdit: (id: string) => void
+	t: (key: string, vars?: Record<string, string>) => string
+}) {
+	const { locale } = useLocale()
+	const monthNames = locale === "th" ? MONTHS_TH : MONTHS_EN
+
+	const addMarker: MilestoneRowData = {
+		id: ADD_ROW_ID,
+		label: "",
+	}
+
+	const data: MilestoneRowData[] = [
+		...plan.milestones.map((m) => ({
+			id: m.id,
+			label: m.label,
+			year: m.year,
+			month: m.month,
+		})),
+		addMarker,
+	]
+
+	const columns: TableColumn<MilestoneRowData>[] = [
+		{
+			key: "name",
+			header: t("row.label"),
+			width: proportional(1),
+			renderCell: (row) =>
+				row.id === ADD_ROW_ID ? (
+					<PlainButton className="row-add" onClick={onAdd}>
+						+ {t("milestone.add")}
+					</PlainButton>
+				) : (
+					<PlainButton className="row-add" onClick={() => onEdit(row.id)}>
+						{row.label}
+					</PlainButton>
+				),
+		},
+		{
+			key: "month",
+			header: t("table.month"),
+			width: pixel(140),
+			align: "end",
+			renderCell: (row) =>
+				row.id === ADD_ROW_ID ? null : (
+					<Text color="secondary" hasTabularNumbers>
+						{monthNames[row.month ?? 0]} {row.year}
+					</Text>
+				),
+		},
+	]
+
+	return <Table data={data} idKey="id" density="compact" dividers="rows" hasHover columns={columns} />
+}
+
+function EntryDialog({
+	dialog,
+	plan,
+	onSave,
+	onRemove,
+	onClose,
+	t,
+}: {
+	dialog:
+		| { mode: "add"; kind: "incomes" | "expenses"; typeId: string }
+		| { mode: "edit"; kind: "incomes" | "expenses"; rowId: string }
+	plan: PlanInput
+	onSave: (values: {
+		label: string
+		amount: number
+		frequency: AmountFrequency
+		startYear: number
+		startMonth: number
+		endYear: number | null
+		endMonth: number
+		growthMode: PeriodRow["growthMode"]
+		growthRate: number
+		deductible?: PeriodRow["deductible"]
+	}) => void
+	onRemove: (id: string) => void
+	onClose: () => void
+	t: (key: string, vars?: Record<string, string>) => string
+}) {
+	const existingRow = dialog.mode === "edit" ? plan[dialog.kind].find((r) => r.id === dialog.rowId) : null
+	const typeId =
+		dialog.mode === "edit"
+			? (existingRow?.typeId ?? (dialog.kind === "incomes" ? "salary" : "livingExpenses"))
+			: dialog.typeId
+	const defaultFreq =
+		dialog.kind === "incomes"
+			? (INCOME_TYPE_DEFAULT_FREQUENCY[typeId as IncomeTypeId] ?? "monthly")
+			: (EXPENSE_TYPE_DEFAULT_FREQUENCY[typeId as ExpenseTypeId] ?? "monthly")
+
+	const [label, setLabel] = useState(dialog.mode === "edit" ? (existingRow?.label ?? "") : t(`type.${typeId}`))
+	const [amount, setAmount] = useState(dialog.mode === "edit" ? (existingRow?.amount ?? 0) : 0)
+	const [frequency, setFrequency] = useState<AmountFrequency>(
+		dialog.mode === "edit" ? (existingRow?.frequency ?? defaultFreq) : defaultFreq,
+	)
+	const [startYear, setStartYear] = useState(dialog.mode === "edit" ? (existingRow?.startYear ?? plan.startYear) : plan.startYear)
+	const [startMonth, setStartMonth] = useState(dialog.mode === "edit" ? (existingRow?.startMonth ?? 0) : 0)
+	const [endYear, setEndYear] = useState<number | null>(dialog.mode === "edit" ? (existingRow?.endYear ?? null) : null)
+	const [endMonth, setEndMonth] = useState(dialog.mode === "edit" ? (existingRow?.endMonth ?? 11) : 11)
+	const [growthMode, setGrowthMode] = useState<PeriodRow["growthMode"]>(
+		dialog.mode === "edit" ? (existingRow?.growthMode ?? "inflation") : "inflation",
+	)
+	const [growthRate, setGrowthRate] = useState(dialog.mode === "edit" ? (existingRow?.growthRate ?? 0) : 0)
+	const [deductible, setDeductible] = useState<PeriodRow["deductible"]>(
+		dialog.mode === "edit" ? (existingRow?.deductible ?? "none") : "none",
+	)
+
+	const typeLabel = t(`type.${typeId}`)
+	const title = dialog.mode === "add" ? t("dialog.addItem", { label: typeLabel }) : t("dialog.editItem", { label: typeLabel })
+
+	return (
+		<Dialog isOpen onOpenChange={(open) => { if (!open) onClose() }} purpose="form" width={640}>
+			<Layout
+				header={<DialogHeader title={title} onOpenChange={() => onClose()} />}
+				content={
+					<LayoutContent>
+						<Grid columns={{ minWidth: 240, max: 2 }} gap={1.5}>
+							<TextInput
+								label={t("row.label")}
+								value={label}
+								onChange={setLabel}
+							/>
+							<NumberInput
+								label={t("row.amount")}
+								value={amount}
+								onChange={(v) => setAmount(v ?? 0)}
+								min={0}
+								step={1000}
+								units="฿"
+							/>
+							<Stack gap={0.5}>
+								<Text size="sm" color="secondary">{t("row.frequency")}</Text>
+								<SegmentedControl
+									value={frequency}
+									onChange={(v) => setFrequency(v as AmountFrequency)}
+									label={t("row.frequency")}
+									layout="fill"
+									size="sm"
+								>
+									<SegmentedControlItem value="monthly" label={t("freq.monthly")} />
+									<SegmentedControlItem value="yearly" label={t("freq.yearly")} />
+								</SegmentedControl>
+							</Stack>
+							<MonthYearPicker
+								label={t("row.startYear")}
+								year={startYear}
+								month={startMonth}
+								onChange={(y, m) => {
+									if (y !== null) setStartYear(y)
+									setStartMonth(m)
+								}}
+								t={t}
+							/>
+							<MonthYearPicker
+								label={t("row.endYear")}
+								year={endYear}
+								month={endMonth}
+								allowForever
+								onChange={(y, m) => {
+									setEndYear(y)
+									setEndMonth(m)
+								}}
+								t={t}
+							/>
+							<Stack gap={1}>
+								<Text size="sm" color="secondary">{t("row.growth")}</Text>
+								<SegmentedControl
+									value={growthMode}
+									onChange={(v) => setGrowthMode(v as PeriodRow["growthMode"])}
+									label={t("row.growth")}
+									layout="fill"
+									size="sm"
+								>
+									<SegmentedControlItem value="inflation" label={t("growth.inflation")} />
+									<SegmentedControlItem value="fixed" label={t("growth.fixed")} />
+									<SegmentedControlItem value="override" label={t("growth.override")} />
+								</SegmentedControl>
+								{growthMode === "override" ? (
+									<NumberInput
+										label={t("row.growthRate")}
+										value={growthRate * 100}
+										onChange={(v) => setGrowthRate((v ?? 0) / 100)}
+										min={-10}
+										max={50}
+										step={0.5}
+										units="%"
+									/>
+								) : null}
+							</Stack>
+							{dialog.kind === "expenses" ? (
+								<Stack gap={1}>
+									<Text size="sm" color="secondary">{t("row.deductible")}</Text>
+									<SegmentedControl
+										value={deductible ?? "none"}
+										onChange={(v) => setDeductible(v === "mortgageInterest" ? "mortgageInterest" : "none")}
+										label={t("row.deductible")}
+										layout="fill"
+										size="sm"
+									>
+										<SegmentedControlItem value="none" label={t("deductible.none")} />
+										<SegmentedControlItem value="mortgageInterest" label={t("deductible.mortgageInterest")} />
+									</SegmentedControl>
+								</Stack>
+							) : null}
+						</Grid>
+					</LayoutContent>
+				}
+				footer={
+					<LayoutFooter>
+						<HStack gap={2} hAlign="end">
+							{dialog.mode === "edit" ? (
+								<PlainButton onClick={() => onRemove(dialog.rowId)}>
+									{t("row.remove")}
+								</PlainButton>
+							) : null}
+							<Button label={t("dialog.cancel")} variant="secondary" onClick={onClose} />
+							<Button
+								label={t("dialog.save")}
+								variant="primary"
+								onClick={() => {
+									onSave({
+										label: label.trim() || typeLabel,
+										amount,
+										frequency,
+										startYear,
+										startMonth,
+										endYear,
+										endMonth,
+										growthMode,
+										growthRate,
+										...(dialog.kind === "expenses" ? { deductible } : {}),
+									})
+								}}
+							/>
+						</HStack>
+					</LayoutFooter>
+				}
+			/>
+		</Dialog>
+	)
+}
+
+function ValueDialog({
+	dialog,
+	plan,
+	onSave,
+	onRemove,
+	onClose,
+	t,
+}: {
+	dialog:
+		| { mode: "add"; kind: "assets" | "liabilities"; typeId: string }
+		| { mode: "edit"; kind: "assets" | "liabilities"; rowId: string }
+	plan: PlanInput
+	onSave: (values: { label: string; value: number }) => void
+	onRemove: (id: string) => void
+	onClose: () => void
+	t: (key: string, vars?: Record<string, string>) => string
+}) {
+	const existingRow =
+		dialog.mode === "edit" ? (plan[dialog.kind] as Array<AssetRow | LiabilityRow>).find((r) => r.id === dialog.rowId) : null
+	const typeId = dialog.mode === "edit" ? (existingRow?.typeId ?? (dialog.kind === "assets" ? "stock" : "debt")) : dialog.typeId
+	const typeLabel = t(`type.${typeId}`)
+	const [label, setLabel] = useState(dialog.mode === "edit" ? (existingRow?.label ?? "") : typeLabel)
+	const [value, setValue] = useState(dialog.mode === "edit" ? (existingRow?.value ?? 0) : 0)
+
+	const title = dialog.mode === "add" ? t("dialog.addItem", { label: typeLabel }) : t("dialog.editItem", { label: typeLabel })
+
+	return (
+		<Dialog isOpen onOpenChange={(open) => { if (!open) onClose() }} purpose="form" width={520}>
+			<Layout
+				header={<DialogHeader title={title} onOpenChange={() => onClose()} />}
+				content={
+					<LayoutContent>
+						<Stack gap={1.5}>
+							<TextInput label={t("row.label")} value={label} onChange={setLabel} />
+							<NumberInput
+								label={t("table.value")}
+								value={value}
+								onChange={(v) => setValue(v ?? 0)}
+								min={0}
+								step={1000}
+								units="฿"
+							/>
+						</Stack>
+					</LayoutContent>
+				}
+				footer={
+					<LayoutFooter>
+						<HStack gap={2} hAlign="end">
+							{dialog.mode === "edit" ? (
+								<PlainButton onClick={() => onRemove(dialog.rowId)}>
+									{t("row.remove")}
+								</PlainButton>
+							) : null}
+							<Button label={t("dialog.cancel")} variant="secondary" onClick={onClose} />
+							<Button
+								label={t("dialog.save")}
+								variant="primary"
+								onClick={() => {
+									onSave({
+										label: label.trim() || typeLabel,
+										value,
+									})
+								}}
+							/>
+						</HStack>
+					</LayoutFooter>
+				}
+			/>
+		</Dialog>
+	)
+}
+
+function MilestoneDialog({
+	id,
+	plan,
+	onSave,
+	onRemove,
+	onClose,
+	t,
+}: {
+	id: string | null
+	plan: PlanInput
+	onSave: (values: { label: string; year: number; month: number }) => void
+	onRemove: (id: string) => void
+	onClose: () => void
+	t: (key: string, vars?: Record<string, string>) => string
+}) {
+	const existing = id !== null ? plan.milestones.find((m) => m.id === id) : null
+	const [label, setLabel] = useState(existing?.label ?? "")
+	const [year, setYear] = useState(existing?.year ?? plan.startYear + 29)
+	const [month, setMonth] = useState(existing?.month ?? 0)
+
+	const title = id === null ? t("milestone.add") : t("milestone.edit")
+
+	return (
+		<Dialog isOpen onOpenChange={(open) => { if (!open) onClose() }} purpose="form" width={520}>
+			<Layout
+				header={<DialogHeader title={title} onOpenChange={() => onClose()} />}
+				content={
+					<LayoutContent>
+						<Stack gap={1.5}>
+							<TextInput label={t("row.label")} value={label} onChange={setLabel} />
+							<MonthYearPicker
+								label={t("table.month")}
+								year={year}
+								month={month}
+								onChange={(y, m) => {
+									if (y !== null) setYear(y)
+									setMonth(m)
+								}}
+								t={t}
+							/>
+						</Stack>
+					</LayoutContent>
+				}
+				footer={
+					<LayoutFooter>
+						<HStack gap={2} hAlign="end">
+							{id !== null ? (
+								<PlainButton onClick={() => onRemove(id)}>
+									{t("row.remove")}
+								</PlainButton>
+							) : null}
+							<Button label={t("dialog.cancel")} variant="secondary" onClick={onClose} />
+							<Button
+								label={t("dialog.save")}
+								variant="primary"
+								onClick={() => {
+									onSave({
+										label: label.trim() || t("tab.milestone"),
+										year,
+										month,
+									})
+								}}
+							/>
+						</HStack>
+					</LayoutFooter>
+				}
+			/>
+		</Dialog>
+	)
+}
+
+function TypePickerDialog({
+	kind,
+	addedTypeIds,
+	onPick,
+	onClose,
+	t,
+}: {
+	kind: "incomes" | "expenses" | "assets" | "liabilities"
+	addedTypeIds: string[]
+	onPick: (typeId: string) => void
+	onClose: () => void
+	t: (key: string, vars?: Record<string, string>) => string
+}) {
+	const catalog =
+		kind === "incomes"
+			? INCOME_TYPE_IDS
+			: kind === "expenses"
+				? EXPENSE_TYPE_IDS
+				: kind === "assets"
+					? ASSET_TYPE_IDS
+					: LIABILITY_TYPE_IDS
+
+	const available = catalog.filter((id) => !addedTypeIds.includes(id))
+
+	const titleKey =
+		kind === "incomes"
+			? "dialog.addType.income"
+			: kind === "expenses"
+				? "dialog.addType.expense"
+				: kind === "assets"
+					? "dialog.addType.asset"
+					: "dialog.addType.liability"
+
+	return (
+		<Dialog isOpen onOpenChange={(open) => { if (!open) onClose() }} purpose="info" width={420}>
+			<Layout
+				header={<DialogHeader title={t(titleKey)} onOpenChange={() => onClose()} />}
+				content={
+					<LayoutContent>
+						{available.length === 0 ? (
+							<Text color="secondary">{t("dialog.allTypesAdded")}</Text>
+						) : (
+							<Stack className="dialog-options">
+								{available.map((id) => (
+									<PlainButton
+										key={id}
+										className="dialog-option"
+										onClick={() => onPick(id)}
+									>
+										{t(`type.${id}`)}
+									</PlainButton>
+								))}
+							</Stack>
+						)}
+					</LayoutContent>
+				}
+			/>
+		</Dialog>
+	)
 }
 
 /* ── Assistant rail (right column) ────────────────────────────────────────

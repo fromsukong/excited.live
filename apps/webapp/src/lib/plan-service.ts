@@ -34,6 +34,7 @@ import {
 	type PathCompare,
 	type OptimizerResult,
 	type MonteCarloResult,
+	yearlyAmount,
 } from "@excited-live/sim"
 
 /** Everything the UI needs, computed in one pass from the plan. */
@@ -57,7 +58,7 @@ export function computePlanSummary(plan: PlanInput): PlanSummary {
 		? plan.expenses.reduce(
 				(sum, row) =>
 					row.deductible === "mortgageInterest" && first.year >= row.startYear
-						? sum + row.amount
+						? sum + yearlyAmount(row)
 						: sum,
 				0,
 			)
@@ -106,3 +107,23 @@ export function computeMonteCarloBands(plan: PlanInput): MonteCarloResult {
 export type { PlanInput, PeriodRow, WalletId, GoalRow, SimulationYear } from "@excited-live/sim"
 export type { MonteCarloResult, MonteCarloYear, MonteCarloBand } from "@excited-live/sim"
 export { realReturn, WALLET_IDS } from "@excited-live/sim"
+export {
+	INCOME_TYPE_IDS,
+	EXPENSE_TYPE_IDS,
+	ASSET_TYPE_IDS,
+	LIABILITY_TYPE_IDS,
+	INCOME_TYPE_DEFAULT_FREQUENCY,
+	EXPENSE_TYPE_DEFAULT_FREQUENCY,
+	rowLifetimeTotal,
+	yearlyAmount,
+} from "@excited-live/sim"
+export type {
+	MilestoneRow,
+	AssetRow,
+	LiabilityRow,
+	IncomeTypeId,
+	ExpenseTypeId,
+	AssetTypeId,
+	LiabilityTypeId,
+	AmountFrequency,
+} from "@excited-live/sim"

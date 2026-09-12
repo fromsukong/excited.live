@@ -87,6 +87,145 @@ export const DEFAULT_WALLETS: readonly WalletDef[] = [
 	},
 ] as const
 
+/** How a row's `amount` is expressed; engine math multiplies monthly by 12. */
+export type AmountFrequency = "monthly" | "yearly"
+
+export type IncomeTypeId =
+	| "salary"
+	| "hourlyWage"
+	| "rsuGrant"
+	| "inheritance"
+	| "sideHustle"
+	| "taxCredit"
+	| "taxDeduction"
+	| "pensionIncome"
+	| "customIncome"
+
+export type ExpenseTypeId =
+	| "livingExpenses"
+	| "rent"
+	| "debt"
+	| "studentLoans"
+	| "dependent"
+	| "education"
+	| "healthCare"
+	| "vacation"
+	| "wedding"
+	| "charity"
+	| "travel"
+	| "medicalExpenses"
+	| "emergency"
+	| "customExpense"
+
+export type AssetTypeId =
+	| "stock"
+	| "mutualFundNonDeductible"
+	| "mutualFundDeductible"
+	| "crypto"
+	| "house"
+	| "car"
+	| "rentalProperty"
+	| "commercialProperty"
+	| "land"
+	| "building"
+	| "motorcycle"
+	| "boat"
+	| "jewelry"
+	| "preciousMetals"
+	| "furniture"
+	| "instrument"
+	| "machinery"
+	| "customAsset"
+
+export type LiabilityTypeId = "debt" | "studentLoans" | "medicalDebt" | "creditCardDebt"
+
+export const INCOME_TYPE_IDS: readonly IncomeTypeId[] = [
+	"salary",
+	"hourlyWage",
+	"rsuGrant",
+	"inheritance",
+	"sideHustle",
+	"taxCredit",
+	"taxDeduction",
+	"pensionIncome",
+	"customIncome",
+] as const
+
+export const EXPENSE_TYPE_IDS: readonly ExpenseTypeId[] = [
+	"livingExpenses",
+	"rent",
+	"debt",
+	"studentLoans",
+	"dependent",
+	"education",
+	"healthCare",
+	"vacation",
+	"wedding",
+	"charity",
+	"travel",
+	"medicalExpenses",
+	"emergency",
+	"customExpense",
+] as const
+
+export const ASSET_TYPE_IDS: readonly AssetTypeId[] = [
+	"stock",
+	"mutualFundNonDeductible",
+	"mutualFundDeductible",
+	"crypto",
+	"house",
+	"car",
+	"rentalProperty",
+	"commercialProperty",
+	"land",
+	"building",
+	"motorcycle",
+	"boat",
+	"jewelry",
+	"preciousMetals",
+	"furniture",
+	"instrument",
+	"machinery",
+	"customAsset",
+] as const
+
+export const LIABILITY_TYPE_IDS: readonly LiabilityTypeId[] = [
+	"debt",
+	"studentLoans",
+	"medicalDebt",
+	"creditCardDebt",
+] as const
+
+/** Default amount frequency used when the UI creates a new entry of a type. */
+export const INCOME_TYPE_DEFAULT_FREQUENCY: Record<IncomeTypeId, AmountFrequency> = {
+	salary: "monthly",
+	hourlyWage: "monthly",
+	rsuGrant: "yearly",
+	inheritance: "yearly",
+	sideHustle: "monthly",
+	taxCredit: "yearly",
+	taxDeduction: "yearly",
+	pensionIncome: "monthly",
+	customIncome: "yearly",
+}
+
+export const EXPENSE_TYPE_DEFAULT_FREQUENCY: Record<ExpenseTypeId, AmountFrequency> = {
+	livingExpenses: "monthly",
+	rent: "monthly",
+	debt: "monthly",
+	studentLoans: "monthly",
+	dependent: "monthly",
+	education: "yearly",
+	healthCare: "yearly",
+	vacation: "yearly",
+	wedding: "yearly",
+	charity: "yearly",
+	travel: "yearly",
+	medicalExpenses: "yearly",
+	emergency: "yearly",
+	customExpense: "monthly",
+}
+
 /**
  * One income or expense line (sheet "Income"/"Expenses" period rows).
  * Active from startYear-startMonth through endYear-endMonth inclusive;
@@ -95,6 +234,10 @@ export const DEFAULT_WALLETS: readonly WalletDef[] = [
 export interface PeriodRow {
 	/** Stable key for React lists; UI-generated (row-1, row-2, …). */
 	id: string
+	/** Income or expense type id (drives the grouped tables in the UI). */
+	typeId: IncomeTypeId | ExpenseTypeId
+	/** Unit `amount` is expressed in — the engine normalizes monthly to yearly. */
+	frequency: AmountFrequency
 	label: string
 	/** First calendar year the row applies. */
 	startYear: number
@@ -115,6 +258,33 @@ export interface PeriodRow {
 	growthRate: number
 	/** Expenses only (US-005): feeds the TH tax calc (mortgage interest, …). */
 	deductible?: "none" | "mortgageInterest"
+}
+
+/** A named milestone (a month marker) — shown as a marker on the chart. */
+export interface MilestoneRow {
+	id: string
+	label: string
+	year: number
+	/** 0 = January … 11 = December. */
+	month: number
+}
+
+/** One asset entry (stored + displayed; not simulated yet). */
+export interface AssetRow {
+	id: string
+	typeId: AssetTypeId
+	label: string
+	/** Current value, THB. */
+	value: number
+}
+
+/** One liability entry (stored + displayed; not simulated yet). */
+export interface LiabilityRow {
+	id: string
+	typeId: LiabilityTypeId
+	label: string
+	/** Amount owed, THB. */
+	value: number
 }
 
 /** Effective growth rate of a row in a plan (US-003: override wins). */
@@ -203,6 +373,12 @@ export interface PlanInput {
 	incomes: PeriodRow[]
 	/** Expense period rows (sheet Expenses column rows). */
 	expenses: PeriodRow[]
+	/** Milestone markers (not simulated). */
+	milestones: MilestoneRow[]
+	/** Asset rows (not simulated). */
+	assets: AssetRow[]
+	/** Liability rows (not simulated). */
+	liabilities: LiabilityRow[]
 	/** Goal checks (US-009 section 1d): name, target (today's money), year. */
 	goals: GoalRow[]
 	/**
@@ -272,6 +448,11 @@ const clampYearlyRate = (value: number): number =>
 
 const round2 = (value: number): number => Math.round(value * 100) / 100
 
+/** A row's yearly amount — monthly rows count ×12. */
+export function yearlyAmount(row: Pick<PeriodRow, "amount" | "frequency">): number {
+	return clampNonNegative(row.amount) * (row.frequency === "monthly" ? 12 : 1)
+}
+
 /**
  * Amount of a period row in a given year (growth compounds inside the row).
  * Partial edge years count only the active months; growth steps on the
@@ -288,7 +469,7 @@ export function rowAmountInYear(
 	const rate = rowGrowthRate(row, inflation)
 	// Anniversary-step index: full 12-month periods since the row started.
 	const anniversaryYearsIn = year - row.startYear
-	const grown = clampNonNegative(row.amount) * Math.pow(1 + rate, anniversaryYearsIn)
+	const grown = yearlyAmount(row) * Math.pow(1 + rate, anniversaryYearsIn)
 
 	// Fraction of THIS year the row is active.
 	let monthsActive = 12
@@ -337,11 +518,31 @@ function monthShare(
 		// Years since the row's start anniversary (fractional within year 1).
 		const yearsIn = (monthIndex - begin) / 12
 		const grown =
-			clampNonNegative(row.amount) *
+			yearlyAmount(row) *
 			Math.pow(1 + rowGrowthRate(row, inflation), Math.floor(yearsIn))
 		total += grown / 12
 	}
 	return total
+}
+
+/**
+ * Nominal total of a row across its whole active life clipped to the plan
+ * window [plan.startYear, plan.startYear + plan.horizonYears - 1]. Forever
+ * rows are clipped to the window end.
+ */
+export function rowLifetimeTotal(
+	row: PeriodRow,
+	plan: Pick<PlanInput, "startYear" | "inflation" | "horizonYears">,
+): number {
+	const windowEnd = plan.startYear + plan.horizonYears - 1
+	const from = Math.max(row.startYear, plan.startYear)
+	const to = Math.min(row.endYear ?? windowEnd, windowEnd)
+	if (to < from) return 0
+	let total = 0
+	for (let year = from; year <= to; year += 1) {
+		total += rowAmountInYear(row, year, plan.inflation)
+	}
+	return round2(total)
 }
 
 /**
@@ -357,12 +558,14 @@ export function defaultPlanInput(now: Date = new Date()): PlanInput {
 		incomes: [
 			{
 				id: "income-salary",
+				typeId: "salary",
+				frequency: "monthly",
 				label: "Salary",
 				startYear,
 				startMonth: 0,
 				endYear: startYear + 29,
 				endMonth: 11,
-				amount: 1_200_000,
+				amount: 100_000,
 				growthMode: "override",
 				growthRate: 0.03,
 			},
@@ -370,16 +573,21 @@ export function defaultPlanInput(now: Date = new Date()): PlanInput {
 		expenses: [
 			{
 				id: "expense-living",
+				typeId: "livingExpenses",
+				frequency: "monthly",
 				label: "Living expenses",
 				startYear,
 				startMonth: 0,
 				endYear: null,
 				endMonth: 11,
-				amount: 480_000,
+				amount: 40_000,
 				growthMode: "inflation",
 				growthRate: 0,
 			},
 		],
+		milestones: [{ id: "milestone-retire", label: "Retire", year: startYear + 29, month: 0 }],
+		assets: [],
+		liabilities: [],
 		goals: [],
 		retirementYear: startYear + 29,
 		retirementMonthlyToday: 40_000,

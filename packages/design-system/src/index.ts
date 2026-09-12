@@ -81,4 +81,14 @@ export {
 export { TabList, type TabListProps } from "@astryxdesign/core/TabList";
 export { Tab, type TabProps } from "@astryxdesign/core/TabList";
 export { DateInput, type DateInputProps } from "@astryxdesign/core/DateInput";
+export { Dialog, DialogHeader, type DialogProps, type DialogHeaderProps } from "@astryxdesign/core/Dialog";
+export {
+	Layout,
+	LayoutContent,
+	LayoutFooter,
+	type LayoutProps,
+	type LayoutContentProps,
+	type LayoutFooterProps,
+} from "@astryxdesign/core/Layout";
+export { HStack, type HStackProps } from "@astryxdesign/core/HStack";
 export { mastercardTheme } from "./mastercard";

@@ -10,7 +10,7 @@
  *
  * Look is unchanged from the previous hand-rolled SVG version: accent line,
  * gradient area under the line, dashed orange zero line when the scale dips
- * negative, x labels every 10 years plus the final year. Colors are read
+ * negative, dashed orange milestone markers, x labels every 10 years plus the final year. Colors are read
  * from the Astryx theme CSS variables at render time (canvas cannot resolve
  * `var(...)` or `light-dark(...)` on its own), with light-theme fallbacks.
  * The Astryx root Theme sets `data-astryx-theme` on <html> in a layout
@@ -22,14 +22,14 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import * as echarts from "echarts/core"
 import { LineChart } from "echarts/charts"
-import { GridComponent, TooltipComponent } from "echarts/components"
+import { GridComponent, MarkLineComponent, TooltipComponent } from "echarts/components"
 import { CanvasRenderer } from "echarts/renderers"
 import type { EChartsType } from "echarts/core"
 import { Stack, Text } from "@excited-live/design-system"
-import type { MonteCarloBand, SimulationYear } from "../lib/plan-service"
+import type { MilestoneRow, MonteCarloBand, SimulationYear } from "../lib/plan-service"
 import { formatBaht, formatBahtCompact } from "../lib/format"
 
-echarts.use([LineChart, GridComponent, TooltipComponent, CanvasRenderer])
+echarts.use([LineChart, GridComponent, MarkLineComponent, TooltipComponent, CanvasRenderer])
 
 const FONT_FAMILY = '"Sofia Sans", Arial, "Helvetica Neue", sans-serif'
 /** Matches the old SVG geometry: 64px label gutter, tight right/top padding. */
@@ -47,6 +47,10 @@ export interface ProjectionChartProps {
 	 * metric units). Drawn as a shaded area under the plan line.
 	 */
 	band?: readonly MonteCarloBand[]
+	/**
+	 * Milestone markers to draw as dashed vertical lines.
+	 */
+	milestones?: ReadonlyArray<MilestoneRow>
 	/** Fired on hover/leave so panels below can mirror the active year. */
 	onActiveYearChange?: (year: number | null) => void
 }
@@ -111,6 +115,7 @@ export function ProjectionChart({
 	metric = "netWorth",
 	ariaLabel,
 	band,
+	milestones,
 	onActiveYearChange,
 }: ProjectionChartProps) {
 	const containerRef = useRef<HTMLElement | null>(null)
@@ -234,6 +239,29 @@ export function ProjectionChart({
 				]
 			: []
 
+		const markLineData: Array<Record<string, unknown>> = []
+		if (rawMin < 0) {
+			markLineData.push({ yAxis: 0, label: { show: false } })
+		}
+		if (milestones) {
+			const categorySet = new Set(categories)
+			for (const m of milestones) {
+				if (categorySet.has(String(m.year))) {
+					markLineData.push({
+						xAxis: String(m.year),
+						label: {
+							show: true,
+							formatter: m.label,
+							position: "insideEndTop",
+							color: orange,
+							fontSize: 11,
+							fontFamily: FONT_FAMILY,
+						},
+					})
+				}
+			}
+		}
+
 		return {
 			animation: false,
 			grid: { ...GRID, containLabel: false },
@@ -314,19 +342,18 @@ export function ProjectionChart({
 						},
 					},
 					markLine:
-						rawMin < 0
+						markLineData.length > 0
 							? {
 									silent: true,
 									symbol: "none",
-									label: { show: false },
 									lineStyle: { color: orange, width: 1, type: "dashed" },
-									data: [{ yAxis: 0 }],
+									data: markLineData,
 								}
 							: undefined,
 				},
 			],
 		}
-	}, [palette, years, metric, band])
+	}, [palette, years, metric, band, milestones])
 
 	// Push option updates (metric switch, horizon change, band recompute).
 	// Also the replay path for deferred init: when the chart instance is
