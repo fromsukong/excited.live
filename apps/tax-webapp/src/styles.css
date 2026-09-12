@@ -234,14 +234,15 @@ button {
 }
 
 .tax-brand__mark {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  display: block;
   width: 30px;
-  height: 30px;
-  border-radius: 999px;
-  background: var(--color-accent);
-  color: #fff;
+  height: 26px;
+}
+
+.tax-brand__wordmark {
+  display: block;
+  height: 15px;
+  width: auto;
 }
 
 .tax-main {
