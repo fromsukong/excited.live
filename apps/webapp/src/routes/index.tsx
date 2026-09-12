@@ -543,7 +543,7 @@ function PeriodRowEditor({
 }) {
 	return (
 		<Stack className="row-detail">
-			<Grid columns={{ minWidth: showDeductible ? 150 : 185, max: showDeductible ? 6 : 5 }} gap={1.5}>
+			<Grid columns={{ minWidth: 200, max: 3 }} gap={1.5}>
 				<TextInput
 					label={t("row.label")}
 					value={row.label}
@@ -691,7 +691,7 @@ function PeriodTable({
 		{
 			key: "amount",
 			header: t("row.amount"),
-			width: pixel(150),
+			width: pixel(130),
 			align: "end",
 			renderCell: (row) =>
 				row.id === ADD_ROW_ID ? null : <Text hasTabularNumbers>{formatBaht(row.amount)}</Text>,
@@ -699,7 +699,7 @@ function PeriodTable({
 		{
 			key: "period",
 			header: t("row.period"),
-			width: pixel(140),
+			width: pixel(115),
 			align: "end",
 			renderCell: (row) =>
 				row.id === ADD_ROW_ID ? null : (

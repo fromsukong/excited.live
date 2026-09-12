@@ -974,4 +974,15 @@ button {
   width: 100%;
 }
 
+/* ≤640px: hide the Period column of income/expense tables — it stays visible
+   in the expanded editor below each row. Column 1 is the expansion chevron. */
+@media (max-width: 640px) {
+  #left-panel-incomes [class*="astryx-table"] th:nth-child(4),
+  #left-panel-incomes [class*="astryx-table"] td:nth-child(4),
+  #left-panel-expenses [class*="astryx-table"] th:nth-child(4),
+  #left-panel-expenses [class*="astryx-table"] td:nth-child(4) {
+    display: none;
+  }
+}
+
 
