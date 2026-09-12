@@ -943,4 +943,19 @@ button {
   }
 }
 
+/* Narrow phones: keep a minimum gap between brand / nav / status so the
+ * wordmark never touches the "Plan | Settings" menu, and drop the decorative
+ * "Synced" text below 400px so the top bar keeps breathing room. */
+@media (max-width: 640px) {
+  .topbar {
+    column-gap: 10px;
+  }
+}
+
+@media (max-width: 400px) {
+  .market-status::before {
+    content: none;
+  }
+}
+
 

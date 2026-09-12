@@ -384,6 +384,7 @@ function Home() {
 												idKey="key"
 												density="compact"
 												hasHover
+												textOverflow="wrap"
 												columns={[
 													{
 														key: "key",
@@ -394,7 +395,7 @@ function Home() {
 													{
 														key: "value",
 														header: t("table.value"),
-														width: proportional(1),
+														width: pixel(130),
 														align: "end",
 														renderCell: (row) => <Text hasTabularNumbers>{row.value}</Text>,
 													},
