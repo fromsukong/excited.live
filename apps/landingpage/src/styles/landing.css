@@ -543,10 +543,13 @@ html[data-lang='en'] [data-lang-th] {
 	display: flex;
 	align-items: center;
 	gap: 12px;
-	background: var(--lifted);
-	border: 1.5px solid var(--orange-light);
+	width: fit-content;
+	max-width: 100%;
+	margin-top: 36px;
+	background: var(--white);
+	border: 1.5px solid var(--orange);
 	border-radius: 28px;
-	padding: 18px 24px;
+	padding: 14px 22px;
 	font-size: 16px;
 	font-weight: 500;
 	color: var(--ink);
@@ -561,7 +564,8 @@ html[data-lang='en'] [data-lang-th] {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	font-size: 14px;
+	font-size: 15px;
+	line-height: 1;
 	flex: none;
 }
 
@@ -1178,7 +1182,7 @@ html[data-lang='en'] [data-lang-th] {
 }
 
 .footer .waitlist-success {
-	background: rgba(255, 255, 255, 0.08);
+	background: rgba(255, 255, 255, 0.14);
 	border-color: var(--orange-light);
 	color: var(--white);
 }
