@@ -68,4 +68,7 @@ export { IconButton, type IconButtonProps } from "@astryxdesign/core/IconButton"
 export { Stack, type StackProps } from "@astryxdesign/core/Stack";
 export { Text, type TextProps } from "@astryxdesign/core/Text";
 export { Theme } from "@astryxdesign/core/theme";
+export { TabList, type TabListProps } from "@astryxdesign/core/TabList";
+export { Tab, type TabProps } from "@astryxdesign/core/TabList";
+export { DateInput, type DateInputProps } from "@astryxdesign/core/DateInput";
 export { mastercardTheme } from "./mastercard";
