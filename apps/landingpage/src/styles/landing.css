@@ -1335,3 +1335,55 @@ html[data-lang='en'] [data-lang-th] {
 .docs-body {
 	background: var(--canvas);
 }
+
+/* ---------- blog breadcrumb (blog index + post pages) ---------- */
+/* .docs-back* was originally the docs breadcrumb; docs pages no longer use
+   those classes, but BOTH blog pages still do — keep these rules when
+   touching docs-page framing. */
+
+.docs-back {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	/* margins + padding keep the wordmark at x=24/y=24 while the padding
+	   gives the pill focus ring and hover hit area breathing room */
+	margin: 20px 16px 0;
+	padding: 4px 8px;
+	font-size: 14px;
+	font-weight: 500;
+	color: var(--ink);
+	text-decoration: none;
+	border-radius: 999px;
+	transition: color 0.15s ease;
+}
+
+.docs-back img {
+	width: 22px;
+	height: 22px;
+	display: block;
+	border-radius: 6px;
+}
+
+.docs-back .brand-dot {
+	color: var(--orange);
+}
+
+/* Hover colors the text via the container so .docs-back-sep (explicit color)
+   keeps its muted tone instead of turning orange with the old `:hover span`. */
+.docs-back:hover {
+	color: var(--orange);
+}
+
+.docs-back:focus-visible {
+	outline: 2px solid var(--orange);
+	outline-offset: 4px;
+}
+
+.docs-back-sep {
+	color: rgba(20, 20, 19, 0.35);
+	margin: 0 2px;
+}
+
+.docs-back-page {
+	font-weight: 600;
+}

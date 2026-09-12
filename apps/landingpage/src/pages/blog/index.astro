@@ -16,7 +16,10 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
 		<img src="/logo-mark.png" alt="" width="22" height="22" />
 		<span>excited<span class="brand-dot">.live</span></span>
 		<span class="docs-back-sep">/</span>
-		<span class="docs-back-page">Blog</span>
+		<span class="docs-back-page">
+			<span data-lang-en>Blog</span>
+			<span data-lang-th>บล็อก</span>
+		</span>
 	</a>
 
 	<main class="blog-index">
