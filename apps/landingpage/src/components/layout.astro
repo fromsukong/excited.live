@@ -86,30 +86,49 @@ const jsonLd = {
 		/>
 		<script is:inline type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
 		<script is:inline>
-			// Google Analytics 4 — production hostname only (localhost + *.pages.dev
-			// previews excluded). Tag loads async; page_view counted per route because
-			// ClientRouter serves client-side navigations.
+			// Google Analytics 4 — production hostname only, and only after the
+			// visitor accepts the cookie banner (choice stored as `exl-consent`).
+			// page_view is counted per route because ClientRouter serves
+			// client-side navigations.
 			(() => {
 				if (location.hostname !== 'excited.live') return;
-				if (window.__exlGaInit) return;
-				window.__exlGaInit = true;
+				const CONSENT_KEY = 'exl-consent';
 				const GA_ID = 'G-QFCM071TWH';
-				window.dataLayer = window.dataLayer || [];
-				window.gtag = function (...args) {
-					window.dataLayer.push(args);
+				const readConsent = () => {
+					try {
+						return localStorage.getItem(CONSENT_KEY) ?? window.__exlConsentChoice ?? null;
+					} catch {
+						return window.__exlConsentChoice ?? null;
+					}
 				};
-				window.gtag('js', new Date());
-				window.gtag('config', GA_ID, { send_page_view: false });
-				const s = document.createElement('script');
-				s.async = true;
-				s.src = 'https://www.googletagmanager.com/gtag/js?id=' + GA_ID;
-				document.head.appendChild(s);
-				document.addEventListener('astro:page-load', function () {
+				let sentFor = null;
+				const pageview = () => {
+					if (sentFor === location.href) return;
+					sentFor = location.href;
 					window.gtag('event', 'page_view', {
 						page_location: location.href,
 						page_title: document.title,
 					});
-				});
+				};
+				const loadGa = () => {
+					if (window.__exlGaInit) return;
+					window.__exlGaInit = true;
+					window.dataLayer = window.dataLayer || [];
+					window.gtag = function (...args) {
+						window.dataLayer.push(args);
+					};
+					window.gtag('js', new Date());
+					window.gtag('config', GA_ID, { send_page_view: false });
+					const s = document.createElement('script');
+					s.async = true;
+					s.src = 'https://www.googletagmanager.com/gtag/js?id=' + GA_ID;
+					document.head.appendChild(s);
+					document.addEventListener('astro:page-load', pageview);
+					pageview();
+				};
+				// The consent banner (end of <body>) calls this after 'Accept'.
+				window.__exlGaLoad = loadGa;
+				if (readConsent() === 'granted') loadGa();
 			})();
 		</script>
 		<script is:inline>
@@ -128,5 +147,151 @@ const jsonLd = {
 	</head>
 	<body>
 		<slot />
+
+		<!-- Cookie consent — GA (head script) only initializes after Accept. -->
+		<div id="cookie-banner" class="cookie-banner" hidden>
+			<p class="cookie-text">
+				<span data-lang-en>
+					We use Google Analytics cookies to see how many people visit and what
+					they read. No ads, no data selling.
+				</span>
+				<span data-lang-th>
+					เราใช้คุกกี้ของ Google Analytics เพื่อดูว่ามีคนเข้าเว็บเท่าไหร่และอ่านอะไรบ้าง —
+					ไม่มีโฆษณา ไม่ขายข้อมูล
+				</span>
+				<a class="cookie-learn" href="/docs/privacy">
+					<span data-lang-en>Privacy</span>
+					<span data-lang-th>ความเป็นส่วนตัว</span>
+				</a>
+			</p>
+			<div class="cookie-actions">
+				<button type="button" class="cookie-btn" data-consent="denied">
+					<span data-lang-en>Decline</span>
+					<span data-lang-th>ปฏิเสธ</span>
+				</button>
+				<button type="button" class="cookie-btn cookie-btn--accept" data-consent="granted">
+					<span data-lang-en>Accept</span>
+					<span data-lang-th>ยอมรับ</span>
+				</button>
+			</div>
+		</div>
+
+		<script is:inline>
+			// Cookie consent banner. Stores Accept/Decline in localStorage
+			// (`exl-consent`); the GA head script only initializes after Accept.
+			// Re-synced on astro:page-load because ClientRouter swaps the body.
+			(() => {
+				const KEY = 'exl-consent';
+				const read = () => {
+					try {
+						return localStorage.getItem(KEY) ?? window.__exlConsentChoice ?? null;
+					} catch {
+						return window.__exlConsentChoice ?? null;
+					}
+				};
+				const sync = () => {
+					const el = document.getElementById('cookie-banner');
+					if (el) el.hidden = read() !== null;
+				};
+				document.addEventListener('click', (event) => {
+					const target = event.target;
+					if (!target || !target.closest) return;
+					const choice = target.closest('[data-consent]');
+					if (choice) {
+						const value = choice.getAttribute('data-consent');
+						window.__exlConsentChoice = value;
+						try {
+							localStorage.setItem(KEY, value);
+						} catch {
+							/* storage unavailable — choice lasts this page view */
+						}
+						if (value === 'granted' && window.__exlGaLoad) window.__exlGaLoad();
+						sync();
+						return;
+					}
+					if (target.closest('[data-consent-reset]')) {
+						event.preventDefault();
+						window.__exlConsentChoice = null;
+						try {
+							localStorage.removeItem(KEY);
+						} catch {
+							/* ignore */
+						}
+						sync();
+					}
+				});
+				document.addEventListener('astro:page-load', sync);
+				sync();
+			})();
+		</script>
 	</body>
 </html>
+
+<style>
+	.cookie-banner {
+		position: fixed;
+		bottom: 16px;
+		left: 50%;
+		transform: translateX(-50%);
+		z-index: 80;
+		width: min(640px, calc(100vw - 24px));
+		display: flex;
+		align-items: center;
+		gap: 14px;
+		padding: 12px 12px 12px 18px;
+		background: var(--lifted);
+		border: 1px solid var(--dust);
+		border-radius: 18px;
+		box-shadow: var(--shadow-halo);
+	}
+	.cookie-banner[hidden] {
+		display: none;
+	}
+	.cookie-text {
+		flex: 1;
+		margin: 0;
+		font-size: 13.5px;
+		line-height: 1.45;
+		color: var(--charcoal);
+	}
+	.cookie-learn {
+		color: var(--link-blue);
+		margin-left: 4px;
+		white-space: nowrap;
+	}
+	.cookie-actions {
+		display: flex;
+		gap: 8px;
+		flex-shrink: 0;
+	}
+	.cookie-btn {
+		appearance: none;
+		background: transparent;
+		border: 1px solid var(--dust);
+		color: var(--ink);
+		font: inherit;
+		font-size: 13.5px;
+		font-weight: 600;
+		padding: 8px 16px;
+		border-radius: 999px;
+		cursor: pointer;
+	}
+	.cookie-btn--accept {
+		background: var(--ink);
+		border-color: var(--ink);
+		color: var(--canvas);
+	}
+	.cookie-btn:hover {
+		opacity: 0.85;
+	}
+	@media (max-width: 620px) {
+		.cookie-banner {
+			flex-direction: column;
+			align-items: stretch;
+			padding: 16px;
+		}
+		.cookie-actions {
+			justify-content: flex-end;
+		}
+	}
+</style>
