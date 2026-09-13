@@ -14,7 +14,9 @@ import {
 	defaultPlanInput,
 	rowAmountInYear,
 	rowGrowthRate,
+	rowLifetimeTotal,
 	runSimulation,
+	type PeriodRow,
 } from "./index"
 
 function plan(overrides: Partial<ReturnType<typeof defaultPlanInput>> = {}) {
@@ -31,6 +33,8 @@ describe("period rows", () => {
 	it("grows a row by its effective rate inside the active window", () => {
 		const row = {
 			id: "r",
+			typeId: "livingExpenses" as const,
+			frequency: "yearly" as const,
 			label: "Rent",
 			startYear: 2026,
 			startMonth: 0,
@@ -49,8 +53,8 @@ describe("period rows", () => {
 	it("sums two overlapping rows of the same type", () => {
 		const plan2 = plan({
 			incomes: [
-				{ id: "a", label: "Salary", startYear: 2026, startMonth: 0, endYear: null, endMonth: 11, amount: 600_000, growthMode: "fixed", growthRate: 0 },
-				{ id: "b", label: "Salary (promotion)", startYear: 2028, startMonth: 0, endYear: null, endMonth: 11, amount: 300_000, growthMode: "fixed", growthRate: 0 },
+				{ id: "a", typeId: "salary", frequency: "yearly", label: "Salary", startYear: 2026, startMonth: 0, endYear: null, endMonth: 11, amount: 600_000, growthMode: "fixed", growthRate: 0 },
+				{ id: "b", typeId: "salary", frequency: "yearly", label: "Salary (promotion)", startYear: 2028, startMonth: 0, endYear: null, endMonth: 11, amount: 300_000, growthMode: "fixed", growthRate: 0 },
 			],
 		})
 		const result = runSimulation(plan2)
@@ -131,8 +135,8 @@ describe("runSimulation", () => {
 	it("feeds deductible mortgage rows into the tax calc (US-005)", () => {
 		const p = plan({
 			expenses: [
-				{ id: "e1", label: "Living", startYear: 2026, startMonth: 0, endYear: null, endMonth: 11, amount: 480_000, growthMode: "fixed", growthRate: 0 },
-				{ id: "e2", label: "Mortgage interest", startYear: 2026, startMonth: 0, endYear: null, endMonth: 11, amount: 200_000, growthMode: "fixed", growthRate: 0, deductible: "mortgageInterest" },
+				{ id: "e1", typeId: "livingExpenses", frequency: "yearly", label: "Living", startYear: 2026, startMonth: 0, endYear: null, endMonth: 11, amount: 480_000, growthMode: "fixed", growthRate: 0 },
+				{ id: "e2", typeId: "livingExpenses", frequency: "yearly", label: "Mortgage interest", startYear: 2026, startMonth: 0, endYear: null, endMonth: 11, amount: 200_000, growthMode: "fixed", growthRate: 0, deductible: "mortgageInterest" },
 			],
 		})
 		const result = runSimulation(p)
@@ -160,7 +164,7 @@ describe("runSimulation", () => {
 			savingsSplit: { emergency: 0, goal: 0, nontax: 1, taxAdvantaged: 0 },
 			efMonths: 6,
 			expenses: [
-				{ id: "e1", label: "Living", startYear: 2026, startMonth: 0, endYear: null, endMonth: 11, amount: 480_000, growthMode: "fixed", growthRate: 0 },
+				{ id: "e1", typeId: "livingExpenses", frequency: "yearly", label: "Living", startYear: 2026, startMonth: 0, endYear: null, endMonth: 11, amount: 480_000, growthMode: "fixed", growthRate: 0 },
 			],
 		})
 		const result = runSimulation(p)
@@ -193,10 +197,10 @@ describe("runSimulation", () => {
 			startYear: 2026,
 			startingWallets: { emergency: 50_000, goal: 0, nontax: 100_000, taxAdvantaged: 0 },
 			incomes: [
-				{ id: "a", label: "Salary", startYear: 2026, startMonth: 0, endYear: 2027, endMonth: 11, amount: 600_000, growthMode: "fixed", growthRate: 0 },
+				{ id: "a", typeId: "salary", frequency: "yearly", label: "Salary", startYear: 2026, startMonth: 0, endYear: 2027, endMonth: 11, amount: 600_000, growthMode: "fixed", growthRate: 0 },
 			],
 			expenses: [
-				{ id: "e", label: "Living", startYear: 2026, startMonth: 0, endYear: null, endMonth: 11, amount: 480_000, growthMode: "fixed", growthRate: 0 },
+				{ id: "e", typeId: "livingExpenses", frequency: "yearly", label: "Living", startYear: 2026, startMonth: 0, endYear: null, endMonth: 11, amount: 480_000, growthMode: "fixed", growthRate: 0 },
 			],
 			savingsSplit: { emergency: 0, goal: 0, nontax: 1, taxAdvantaged: 0 },
 			retirementYear: 2028,
@@ -228,5 +232,101 @@ describe("runSimulation", () => {
 			balance *= growth
 		}
 		expect(result.years[0]!.wallets.nontax).toBeCloseTo(balance, 0)
+	})
+})
+
+describe("rowLifetimeTotal", () => {
+	it("calculates total for a fixed 1.2M/yr row open-ended horizon 10", () => {
+		const row: PeriodRow = {
+			id: "r1",
+			typeId: "salary",
+			frequency: "yearly",
+			label: "Salary",
+			startYear: 2026,
+			startMonth: 0,
+			endYear: null,
+			endMonth: 11,
+			amount: 1_200_000,
+			growthMode: "fixed",
+			growthRate: 0,
+		}
+		expect(rowLifetimeTotal(row, { startYear: 2026, inflation: 0.02, horizonYears: 10 })).toBe(12_000_000)
+	})
+
+	it("clips when endYear is set to 2026", () => {
+		const row: PeriodRow = {
+			id: "r2",
+			typeId: "salary",
+			frequency: "yearly",
+			label: "Salary",
+			startYear: 2026,
+			startMonth: 0,
+			endYear: 2026,
+			endMonth: 11,
+			amount: 1_200_000,
+			growthMode: "fixed",
+			growthRate: 0,
+		}
+		expect(rowLifetimeTotal(row, { startYear: 2026, inflation: 0.02, horizonYears: 10 })).toBe(1_200_000)
+	})
+
+	it("handles partial start year (2026-07 / month 6)", () => {
+		const row: PeriodRow = {
+			id: "r3",
+			typeId: "salary",
+			frequency: "yearly",
+			label: "Salary",
+			startYear: 2026,
+			startMonth: 6,
+			endYear: null,
+			endMonth: 11,
+			amount: 1_200_000,
+			growthMode: "fixed",
+			growthRate: 0,
+		}
+		expect(rowLifetimeTotal(row, { startYear: 2026, inflation: 0.02, horizonYears: 10 })).toBe(11_400_000)
+	})
+
+	it("calculates total for a monthly row amount 40,000", () => {
+		const row: PeriodRow = {
+			id: "r4",
+			typeId: "livingExpenses",
+			frequency: "monthly",
+			label: "Living",
+			startYear: 2026,
+			startMonth: 0,
+			endYear: null,
+			endMonth: 11,
+			amount: 40_000,
+			growthMode: "fixed",
+			growthRate: 0,
+		}
+		expect(rowLifetimeTotal(row, { startYear: 2026, inflation: 0.02, horizonYears: 10 })).toBe(4_800_000)
+	})
+
+	it("clips a row starting before plan.startYear to the window", () => {
+		const row: PeriodRow = {
+			id: "r5",
+			typeId: "salary",
+			frequency: "yearly",
+			label: "Salary",
+			startYear: 2020,
+			startMonth: 0,
+			endYear: 2028,
+			endMonth: 11,
+			amount: 1_000_000,
+			growthMode: "fixed",
+			growthRate: 0,
+		}
+		expect(rowLifetimeTotal(row, { startYear: 2026, inflation: 0.02, horizonYears: 10 })).toBe(3_000_000)
+	})
+})
+
+describe("defaultPlanInput", () => {
+	it("seeds salary typeId and retire milestone", () => {
+		const p = defaultPlanInput(new Date("2026-01-15"))
+		expect(p.incomes[0]?.typeId).toBe("salary")
+		expect(p.milestones).toHaveLength(1)
+		expect(p.milestones[0]?.label).toBe("Retire")
 	})
 })

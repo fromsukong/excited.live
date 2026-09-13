@@ -969,19 +969,111 @@ button {
   color: var(--copy);
 }
 
+/* Type-picker dialog rows (flat text list — deliberately not a card grid). */
+.dialog-options { display: flex; flex-direction: column; width: 100%; }
+.dialog-option {
+  width: 100%;
+  padding: 12px 2px;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--copy);
+  font-size: 15px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+.dialog-option:last-child { border-bottom: none; }
+.dialog-option:hover { color: var(--color-accent); }
+
 .row-detail {
   min-width: 0;
   width: 100%;
 }
 
-/* ≤640px: hide the Period column of income/expense tables — it stays visible
-   in the expanded editor below each row. Column 1 is the expansion chevron. */
+/* ≤640px: hide the Period column of the income/expense GROUP tables (a group
+   table = a <table> that is not itself nested inside another table). The
+   direct-child combinators keep this off the nested entry tables. Column 1 is
+   the expansion chevron, 2 the name, 3 the total, 4 the period. */
 @media (max-width: 640px) {
-  #left-panel-incomes [class*="astryx-table"] th:nth-child(4),
-  #left-panel-incomes [class*="astryx-table"] td:nth-child(4),
-  #left-panel-expenses [class*="astryx-table"] th:nth-child(4),
-  #left-panel-expenses [class*="astryx-table"] td:nth-child(4) {
+  #left-panel-incomes table:not(table table) > thead > tr > th:nth-child(4),
+  #left-panel-incomes table:not(table table) > tbody > tr > td:nth-child(4),
+  #left-panel-expenses table:not(table table) > thead > tr > th:nth-child(4),
+  #left-panel-expenses table:not(table table) > tbody > tr > td:nth-child(4) {
     display: none;
+  }
+
+  /* Nested entry tables (table inside table) are narrower: drop Period (col 2)
+     and keep Name / Amount / Lifetime fully visible. */
+  #left-panel-incomes table table > thead > tr > th:nth-child(2),
+  #left-panel-incomes table table > tbody > tr > td:nth-child(2),
+  #left-panel-expenses table table > thead > tr > th:nth-child(2),
+  #left-panel-expenses table table > tbody > tr > td:nth-child(2) {
+    display: none;
+  }
+
+  /* Phone widths: Astryx bakes a min-width on each table (sum of the column
+     min-widths, display:none columns included) with table-layout: fixed — the
+     tables then render wider than the ~314px panel and clip. Drop the table
+     min-width and slim the numeric columns so everything fits without
+     horizontal scrolling. */
+  #left-panel-incomes table,
+  #left-panel-expenses table,
+  #left-panel-assets table,
+  #left-panel-liabilities table {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  #left-panel-incomes table table > thead > tr > th:nth-child(1),
+  #left-panel-incomes table table > tbody > tr > td:nth-child(1),
+  #left-panel-incomes table:not(table table) > thead > tr > th:nth-child(2),
+  #left-panel-incomes table:not(table table) > tbody > tr > td:nth-child(2),
+  #left-panel-expenses table table > thead > tr > th:nth-child(1),
+  #left-panel-expenses table table > tbody > tr > td:nth-child(1),
+  #left-panel-expenses table:not(table table) > thead > tr > th:nth-child(2),
+  #left-panel-expenses table:not(table table) > tbody > tr > td:nth-child(2),
+  #left-panel-assets table table > thead > tr > th:nth-child(1),
+  #left-panel-assets table table > tbody > tr > td:nth-child(1),
+  #left-panel-assets table:not(table table) > thead > tr > th:nth-child(2),
+  #left-panel-assets table:not(table table) > tbody > tr > td:nth-child(2),
+  #left-panel-liabilities table table > thead > tr > th:nth-child(1),
+  #left-panel-liabilities table table > tbody > tr > td:nth-child(1),
+  #left-panel-liabilities table:not(table table) > thead > tr > th:nth-child(2),
+  #left-panel-liabilities table:not(table table) > tbody > tr > td:nth-child(2) {
+    min-width: 0 !important;
+  }
+
+  #left-panel-incomes table:not(table table) > thead > tr > th:nth-child(3),
+  #left-panel-incomes table:not(table table) > tbody > tr > td:nth-child(3),
+  #left-panel-expenses table:not(table table) > thead > tr > th:nth-child(3),
+  #left-panel-expenses table:not(table table) > tbody > tr > td:nth-child(3),
+  #left-panel-assets table:not(table table) > thead > tr > th:nth-child(3),
+  #left-panel-assets table:not(table table) > tbody > tr > td:nth-child(3),
+  #left-panel-liabilities table:not(table table) > thead > tr > th:nth-child(3),
+  #left-panel-liabilities table:not(table table) > tbody > tr > td:nth-child(3),
+  #left-panel-assets table table > thead > tr > th:nth-child(2),
+  #left-panel-assets table table > tbody > tr > td:nth-child(2),
+  #left-panel-liabilities table table > thead > tr > th:nth-child(2),
+  #left-panel-liabilities table table > tbody > tr > td:nth-child(2) {
+    width: 112px !important;
+    min-width: 112px !important;
+  }
+
+  #left-panel-incomes table table > thead > tr > th:nth-child(4),
+  #left-panel-incomes table table > tbody > tr > td:nth-child(4),
+  #left-panel-expenses table table > thead > tr > th:nth-child(4),
+  #left-panel-expenses table table > tbody > tr > td:nth-child(4) {
+    width: 112px !important;
+    min-width: 112px !important;
+  }
+
+  /* The entry Amount column breathes in two lines ("฿100,000" / "/month") so
+     the name column keeps room; group totals and lifetime stay single-line. */
+  #left-panel-incomes table table > thead > tr > th:nth-child(3),
+  #left-panel-incomes table table > tbody > tr > td:nth-child(3),
+  #left-panel-expenses table table > thead > tr > th:nth-child(3),
+  #left-panel-expenses table table > tbody > tr > td:nth-child(3) {
+    width: 96px !important;
+    min-width: 96px !important;
   }
 }
 
