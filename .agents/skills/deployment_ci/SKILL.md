@@ -11,7 +11,7 @@ description: >-
 
 Three deploy tiers, one rule: agents never deploy. PR previews are automatic, pushes to `main` go to prelive, and production is a manual human action. No deploys of any kind without explicit human approval (AGENTS.md deploy model).
 
-Workflows live in `.github/workflows/`. All of them use Node 22 and pnpm 10.12.0, and pin wrangler 4.x through the `WRANGLER_VERSION` env.
+Workflows live in `.github/workflows/`. All build and deploy workflows use Node 22 and pnpm 10.12.0; the 9 deploy workflows pin wrangler via `WRANGLER_VERSION`.
 
 ---
 
@@ -42,7 +42,7 @@ Agents never trigger production workflows, for any reason, including "just testi
 
 - Deploy tiers: `preview.yml` / `prelive.yml` / `production.yml` (main webapp), `tax-preview.yml` / `tax-prelive.yml` / `tax-production.yml`, `landing-preview.yml` / `landing-prelive.yml` / `landing-production.yml`.
 - `pr-tests.yml` ("PR Checks"): PR lint + affected-package tests (section 3).
-- Preview metadata: `pr-description.yml`, `tax-pr-description.yml`, `landing-pr-description.yml`. They run on `workflow_run` completion of the matching preview workflow and write the preview URLs into the PR body between the `AUTO-PREVIEWS` markers.
+- Preview metadata: `pr-description.yml`, `tax-pr-description.yml`, `landing-pr-description.yml`. They run on `workflow_run` completion of the matching preview workflow and write the preview URLs into the PR body between the `AUTO-PREVIEWS` (main webapp), `AUTO-TAX-PREVIEWS` (tax), and `AUTO-LANDING-PREVIEWS` (landing) markers.
 - Cleanup: `pr-cleanup.yml` removes preview deployments for the branch on `pull_request` closed, for both `excited-live` and `excited-live-landing-preview`; `tax-pr-cleanup.yml` does the same for `excited-live-tax` (and is path-filtered to tax changes).
 
 ## 3. What CI enforces (pr-tests.yml)
@@ -50,7 +50,7 @@ Agents never trigger production workflows, for any reason, including "just testi
 - **Lint**: whole-repo `pnpm lint --max-warnings=0` (flat config `eslint.config.mjs`). The warning budget is zero, so a local warning blocks the PR.
 - **Tests**: only packages affected by the PR. The `detect` job diffs against the merge base and feeds a matrix; packages with a real test script run, packages without one are skipped. Root-level changes (lockfile, configs, `turbo.json`) trigger all packages that have tests.
 - Runs on PR `opened`, `synchronize`, and `reopened`, with cancel-in-progress concurrency.
-- **No builds in PR Checks**. Builds happen inside the deploy workflows: main webapp runs `pnpm --filter @excited-live/webapp^... build && pnpm build` in `apps/webapp`; tax runs `pnpm exec turbo run build --filter=@excited-live/tax-webapp`; landing runs `pnpm exec turbo run build --filter=@excited-live/landingpage` (turbo builds the dependency chain first, which the tax app needs because it resolves `@excited-live/tax` from `packages/tax/dist`).
+- **No app builds in PR Checks; turbo may still build upstream dependency packages for tested packages**. Builds happen inside the deploy workflows: main webapp runs `pnpm --filter @excited-live/webapp^... build && pnpm build` in `apps/webapp`; tax runs `pnpm exec turbo run build --filter=@excited-live/tax-webapp`; landing runs `pnpm exec turbo run build --filter=@excited-live/landingpage` (turbo builds the dependency chain first, which the tax app needs because it resolves `@excited-live/tax` from `packages/tax/dist`).
 - On a docs-only PR expect: lint runs, test job skipped ("affected packages with tests: none").
 
 ## 4. The sanitize algorithm: 11 copies across 8 workflow files
@@ -82,7 +82,7 @@ grep -rln "SANITIZED_BRANCH\|sanitize" .github/workflows/
 - Symptom: a deploy step fails with Cloudflare auth errors while the build, lint, and test steps ahead of it stay green. That is a repository credential problem, not your change.
 - Response: do not attempt credential workarounds, do not edit workflows around it, do not re-run "until it works". Report the failure with the run link and stop; credentials are handled outside the repo.
 - History: FRO-36 tracked a credential outage where PR preview and prelive deploy steps failed this way. The credential was restored on 2026-10-04 and deploys were verified working the same day: PR previews deployed and their aliases served HTTP 200, and a `main` merge deployed to prelive successfully. FRO-36 was in review at audit time.
-- Known harmless noise: the `wrangler pages project create ... || true` line logs "A project with this name already exists [code: 8000002]" on every run. It is tolerated. Judge the deploy by its own lines: "Deployment complete!" plus the alias URL.
+- Known harmless noise: the `wrangler pages project create ... || true` line logs "A project with this name already exists. Choose a different project name. [code: 8000002]" on every run. It is tolerated. Judge the deploy by its own lines: "Deployment complete!" plus the alias URL.
 
 ## 8. Agent checklist around CI
 
