@@ -62,6 +62,8 @@ export default tseslint.config(
 			"**/.verify/**",
 			"**/routeTree.gen.ts",
 			"**/*.cjs",
+			"**/playwright-report/**",
+			"**/test-results/**",
 		],
 	},
 	js.configs.recommended,
