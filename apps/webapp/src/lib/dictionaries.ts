@@ -125,6 +125,7 @@ export const strings: Dictionary = {
 	"dialog.cancel": { en: "Cancel", th: "ยกเลิก" },
 	"milestone.add": { en: "Add milestone", th: "เพิ่มหมุดหมาย" },
 	"milestone.edit": { en: "Edit milestone", th: "แก้ไขหมุดหมาย" },
+	"milestone.date": { en: "Date", th: "วันที่" },
 
 	// Income types
 	"type.salary": { en: "Salary", th: "เงินเดือน" },

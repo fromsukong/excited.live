@@ -167,9 +167,7 @@ export function DashboardPage() {
 				? (s.result.years.find((y) => y.year === hoverYear) ?? null)
 				: null
 		const end = hovered ?? shown?.[shown.length - 1] ?? s.result.years[s.result.years.length - 1]
-		const startNet = hovered
-			? (s.result.years[0]?.netWorth ?? 0)
-			: (s.result.years[0]?.netWorth ?? 0)
+		const startNet = s.result.years[0]?.netWorth ?? 0
 		const change = hovered
 			? hovered.netWorth - (s.result.years[0]?.netWorth ?? 0)
 			: (end?.netWorth ?? 0) - startNet
@@ -502,7 +500,7 @@ export function DashboardPage() {
 									</TabList>
 
 									{leftTab === "financials" ? (
-										<Stack id="left-panel-financials" role="tabpanel" tabIndex={0} aria-labelledby="tab-left-financials" className="tab-inputs" aria-label={t("a11y.financialSnapshot")}>
+										<Stack id="left-panel-financials" role="tabpanel" tabIndex={0} aria-labelledby="tab-left-financials" className="tab-inputs">
 											<Table
 												data={financialMetrics}
 												idKey="key"
@@ -527,7 +525,7 @@ export function DashboardPage() {
 											/>
 										</Stack>
 									) : leftTab === "milestone" ? (
-										<Stack id="left-panel-milestone" role="tabpanel" tabIndex={0} aria-labelledby="tab-left-milestone" className="tab-inputs" aria-label={t("tab.milestone")}>
+										<Stack id="left-panel-milestone" role="tabpanel" tabIndex={0} aria-labelledby="tab-left-milestone" className="tab-inputs">
 											<MilestoneTable
 												plan={plan}
 												onAdd={() => setMilestoneDialog({ id: null })}
@@ -536,7 +534,7 @@ export function DashboardPage() {
 											/>
 										</Stack>
 									) : leftTab === "incomes" ? (
-										<Stack id="left-panel-incomes" role="tabpanel" tabIndex={0} aria-labelledby="tab-left-incomes" className="tab-inputs" aria-label={t("tab.income")}>
+										<Stack id="left-panel-incomes" role="tabpanel" tabIndex={0} aria-labelledby="tab-left-incomes" className="tab-inputs">
 											<GroupedPeriodTable
 												kind="incomes"
 												plan={plan}
@@ -552,7 +550,7 @@ export function DashboardPage() {
 											/>
 										</Stack>
 									) : leftTab === "expenses" ? (
-										<Stack id="left-panel-expenses" role="tabpanel" tabIndex={0} aria-labelledby="tab-left-expenses" className="tab-inputs" aria-label={t("tab.expenses")}>
+										<Stack id="left-panel-expenses" role="tabpanel" tabIndex={0} aria-labelledby="tab-left-expenses" className="tab-inputs">
 											<GroupedPeriodTable
 												kind="expenses"
 												plan={plan}
@@ -568,7 +566,7 @@ export function DashboardPage() {
 											/>
 										</Stack>
 									) : leftTab === "assets" ? (
-										<Stack id="left-panel-assets" role="tabpanel" tabIndex={0} aria-labelledby="tab-left-assets" className="tab-inputs" aria-label={t("tab.assets")}>
+										<Stack id="left-panel-assets" role="tabpanel" tabIndex={0} aria-labelledby="tab-left-assets" className="tab-inputs">
 											<GroupedValueTable
 												kind="assets"
 												plan={plan}
@@ -580,7 +578,7 @@ export function DashboardPage() {
 											/>
 										</Stack>
 									) : (
-										<Stack id="left-panel-liabilities" role="tabpanel" tabIndex={0} aria-labelledby="tab-left-liabilities" className="tab-inputs" aria-label={t("tab.liabilities")}>
+										<Stack id="left-panel-liabilities" role="tabpanel" tabIndex={0} aria-labelledby="tab-left-liabilities" className="tab-inputs">
 											<GroupedValueTable
 												kind="liabilities"
 												plan={plan}

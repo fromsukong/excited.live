@@ -111,7 +111,7 @@ export function AssistantRail({
 	}
 
 	return (
-		<Stack className="assistant-rail" role="region" aria-label={t("rail.title")}>
+		<Stack className="assistant-rail">
 			<Stack direction="horizontal" justify="between" vAlign="center" className="assistant-rail__head">
 				<Stack gap={0}>
 					<Text weight="semibold">{t("rail.title")}</Text>

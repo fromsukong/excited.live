@@ -35,8 +35,6 @@ import {
 	type PlanInput,
 } from "../../lib/plan-service"
 
-/** Editable period-row editor (income or expenses). */
-
 /**
  * Month + year picker for a period row boundary. Month = Astryx Selector
  * dropdown; year = compact integer input. `allowForever` adds an ∞ option
@@ -399,7 +397,7 @@ export function MilestoneDialog({
 						<Stack gap={1.5}>
 							<TextInput label={t("row.label")} value={label} onChange={setLabel} />
 							<MonthYearPicker
-								label={t("table.month")}
+								label={t("milestone.date")}
 								year={year}
 								month={month}
 								onChange={(y, m) => {
