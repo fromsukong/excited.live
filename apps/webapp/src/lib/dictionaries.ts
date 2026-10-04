@@ -91,7 +91,7 @@ export const strings: Dictionary = {
 	"row.period": { en: "Period", th: "ช่วงเวลา" },
 	"row.amount": { en: "Amount (฿)", th: "จำนวน (บาท)" },
 	"row.startYear": { en: "Start", th: "เริ่ม" },
-	"row.endYear": { en: "End (blank = forever)", th: "จบ (ว่าง = ตลอดไป)" },
+	"row.endYear": { en: "End", th: "สิ้นสุด" },
 	"row.growth": { en: "Growth", th: "เติบโต" },
 	"growth.inflation": { en: "Inflation", th: "ตามเงินเฟ้อ" },
 	"growth.fixed": { en: "Fixed", th: "คงที่" },
@@ -145,7 +145,7 @@ export const strings: Dictionary = {
 	"type.livingExpenses": { en: "Living expenses", th: "ค่าใช้จ่ายในชีวิต" },
 	"type.rent": { en: "Rent", th: "ค่าเช่า" },
 	"type.debt": { en: "Debt", th: "หนี้" },
-	"type.studentLoans": { en: "Student loans", th: "หนี้กยศ." },
+	"type.studentLoans": { en: "Student loans", th: "หนี้ กยศ." },
 	"type.dependent": { en: "Dependent", th: "คนที่ดูแล" },
 	"type.education": { en: "Education", th: "การศึกษา" },
 	"type.healthCare": { en: "Health care", th: "สุขภาพ" },
@@ -228,6 +228,13 @@ export const strings: Dictionary = {
 	"wallets.heading": { en: "Wallets", th: "กระเป๋าเงิน" },
 	"row.until": { en: "Until", th: "ถึง" },
 	"a11y.netWorthChart": { en: "Net worth projection chart", th: "แผนภูมิมูลค่าสุทธิ" },
+
+	// Month / year picker
+	"picker.now": { en: "Now", th: "ตอนนี้" },
+	"picker.forever": { en: "Forever", th: "ตลอดไป" },
+	"picker.month": { en: "Month", th: "เดือน" },
+	"picker.year": { en: "Year", th: "ปี" },
+	"picker.thisYear": { en: "This year", th: "ปีนี้" },
 
 	// Settings page (mock)
 	"settings.note": { en: "Mock — nothing is saved yet.", th: "ตัวอย่าง — ยังไม่บันทึกจริง" },
