@@ -101,4 +101,7 @@ code. The MVP scope grows over time; the PRD is where that growth is agreed.
 - `docs/PRD.md` — product requirements, source of truth (see above)
 - `DEVELOPMENT.md` — commands, mock vs live API mode, deploy pitfalls
 - `.github/pull_request_template.md` — required PR shape
+- `.agents/skills/README.md` (project-local agent skills): tax_engine, design_system,
+  deployment_ci, and frontend_engineering; loaded when the checkout is trusted, and
+  take precedence over same-named profile skills.
 - `packages/tax/src/index.ts` — the current (single-file) engine surface
