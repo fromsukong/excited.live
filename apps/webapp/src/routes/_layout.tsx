@@ -5,6 +5,7 @@ import { getAuth } from "@workos/authkit-tanstack-react-start"
 import {
 	Card,
 	Grid,
+	PlainButton,
 	Stack,
 	Text,
 	Theme,
@@ -45,7 +46,7 @@ function DashboardLayoutWrapper() {
 }
 
 function DashboardLayout() {
-	const { t, summary } = usePlanDashboardContext()
+	const { t, summary, status, reload } = usePlanDashboardContext()
 	const { auth, returnPathname } = Route.useLoaderData()
 
 	return (
@@ -66,12 +67,21 @@ function DashboardLayout() {
 							className="plan-column"
 							aria-label={t("rail.title")}
 						>
-							{summary.ok ? (
+							{status === "loading" ? (
+								<Stack className="plan-column__chat" vAlign="center" hAlign="center" padding={4}>
+									<Text color="secondary">{t("plan.lastSyncedToday")}</Text>
+								</Stack>
+							) : summary.ok ? (
 								<Stack className="plan-column__chat">
 									<AssistantRail summary={summary.data} t={t} />
 								</Stack>
 							) : (
-								<Text color="secondary">{summary.error.message}</Text>
+								<Stack className="plan-column__chat" vAlign="center" hAlign="center" padding={4} gap={2}>
+									<Text color="secondary">{t("component.error.generic")}</Text>
+									<PlainButton onClick={reload}>
+										<Text size="sm">{t("action.retry")}</Text>
+									</PlainButton>
+								</Stack>
 							)}
 						</Stack>
 					</Grid>

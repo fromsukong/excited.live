@@ -1,8 +1,18 @@
-import { createElement, createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react"
-import { type DateInputProps } from "@excited-live/design-system"
+import {
+	createElement,
+	createContext,
+	useCallback,
+	useContext,
+	useEffect,
+	useMemo,
+	useState,
+	type ReactNode,
+} from "react"
 import { useLocale } from "../lib/locale-context"
 import {
-	computeMonteCarloBands,
+	fetchMonteCarloBandsData,
+	fetchPlanData,
+	savePlanData,
 	computePlanSummary,
 	defaultPlan,
 	type AmountFrequency,
@@ -47,19 +57,22 @@ export const HORIZONS: readonly HorizonKey[] = ["10", "20", "30", "40", "all"]
 /** Deliberate 2026-09-12 product decision: add button opens dialog ONLY for salary; other types land later. */
 export const ADD_DIALOG_TYPE_IDS = new Set<string>(["salary"])
 
+export type PageLoadStatus = "loading" | "success" | "error"
+export type ComponentLoadStatus = "idle" | "loading" | "success" | "error"
+
 export function usePlanDashboard() {
 	const { t, locale, setLocale } = useLocale()
+
+	// 1. Root Page Data Lifecycle
+	const [status, setStatus] = useState<PageLoadStatus>("loading")
+	const [error, setError] = useState<Error | null>(null)
 	const [plan, setPlan] = useState<PlanInput>(() => defaultPlan())
+
 	const [horizon, setHorizon] = useState<HorizonKey>("30")
 	const [metric, setMetric] = useState<MetricKey>("metric.netWorth")
 	const [leftTab, setLeftTab] = useState<LeftTab>("financials")
 	const [page, setPage] = useState<PageKey>("plan")
 	const [hoverYear, setHoverYear] = useState<number | null>(null)
-
-	// Settings page (mock): local-only fields, nothing is persisted yet.
-	const [profileName, setProfileName] = useState("")
-	const [birthday, setBirthday] = useState<DateInputProps["value"]>(undefined)
-	const [gender, setGender] = useState("female")
 
 	const [addedTypes, setAddedTypes] = useState<
 		Record<"incomes" | "expenses" | "assets" | "liabilities", string[]>
@@ -73,26 +86,62 @@ export function usePlanDashboard() {
 		}
 	})
 	const [pickerKind, setPickerKind] = useState<TypePickerKind | null>(null)
-	const [entryDialog, setEntryDialog] = useState<EntryDialogDescriptor | null>(
-		null,
-	)
-	const [valueDialog, setValueDialog] = useState<ValueDialogDescriptor | null>(
-		null,
-	)
-	const [milestoneDialog, setMilestoneDialog] = useState<{
-		id: string | null
-	} | null>(null)
+	const [entryDialog, setEntryDialog] = useState<EntryDialogDescriptor | null>(null)
+	const [valueDialog, setValueDialog] = useState<ValueDialogDescriptor | null>(null)
+	const [milestoneDialog, setMilestoneDialog] = useState<{ id: string | null } | null>(null)
+
+	// Supplementary child endpoint: Monte Carlo bands
+	const [bands, setBands] = useState<MonteCarloResult | null>(null)
+	const [bandStatus, setBandStatus] = useState<ComponentLoadStatus>("idle")
+
+	// Root data fetcher
+	const loadRootData = useCallback(async () => {
+		setStatus("loading")
+		setError(null)
+		try {
+			const data = await fetchPlanData()
+			setPlan(data)
+			setAddedTypes({
+				incomes: Array.from(new Set(data.incomes.map((r) => r.typeId))),
+				expenses: Array.from(new Set(data.expenses.map((r) => r.typeId))),
+				assets: Array.from(new Set(data.assets.map((r) => r.typeId))),
+				liabilities: Array.from(new Set(data.liabilities.map((r) => r.typeId))),
+			})
+			setStatus("success")
+		} catch (err) {
+			setStatus("error")
+			setError(err instanceof Error ? err : new Error(String(err)))
+		}
+	}, [])
+
+	useEffect(() => {
+		loadRootData()
+	}, [loadRootData])
+
+	// Debounced plan persistence (only when root successfully loaded)
+	useEffect(() => {
+		if (status !== "success") return
+		const timer = setTimeout(() => {
+			savePlanData(plan).catch((err) => {
+				console.error("[plan-service] failed to save plan", err)
+			})
+		}, 600)
+		return () => clearTimeout(timer)
+	}, [plan, status])
 
 	const summary = useMemo<
 		| { ok: true; data: PlanSummary }
 		| { ok: false; error: Error }
 	>(() => {
+		if (status !== "success") {
+			return { ok: false, error: error ?? new Error("Plan not loaded") }
+		}
 		try {
 			return { ok: true, data: computePlanSummary(plan) }
-		} catch (error) {
-			return { ok: false, error: error as Error }
+		} catch (err) {
+			return { ok: false, error: err as Error }
 		}
-	}, [plan])
+	}, [plan, status, error])
 
 	const shown = useMemo(() => {
 		if (!summary.ok) return null
@@ -102,27 +151,28 @@ export function usePlanDashboard() {
 		return all.slice(0, count)
 	}, [summary, horizon])
 
-	// US-110 — Monte Carlo bands. ~200 full projections cost a few hundred ms,
-	// so the recompute is debounced: typing stays instant (deterministic
-	// summary), the band catches up a beat later. The engine is seeded by
-	// default, so the band is stable across renders (SSR/client match).
-	const [bands, setBands] = useState<MonteCarloResult | null>(null)
+	// Supplementary child endpoint: runs ONLY when root succeeds
+	const loadMonteCarloBands = useCallback(async () => {
+		if (status !== "success") return
+		setBandStatus("loading")
+		try {
+			const result = await fetchMonteCarloBandsData(plan)
+			setBands(result)
+			setBandStatus("success")
+		} catch {
+			setBands(null)
+			setBandStatus("error")
+		}
+	}, [plan, status])
+
 	useEffect(() => {
+		if (status !== "success") return
 		const timer = setTimeout(() => {
-			try {
-				setBands(computeMonteCarloBands(plan))
-			} catch {
-				setBands(null)
-			}
+			loadMonteCarloBands()
 		}, 250)
 		return () => clearTimeout(timer)
-	}, [plan])
+	}, [loadMonteCarloBands, status])
 
-	/**
-	 * Band slice index-aligned with `shown`. Only net worth carries market
-	 * risk in the MVP engine, so the band shows for the net-worth metric
-	 * only (cash-flow band would be zero-width everywhere).
-	 */
 	const shownBands = useMemo(() => {
 		if (!bands || !shown || bands.years.length < shown.length) return null
 		if (metric !== "metric.netWorth") return null
@@ -438,6 +488,11 @@ export function usePlanDashboard() {
 		t,
 		locale,
 		setLocale,
+		// Root page status & error handling
+		status,
+		error,
+		reload: loadRootData,
+		// Plan data & projections
 		plan,
 		horizon,
 		setHorizon,
@@ -449,12 +504,6 @@ export function usePlanDashboard() {
 		setPage,
 		hoverYear,
 		setHoverYear,
-		profileName,
-		setProfileName,
-		birthday,
-		setBirthday,
-		gender,
-		setGender,
 		addedTypes,
 		setAddedTypes,
 		pickerKind,
@@ -469,6 +518,8 @@ export function usePlanDashboard() {
 		shown,
 		shownBands,
 		bandCaption,
+		bandStatus,
+		retryBand: loadMonteCarloBands,
 		financialMetrics,
 		removeEntryRow,
 		removeMilestone,

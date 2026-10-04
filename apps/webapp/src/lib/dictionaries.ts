@@ -58,45 +58,17 @@ export const strings: Dictionary = {
 	// Right column — plan summary card
 	"plan.actions": { en: "Plan", th: "แผน" },
 	"plan.lastSyncedToday": { en: "Recomputed just now", th: "คำนวณใหม่เมื่อสักครู่" },
-	"plan.keepCurrent": { en: "Every input is live", th: "ทุกตัวเลขแก้ได้สด ๆ" },
-	"plan.summaryBody": {
-		en: "Edit any input below — the chart, your numbers, and this plan update instantly.",
-		th: "แก้ตัวเลขด้านล่างได้เลย กราฟ ตัวเลข และแผนจะอัปเดตทันที",
-	},
 
-	// Engine answers (used by the chat replies)
-	"info.retirement.left": { en: "{amount} left at {year}", th: "เหลือ {amount} ถึงปี {year}" },
-	"info.retirement.runsOut": { en: "money runs out {year}", th: "เงินหมดปี {year}" },
-	"info.runsOut.never": { en: "never", th: "ไม่หมด" },
-
-	// Editor (inline section below the grid)
-	"editor.heading": { en: "Plan inputs", th: "ตัวเลขของแผน" },
-	"editor.desc": {
-		en: "Everything here is editable — add rows for each income or expense, with start/end years and growth.",
-		th: "แก้ได้ทุกช่อง เพิ่มแถวรายได้หรือรายจ่ายได้ พร้อมปีเริ่ม-จบ และการเติบโต",
-	},
-
-	// Sections
-	"section.chart": { en: "Net worth over time", th: "มูลค่าสุทธิตลอดเวลา" },
-	"section.summaryLong": { en: "Long term", th: "ระยะยาว" },
-	"section.summaryThisYear": { en: "This year", th: "ปีนี้" },
-
-	// Rows
-	"incomes.heading": { en: "Income", th: "รายได้" },
-	"expenses.heading": { en: "Expenses", th: "ค่าใช้จ่าย" },
-	"row.label": { en: "Name", th: "ชื่อ" },
-	"table.metric": { en: "Metric", th: "ตัวชี้วัด" },
-	"table.value": { en: "Value", th: "มูลค่า" },
-	"table.wallet": { en: "Wallet", th: "กระเป๋า" },
-	"row.period": { en: "Period", th: "ช่วงเวลา" },
-	"row.amount": { en: "Amount (฿)", th: "จำนวน (บาท)" },
-	"row.startYear": { en: "Start", th: "เริ่ม" },
-	"row.endYear": { en: "End (blank = forever)", th: "จบ (ว่าง = ตลอดไป)" },
-	"row.growth": { en: "Growth", th: "เติบโต" },
-	"growth.inflation": { en: "Inflation", th: "ตามเงินเฟ้อ" },
-	"growth.fixed": { en: "Fixed", th: "คงที่" },
-	"growth.override": { en: "Custom %", th: "กำหนดเอง %" },
-	"row.growthRate": { en: "Growth %", th: "อัตราเติบโต %" },
+	// Row and Table labels
+	"row.label": { en: "Name", th: "ชื่อรายการ" },
+	"row.amount": { en: "Amount", th: "จำนวนเงิน" },
+	"row.start": { en: "Start", th: "เริ่มต้น" },
+	"row.end": { en: "End", th: "สิ้นสุด" },
+	"row.growth": { en: "Growth", th: "การเติบโต" },
+	"row.growthMode.inflation": { en: "Inflation", th: "ตามเงินเฟ้อ" },
+	"row.growthMode.fixed": { en: "Fixed %", th: "คงที่ %" },
+	"row.growthMode.override": { en: "Override", th: "กำหนดเอง" },
+	"row.growthRate": { en: "Rate %", th: "อัตรา %" },
 	"row.deductible": { en: "Deductible", th: "ลดหย่อนภาษี" },
 	"deductible.none": { en: "No", th: "ไม่" },
 	"deductible.mortgageInterest": { en: "Mortgage", th: "ดอกเบี้ยบ้าน" },
@@ -145,7 +117,7 @@ export const strings: Dictionary = {
 	"type.livingExpenses": { en: "Living expenses", th: "ค่าใช้จ่ายในชีวิต" },
 	"type.rent": { en: "Rent", th: "ค่าเช่า" },
 	"type.debt": { en: "Debt", th: "หนี้" },
-	"type.studentLoans": { en: "Student loans", th: "หนี้กยศ." },
+	"type.studentLoans": { en: "Student loans", th: "หนี้ กยศ." },
 	"type.dependent": { en: "Dependent", th: "คนที่ดูแล" },
 	"type.education": { en: "Education", th: "การศึกษา" },
 	"type.healthCare": { en: "Health care", th: "สุขภาพ" },
@@ -229,8 +201,8 @@ export const strings: Dictionary = {
 	"row.until": { en: "Until", th: "ถึง" },
 	"a11y.netWorthChart": { en: "Net worth projection chart", th: "แผนภูมิมูลค่าสุทธิ" },
 
-	// Settings page (mock)
-	"settings.note": { en: "Mock — nothing is saved yet.", th: "ตัวอย่าง — ยังไม่บันทึกจริง" },
+	// Settings page
+	"settings.note": { en: "Saved per profile settings.", th: "บันทึกตามการตั้งค่าโปรไฟล์" },
 	"settings.name": { en: "Display name", th: "ชื่อที่แสดง" },
 	"settings.birthday": { en: "Birthday", th: "วันเกิด" },
 	"settings.gender": { en: "Gender", th: "เพศ" },
@@ -274,6 +246,28 @@ export const strings: Dictionary = {
 	},
 	"chat.status.funded": { en: "on track", th: "กำลังไปได้ดี" },
 	"chat.status.short": { en: "at risk", th: "มีความเสี่ยง" },
+
+	// Empty states and resilient error loading (Root & Component level)
+	"empty.home.title": { en: "Unable to load plan", th: "ไม่สามารถโหลดข้อมูลแผนได้" },
+	"empty.home.description": {
+		en: "Something went wrong while fetching your plan. Click reload to try again.",
+		th: "เกิดข้อผิดพลาดในการโหลดข้อมูลแผนของคุณ คลิกโหลดใหม่เพื่อลองอีกครั้ง",
+	},
+	"empty.settings.title": { en: "Unable to load settings", th: "ไม่สามารถโหลดข้อมูลการตั้งค่าได้" },
+	"empty.settings.description": {
+		en: "Something went wrong while fetching your settings. Click reload to try again.",
+		th: "เกิดข้อผิดพลาดในการโหลดข้อมูลการตั้งค่าของคุณ คลิกโหลดใหม่เพื่อลองอีกครั้ง",
+	},
+	"action.reload": { en: "Reload", th: "โหลดใหม่" },
+	"action.retry": { en: "Retry", th: "ลองใหม่" },
+	"component.error.band": {
+		en: "Market band simulation unavailable.",
+		th: "ไม่สามารถโหลดแถบการจำลองตลาดได้",
+	},
+	"component.error.generic": {
+		en: "Failed to load this section.",
+		th: "ไม่สามารถโหลดข้อมูลส่วนนี้ได้",
+	},
 }
 
 /** Optional per-locale overrides on top of `strings` (none needed yet). */
