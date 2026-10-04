@@ -77,19 +77,18 @@ grep -rln "SANITIZED_BRANCH\|sanitize" .github/workflows/
 - `dist/`, `.output/` (build outputs).
 - The design-system theme outputs (`mastercard-theme.css`, `mastercard.js`, `mastercard.d.ts`) are generated too, but they are regenerated on purpose with `theme:build` and committed as part of the change. See the `design_system` skill.
 
-## 7. Current pitfall: the deploy credential is dead (FRO-36)
+## 7. Deploy failure triage (the FRO-36 story)
 
-The Cloudflare deploy credential is currently not valid. PR preview and prelive deploy steps fail at the deploy stage with Cloudflare auth errors while the build, lint, and test steps ahead of them stay green. This is expected right now: the fix is tracked in FRO-36.
-
-- Do not attempt credential workarounds, do not edit workflows around it, do not re-run "until it works".
-- When reporting CI status on a PR, attribute the deploy-step failure to FRO-36 and say which steps did pass.
-- The description workflows only run when the preview workflow concludes success, so while FRO-36 is open expect the `AUTO-PREVIEWS` block in PR bodies to stay empty. Do not wait on it.
+- Symptom: a deploy step fails with Cloudflare auth errors while the build, lint, and test steps ahead of it stay green. That is a repository credential problem, not your change.
+- Response: do not attempt credential workarounds, do not edit workflows around it, do not re-run "until it works". Report the failure with the run link and stop; credentials are handled outside the repo.
+- History: FRO-36 tracked a credential outage where PR preview and prelive deploy steps failed this way. The credential was restored on 2026-10-04 and deploys were verified working the same day: PR previews deployed and their aliases served HTTP 200, and a `main` merge deployed to prelive successfully. FRO-36 was in review at audit time.
+- Known harmless noise: the `wrangler pages project create ... || true` line logs "A project with this name already exists [code: 8000002]" on every run. It is tolerated. Judge the deploy by its own lines: "Deployment complete!" plus the alias URL.
 
 ## 8. Agent checklist around CI
 
 1. Before opening a PR: run the narrowest relevant checks (`pnpm lint --max-warnings=0`, the affected package's tests). Do not run the whole workspace "just in case".
 2. Push only your own commits: `git log origin/main..HEAD` first (shared clone rules in AGENTS.md).
-3. After opening the PR: check `PR Checks`. Lint must be green; the test job may be skipped for docs-only changes. For deploy workflows, the build steps must pass; a deploy-step failure is FRO-36 noise.
+3. After opening the PR: check `PR Checks`. Lint must be green; the test job may be skipped for docs-only changes. For deploy workflows, the build steps must pass and the deploy step should end with "Deployment complete!" plus an alias URL. A deploy auth failure against the Cloudflare API means the repo credential (section 7), not your change.
 4. Never trigger production, never merge. Hand the PR to Prame; merges and deploys wait for him.
 5. Report state honestly: which checks ran, which passed, which failed, and why.
 
