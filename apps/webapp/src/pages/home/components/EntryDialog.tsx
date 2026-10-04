@@ -102,13 +102,18 @@ export function EntryDialog({
 	const [frequency, setFrequency] = useState<AmountFrequency>(
 		dialog.mode === "edit" ? (existingRow?.frequency ?? defaultFreq) : defaultFreq,
 	)
+
+	const now = new Date()
+	const currentYear = now.getFullYear()
+	const currentMonth = now.getMonth()
+
 	const [startYear, setStartYear] = useState(
 		dialog.mode === "edit"
 			? (existingRow?.startYear ?? plan.startYear)
-			: plan.startYear,
+			: currentYear,
 	)
 	const [startMonth, setStartMonth] = useState(
-		dialog.mode === "edit" ? (existingRow?.startMonth ?? 0) : 0,
+		dialog.mode === "edit" ? (existingRow?.startMonth ?? 0) : currentMonth,
 	)
 	const [endYear, setEndYear] = useState<number | null>(
 		dialog.mode === "edit" ? (existingRow?.endYear ?? null) : null,
@@ -128,25 +133,27 @@ export function EntryDialog({
 		dialog.mode === "edit" ? (existingRow?.deductible ?? "none") : "none",
 	)
 
-	const handleTypeChange = (newTypeId: string) => {
-		const oldTypeLabel = t(`type.${typeId}`)
-		const typedId = newTypeId as IncomeTypeId | ExpenseTypeId
+	function handleTypeChange(nextId: string | null) {
+		if (!nextId) return
+		const typedId = nextId as IncomeTypeId | ExpenseTypeId
 		setTypeId(typedId)
-		if (label === oldTypeLabel || label === "") {
-			setLabel(t(`type.${newTypeId}`))
+		// Auto-populate label if user hasn't edited it or if it matches the old type's label
+		const oldLabel = t(`type.${typeId}`)
+		if (!label || label === oldLabel) {
+			setLabel(t(`type.${typedId}`))
 		}
-		const newFreq =
+		// Reset frequency to type's default
+		const nextDefaultFreq =
 			dialog.kind === "incomes"
 				? (INCOME_TYPE_DEFAULT_FREQUENCY[typedId as IncomeTypeId] ?? "monthly")
 				: (EXPENSE_TYPE_DEFAULT_FREQUENCY[typedId as ExpenseTypeId] ?? "monthly")
-		setFrequency(newFreq)
+		setFrequency(nextDefaultFreq)
 	}
 
-	const typeLabel = t(`type.${typeId}`)
 	const title =
 		dialog.mode === "add"
-			? t("dialog.addItem", { label: typeLabel })
-			: t("dialog.editItem", { label: typeLabel })
+			? t("dialog.addItem", { label: t(`type.${typeId}`) })
+			: t("dialog.editItem", { label: label || t(`type.${typeId}`) })
 
 	return (
 		<Dialog

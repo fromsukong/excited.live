@@ -19,7 +19,14 @@ export {
 } from "./Svg";
 export { NumberInput, type NumberInputProps } from "@astryxdesign/core/NumberInput";
 export { TextInput, type TextInputProps } from "@astryxdesign/core/TextInput";
-export { Selector, type SelectorProps } from "@astryxdesign/core/Selector";
+export {
+	Selector,
+	SelectorOption,
+	type SelectorProps,
+	type SelectorOptionData,
+	type SelectorOptionType,
+} from "@astryxdesign/core/Selector";
+export { StatusDot, type StatusDotProps } from "@astryxdesign/core/StatusDot";
 export {
 	SegmentedControl,
 	SegmentedControlItem,
