@@ -1,0 +1,26 @@
+{
+	"name": "@excited-live/api",
+	"version": "0.0.1",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"dev": "tsx watch src/index.ts",
+		"dev:api": "tsx watch src/index.ts",
+		"build": "tsup src/index.ts --format esm --clean",
+		"start": "node dist/index.js",
+		"typecheck": "tsc --noEmit",
+		"lint": "eslint ."
+	},
+	"dependencies": {
+		"@excited-live/sim": "workspace:*",
+		"@excited-live/tax": "workspace:*",
+		"@hono/node-server": "^1.13.8",
+		"hono": "^4.7.4"
+	},
+	"devDependencies": {
+		"@types/node": "^24.0.0",
+		"tsup": "^8.5.0",
+		"tsx": "^4.19.3",
+		"typescript": "^5.8.3"
+	}
+}

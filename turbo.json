@@ -1,6 +1,7 @@
 {
 	"$schema": "https://turbo.build/schema.json",
 	"globalEnv": [
+		"PORT",
 		"VITE_API_MODE",
 		"BACKEND_API_URL",
 		"WORKOS_CLIENT_ID",
