@@ -72,19 +72,27 @@ function formatMonthAge(
 	if (totalMonths < 0) return ""
 	const y = Math.floor(totalMonths / 12)
 	const m = totalMonths % 12
-	return `${y}y${m}m`
+	return `${y}y ${m}m`
 }
 
-function formatYearAge(targetYear: number, birthYear: number): string {
-	const age = targetYear - birthYear
-	return age >= 0 ? `${age}y` : ""
+function formatYearAgeRange(
+	targetYear: number,
+	birthYear: number,
+	birthMonth: number,
+): string {
+	const startAge = formatMonthAge(targetYear, 0, birthYear, birthMonth)
+	const endAge = formatMonthAge(targetYear, 11, birthYear, birthMonth)
+	if (!startAge && !endAge) return ""
+	if (!startAge) return endAge
+	if (!endAge) return startAge
+	return `${startAge} - ${endAge}`
 }
 
 /**
  * Month / Year picker built with Astryx Selector component.
  * Configured via `mode` prop:
- * - "month" (default): Pick Month + Year (e.g. "Now", "Jan 2026") with relative age (e.g. "23y5m")
- * - "year": Pick Year only (e.g. "Now", "2026", "2027") with relative age (e.g. "24y")
+ * - "month" (default): Pick Month + Year (e.g. "Now", "Jan 2026") with relative age (e.g. "23y 5m")
+ * - "year": Pick Year only (e.g. "Now", "2026", "2027") with yearly age range (e.g. "23y 5m - 24y 4m")
  * - Both modes support "Forever" when `allowForever` is true.
  * - Single Astryx Selector dropdown with built-in search filtering.
  */
@@ -119,7 +127,7 @@ export function MonthYearPicker({
 	const ctx = useSafePlanDashboardContext()
 	const { birthYear, birthMonth } = useMemo(() => {
 		let bYear = 2002
-		let bMonth = 7 // Default August matches 23y5m in Jan 2026
+		let bMonth = 7 // Default August matches 23y 5m in Jan 2026
 
 		if (ctx?.birthday) {
 			const bDate = new Date(ctx.birthday)
@@ -143,9 +151,9 @@ export function MonthYearPicker({
 			const list: SelectorOptionType[] = [
 				{
 					value: "now",
-					label: nowLabel,
+					label: `${nowLabel} (${currentYear})`,
 					icon: CalendarIcon,
-					description: formatYearAge(currentYear, birthYear),
+					description: formatYearAgeRange(currentYear, birthYear, birthMonth),
 				},
 			]
 
@@ -157,10 +165,11 @@ export function MonthYearPicker({
 			}
 
 			for (let y = startYear; y <= endYear; y++) {
+				if (y === currentYear) continue
 				list.push({
 					value: `${y}`,
 					label: `${y}`,
-					description: formatYearAge(y, birthYear),
+					description: formatYearAgeRange(y, birthYear, birthMonth),
 				})
 			}
 
@@ -200,10 +209,10 @@ export function MonthYearPicker({
 		year,
 		nowLabel,
 		birthYear,
+		birthMonth,
 		allowForever,
 		foreverLabel,
 		monthNames,
-		birthMonth,
 	])
 
 	const selectedValue = useMemo(() => {
@@ -276,7 +285,13 @@ export function MonthYearPicker({
 			)}
 			renderValue={(opt: SelectorOptionData) => (
 				<HStack justify="between" align="center" style={{ width: "100%" }}>
-					<Text>{opt.label}</Text>
+					<Text>
+						{opt.value === "now"
+							? mode === "year"
+								? `${currentYear}`
+								: nowLabel
+							: opt.label}
+					</Text>
 					{opt.value === "now" ? (
 						<StatusDot variant="success" label={nowLabel} />
 					) : null}

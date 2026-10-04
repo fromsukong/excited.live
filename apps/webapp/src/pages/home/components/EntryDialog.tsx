@@ -224,6 +224,7 @@ export function EntryDialog({
 								label={t("row.startYear")}
 								year={startYear}
 								month={startMonth}
+								mode={frequency === "yearly" ? "year" : "month"}
 								onChange={(y, m) => {
 									if (y !== null) setStartYear(y)
 									setStartMonth(m)
@@ -234,6 +235,7 @@ export function EntryDialog({
 								label={t("row.endYear")}
 								year={endYear}
 								month={endMonth}
+								mode={frequency === "yearly" ? "year" : "month"}
 								allowForever
 								onChange={(y, m) => {
 									setEndYear(y)
