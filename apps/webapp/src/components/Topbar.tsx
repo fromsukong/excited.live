@@ -8,8 +8,9 @@ import {
 } from "@excited-live/design-system"
 import { Link, useLocation } from "@tanstack/react-router"
 import { useLocale } from "../lib/locale-context"
+import { TopbarAuth, type TopbarAuthProps } from "./TopbarAuth"
 
-export function Topbar() {
+export function Topbar({ auth, returnPathname }: TopbarAuthProps) {
 	const { t, locale, setLocale } = useLocale()
 	const location = useLocation()
 
@@ -81,6 +82,7 @@ export function Topbar() {
 				>
 					{locale === "en" ? t("locale.th") : t("locale.en")}
 				</PlainButton>
+				<TopbarAuth auth={auth} returnPathname={returnPathname} />
 			</Stack>
 		</Stack>
 	)

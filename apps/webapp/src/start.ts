@@ -10,6 +10,9 @@
  *    session work happens (per @workos/authkit-tanstack-react-start docs).
  * 3. `authkitMiddleware` — validates/refreshes the WorkOS AuthKit session and
  *    exposes auth context to server functions and route loaders.
+ * 4. `authGuardMiddleware` — route gate (#46): redirects signed-out page requests
+ *    to /api/auth/sign-in when auth is required (WORKOS_REQUIRE_AUTH). Must run
+ *    after authkitMiddleware so the session is already resolved.
  *
  * The locale middleware resolves the request locale once per request:
  * 1. `excited_live_locale` cookie (visitor's explicit choice),
@@ -20,7 +23,7 @@
  */
 import { createStart, createCsrfMiddleware, createMiddleware } from "@tanstack/react-start"
 import { getRequest } from "@tanstack/react-start/server"
-import { authkitMiddleware } from "@workos/authkit-tanstack-react-start"
+import { authkitMiddleware, type AuthKitContext } from "@workos/authkit-tanstack-react-start"
 import {
 	localeCookieValue,
 	localeFromAcceptLanguage,
@@ -28,6 +31,7 @@ import {
 	type Locale,
 } from "@excited-live/i18n"
 import { routeTree } from "./routeTree.gen"
+import { authkitConfigured, authRequired } from "./lib/auth-config"
 
 const localeMiddleware = createMiddleware({ type: "request" }).server(async ({ next }) => {
 	const request = getRequest()
@@ -59,31 +63,76 @@ const csrfMiddleware = createCsrfMiddleware({
 })
 
 /**
- * AuthKit requires 4 env vars (WORKOS_CLIENT_ID, WORKOS_API_KEY,
- * WORKOS_REDIRECT_URI, WORKOS_COOKIE_PASSWORD). Environments without them
- * (PR previews, prelive, local mock work) must not have every request 500 —
- * authkitMiddleware throws on first use when the config is missing. The start
- * callback is re-evaluated per request (TanStack Start waitForRequest), so the
- * check runs at request time and works on workerd/Cloudflare Pages too.
- * When unconfigured, we keep CSRF + locale and log once per process.
+ * Route gate (#46): when auth is required (see lib/auth-config.ts), signed-out
+ * PAGE requests are redirected into the AuthKit sign-in flow. Only registered
+ * after authkitMiddleware, and only when configured + required.
+ *
+ * This is a PAGE-LEVEL gate only: server-function RPCs are intentionally not
+ * gated (getAuthState must stay callable while signed out). Any future server
+ * function that touches user data must check getAuth() itself — the
+ * WORKOS_REQUIRE_AUTH flag does not cover server functions.
  */
-let authConfigWarned = false
+// Endpoints that must stay reachable while signed out — the AuthKit flow
+// itself. Exact paths only: anything else under /api/auth/ added later stays
+// gated by default (a prefix check would silently exempt it).
+const PUBLIC_AUTH_PATHS = new Set(["/api/auth/sign-in", "/api/auth/callback", "/api/auth/sign-out"])
 
-function authkitConfigured(): boolean {
-	const env = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env
-	const ok = Boolean(
-		env?.WORKOS_CLIENT_ID && env?.WORKOS_API_KEY && env?.WORKOS_REDIRECT_URI && env?.WORKOS_COOKIE_PASSWORD,
-	)
-	if (!ok && !authConfigWarned) {
-		authConfigWarned = true
-		console.warn("[auth] WORKOS_* env vars not set — AuthKit disabled for this environment (auth routes unavailable)")
-	}
-	return ok
-}
+// Static file shapes (missing /favicon.ico, /robots.txt, …) pass through so
+// they render their normal 404 instead of a sign-in bounce. Strict extension
+// allowlist on purpose — a dotted route segment (e.g. /user/john.doe) must
+// stay gated, so do NOT widen this to "contains a dot".
+const STATIC_FILE_EXTENSION_RE = /\.(?:ico|png|jpg|jpeg|svg|webp|gif|css|js|woff2?|txt|xml|map)$/i
+
+const authGuardMiddleware = createMiddleware({ type: "request" }).server(
+	async ({ next, request, context, pathname, handlerType }) => {
+		// Page/router requests only — see the gate comment above.
+		if (handlerType !== "router") return next()
+		if (PUBLIC_AUTH_PATHS.has(pathname)) return next()
+		const lastSegment = pathname.slice(pathname.lastIndexOf("/") + 1)
+		if (STATIC_FILE_EXTENSION_RE.test(lastSegment)) return next()
+
+		// authkitMiddleware merges its context ({ auth, request, … }) into the
+		// downstream middleware context before this middleware runs — read the
+		// session from there. (The *global* start context is only available once
+		// the terminal handler runs, which is too late for a middleware guard.)
+		// The channel is untyped (the WorkOS package doesn't surface the merged
+		// context type), so read it by shape.
+		const authkit: Partial<AuthKitContext> = context ?? {}
+		if (typeof authkit.auth !== "function") {
+			// Unreachable when the guard is registered correctly (it only mounts
+			// alongside authkitMiddleware). Fail closed rather than silently
+			// disengaging the gate.
+			console.error("[auth] guard: AuthKit context missing — refusing request")
+			return new Response("Auth is misconfigured", {
+				status: 503,
+				headers: { "cache-control": "no-store", "content-type": "text/plain; charset=utf-8" },
+			})
+		}
+		const { user } = authkit.auth()
+		if (user) return next()
+
+		// Preserve the full target (path + query) so deep links survive sign-in.
+		const url = new URL(request.url)
+		const returnPathname = encodeURIComponent(url.pathname + url.search)
+		return new Response(null, {
+			status: 307,
+			headers: {
+				location: `/api/auth/sign-in?returnPathname=${returnPathname}`,
+				"cache-control": "no-store",
+			},
+		})
+	},
+)
 
 export const startInstance = createStart(async () => {
+	const configured = authkitConfigured()
 	return {
-		requestMiddleware: [localeMiddleware, csrfMiddleware, ...(authkitConfigured() ? [authkitMiddleware()] : [])],
+		requestMiddleware: [
+			localeMiddleware,
+			csrfMiddleware,
+			...(configured ? [authkitMiddleware()] : []),
+			...(configured && authRequired() ? [authGuardMiddleware] : []),
+		],
 		router: {
 			routeTree,
 		},
