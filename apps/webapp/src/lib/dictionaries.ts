@@ -18,6 +18,8 @@ export const strings: Dictionary = {
 	"locale.toggle": { en: "Switch language", th: "เปลี่ยนภาษา" },
 	"locale.en": { en: "EN", th: "EN" },
 	"locale.th": { en: "ไทย", th: "ไทย" },
+	"auth.signIn": { en: "Sign in", th: "เข้าสู่ระบบ" },
+	"auth.signOut": { en: "Sign out", th: "ออกจากระบบ" },
 	"metric.netWorth": { en: "Net worth", th: "มูลค่าสุทธิ" },
 	"metric.cashFlow": { en: "Cash flow", th: "กระแสเงินสด" },
 	"period.all": { en: "All", th: "ทั้งหมด" },

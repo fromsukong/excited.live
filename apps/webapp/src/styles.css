@@ -101,7 +101,7 @@ button {
   letter-spacing: -0.01em;
 }
 
-.locale-button {
+.locale-button, .auth-link {
   padding: 4px 10px;
   border: 1px solid color-mix(in srgb, var(--copy) 25%, transparent);
   border-radius: 999px;
@@ -110,6 +110,15 @@ button {
   font-size: 12px;
   line-height: 1.4;
   cursor: pointer;
+}
+
+.auth-link {
+  text-decoration: none;
+  display: inline-block;
+}
+
+.auth-user {
+  white-space: nowrap;
 }
 
 .locale-button.is-active {

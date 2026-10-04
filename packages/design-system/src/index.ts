@@ -1,6 +1,7 @@
 export { AppDocument, type AppDocumentProps } from "./AppDocument";
 export { Img, type ImgProps } from "./Img";
 export { PlainButton, type PlainButtonProps } from "./PlainButton";
+export { Link, type LinkProps } from "./Link";
 export {
 	Svg,
 	SvgLine,
