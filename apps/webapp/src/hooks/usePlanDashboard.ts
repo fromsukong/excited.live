@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react"
+import { createElement, createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react"
 import { type DateInputProps } from "@excited-live/design-system"
 import { useLocale } from "../lib/locale-context"
 import {
@@ -22,9 +22,9 @@ import { formatBaht, formatPercent } from "../lib/format"
 import {
 	type EntryDialogDescriptor,
 	type EntryDialogProps,
-} from "../components/EntryDialog"
-import { type ValueDialogDescriptor } from "../components/ValueDialog"
-import { type TypePickerKind } from "../components/TypePickerDialog"
+} from "../pages/home/components/EntryDialog"
+import { type ValueDialogDescriptor } from "../pages/home/components/ValueDialog"
+import { type TypePickerKind } from "../pages/home/components/TypePickerDialog"
 
 export type HorizonKey = "10" | "20" | "30" | "40" | "all"
 export type MetricKey = "metric.netWorth" | "metric.cashFlow"
@@ -243,6 +243,11 @@ export function usePlanDashboard() {
 				[kind]: [...current[kind], { id, typeId, ...values }],
 			}
 		})
+		setAddedTypes((prev) =>
+			prev[kind].includes(typeId)
+				? prev
+				: { ...prev, [kind]: [...prev[kind], typeId] },
+		)
 	}
 
 	const patchEntryRow = (
@@ -327,6 +332,11 @@ export function usePlanDashboard() {
 			}
 			return { ...current, liabilities: [...current.liabilities, newRow] }
 		})
+		setAddedTypes((prev) =>
+			prev[kind].includes(typeId)
+				? prev
+				: { ...prev, [kind]: [...prev[kind], typeId] },
+		)
 	}
 
 	const patchValueRow = (
@@ -370,25 +380,31 @@ export function usePlanDashboard() {
 	const handleSaveEntry: EntryDialogProps["onSave"] = (values) => {
 		if (!entryDialog) return
 		if (entryDialog.mode === "add") {
-			addEntryRow(
-				entryDialog.kind,
-				entryDialog.typeId as IncomeTypeId | ExpenseTypeId,
-				values,
-			)
+			const typeId = (values.typeId ??
+				entryDialog.typeId ??
+				(entryDialog.kind === "incomes" ? "salary" : "livingExpenses")) as
+				| IncomeTypeId
+				| ExpenseTypeId
+			addEntryRow(entryDialog.kind, typeId, values)
 		} else {
 			patchEntryRow(entryDialog.kind, entryDialog.rowId, values)
 		}
 		setEntryDialog(null)
 	}
 
-	const handleSaveValue = (values: { label: string; value: number }) => {
+	const handleSaveValue = (values: {
+		typeId?: AssetTypeId | LiabilityTypeId
+		label: string
+		value: number
+	}) => {
 		if (!valueDialog) return
 		if (valueDialog.mode === "add") {
-			addValueRow(
-				valueDialog.kind,
-				valueDialog.typeId as AssetTypeId | LiabilityTypeId,
-				values,
-			)
+			const typeId = (values.typeId ??
+				valueDialog.typeId ??
+				(valueDialog.kind === "assets" ? "stock" : "debt")) as
+				| AssetTypeId
+				| LiabilityTypeId
+			addValueRow(valueDialog.kind, typeId, values)
 		} else {
 			patchValueRow(valueDialog.kind, valueDialog.rowId, values)
 		}
@@ -462,4 +478,21 @@ export function usePlanDashboard() {
 		handleSaveMilestone,
 		handlePickType,
 	}
+}
+
+export type PlanDashboardValue = ReturnType<typeof usePlanDashboard>
+
+const PlanDashboardContext = createContext<PlanDashboardValue | null>(null)
+
+export function PlanDashboardProvider({ children }: { children: ReactNode }) {
+	const value = usePlanDashboard()
+	return createElement(PlanDashboardContext.Provider, { value }, children)
+}
+
+export function usePlanDashboardContext() {
+	const context = useContext(PlanDashboardContext)
+	if (!context) {
+		throw new Error("usePlanDashboardContext must be used within PlanDashboardProvider")
+	}
+	return context
 }

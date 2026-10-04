@@ -9,7 +9,7 @@ import {
 	useTableRowExpansion,
 	type TableColumn,
 } from "@excited-live/design-system"
-import { formatBaht } from "../lib/format"
+import { formatBaht } from "../../../lib/format"
 import {
 	ASSET_TYPE_IDS,
 	LIABILITY_TYPE_IDS,
@@ -18,7 +18,7 @@ import {
 	type LiabilityRow,
 	type LiabilityTypeId,
 	type PlanInput,
-} from "../lib/plan-service"
+} from "../../../lib/plan-service"
 import { ADD_ROW_ID } from "./EntryTable"
 
 export interface ValueGroupRowData extends Record<string, unknown> {
@@ -34,7 +34,7 @@ export interface GroupedValueTableProps {
 	kind: "assets" | "liabilities"
 	plan: PlanInput
 	addedTypeIds: string[]
-	onAddType: () => void
+	onAddNewItem: () => void
 	onAddItem: (typeId: string) => void
 	onEditItem: (row: AssetRow | LiabilityRow) => void
 	t: (key: string, vars?: Record<string, string>) => string
@@ -44,7 +44,7 @@ export function GroupedValueTable({
 	kind,
 	plan,
 	addedTypeIds,
-	onAddType,
+	onAddNewItem,
 	onAddItem,
 	onEditItem,
 	t,
@@ -141,8 +141,8 @@ export function GroupedValueTable({
 			width: proportional(1),
 			renderCell: (row) =>
 				row.id === ADD_ROW_ID ? (
-					<PlainButton className="row-add" onClick={onAddType}>
-						+ {t("row.addType")}
+					<PlainButton className="row-add" onClick={onAddNewItem}>
+						+ {t("row.addItem")}
 					</PlainButton>
 				) : (
 					<Text weight="semibold">{t(`type.${row.typeId}`)}</Text>

@@ -132,6 +132,12 @@
   .astryx-badge {
     border-radius: var(--radius-full);
   }
+
+  .astryx-dialog {
+    --astryx-dialog-padding-inline: 32px;
+    --astryx-dialog-padding-block-start: 28px;
+    --astryx-dialog-padding-block-end: 28px;
+  }
 }
 }
 

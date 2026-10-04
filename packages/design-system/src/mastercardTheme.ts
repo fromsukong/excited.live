@@ -103,6 +103,11 @@ export const mastercardTheme = defineTheme({
 				borderRadius: "var(--radius-full)",
 			},
 		},
+		dialog: {
+			base: {
+				padding: "28px 32px",
+			},
+		},
 	},
 });
 

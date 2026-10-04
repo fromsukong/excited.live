@@ -66,6 +66,11 @@ export const mastercardTheme = {
       "base": {
         "borderRadius": "var(--radius-full)"
       }
+    },
+    "dialog": {
+      "base": {
+        "padding": "28px 32px"
+      }
     }
   },
   __onDark: {

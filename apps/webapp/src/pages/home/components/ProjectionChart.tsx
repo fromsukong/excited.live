@@ -26,8 +26,8 @@ import { GridComponent, MarkLineComponent, TooltipComponent } from "echarts/comp
 import { CanvasRenderer } from "echarts/renderers"
 import type { EChartsType } from "echarts/core"
 import { Stack, Text } from "@excited-live/design-system"
-import type { MilestoneRow, MonteCarloBand, SimulationYear } from "../lib/plan-service"
-import { formatBaht, formatBahtCompact } from "../lib/format"
+import type { MilestoneRow, MonteCarloBand, SimulationYear } from "../../../lib/plan-service"
+import { formatBaht, formatBahtCompact } from "../../../lib/format"
 
 echarts.use([LineChart, GridComponent, MarkLineComponent, TooltipComponent, CanvasRenderer])
 

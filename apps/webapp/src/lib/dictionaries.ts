@@ -103,6 +103,8 @@ export const strings: Dictionary = {
 	"row.newExpense": { en: "New expense", th: "ค่าใช้จ่ายใหม่" },
 	"row.remove": { en: "Remove", th: "ลบ" },
 	"row.addType": { en: "Add type", th: "เพิ่มประเภท" },
+	"row.addItem": { en: "Add item", th: "เพิ่มรายการ" },
+	"table.type": { en: "Type", th: "ประเภท" },
 	"row.frequency": { en: "Per", th: "ต่อ" },
 	"freq.monthly": { en: "Month", th: "เดือน" },
 	"freq.yearly": { en: "Year", th: "ปี" },

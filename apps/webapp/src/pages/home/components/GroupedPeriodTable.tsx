@@ -9,7 +9,7 @@ import {
 	useTableRowExpansion,
 	type TableColumn,
 } from "@excited-live/design-system"
-import { formatBaht } from "../lib/format"
+import { formatBaht } from "../../../lib/format"
 import {
 	EXPENSE_TYPE_IDS,
 	INCOME_TYPE_IDS,
@@ -18,7 +18,7 @@ import {
 	type IncomeTypeId,
 	type PeriodRow,
 	type PlanInput,
-} from "../lib/plan-service"
+} from "../../../lib/plan-service"
 import { ADD_ROW_ID, EntryTable } from "./EntryTable"
 
 export interface PeriodGroupRowData extends Record<string, unknown> {
@@ -32,7 +32,7 @@ export interface GroupedPeriodTableProps {
 	kind: "incomes" | "expenses"
 	plan: PlanInput
 	addedTypeIds: string[]
-	onAddType: () => void
+	onAddNewItem: () => void
 	onAddItem: (typeId: string) => void
 	onEditItem: (row: PeriodRow) => void
 	t: (key: string, vars?: Record<string, string>) => string
@@ -42,7 +42,7 @@ export function GroupedPeriodTable({
 	kind,
 	plan,
 	addedTypeIds,
-	onAddType,
+	onAddNewItem,
 	onAddItem,
 	onEditItem,
 	t,
@@ -121,8 +121,8 @@ export function GroupedPeriodTable({
 			width: proportional(1),
 			renderCell: (row) =>
 				row.id === ADD_ROW_ID ? (
-					<PlainButton className="row-add" onClick={onAddType}>
-						+ {t("row.addType")}
+					<PlainButton className="row-add" onClick={onAddNewItem}>
+						+ {t("row.addItem")}
 					</PlainButton>
 				) : (
 					<Text weight="semibold">{t(`type.${row.typeId}`)}</Text>

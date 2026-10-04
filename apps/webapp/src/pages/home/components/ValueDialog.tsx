@@ -9,23 +9,37 @@ import {
 	LayoutFooter,
 	NumberInput,
 	PlainButton,
+	Selector,
 	Stack,
 	TextInput,
 } from "@excited-live/design-system"
 import {
+	ASSET_TYPE_IDS,
+	LIABILITY_TYPE_IDS,
 	type AssetRow,
+	type AssetTypeId,
 	type LiabilityRow,
+	type LiabilityTypeId,
 	type PlanInput,
-} from "../lib/plan-service"
+} from "../../../lib/plan-service"
 
 export type ValueDialogDescriptor =
-	| { mode: "add"; kind: "assets" | "liabilities"; typeId: string }
+	| {
+			mode: "add"
+			kind: "assets" | "liabilities"
+			typeId?: AssetTypeId | LiabilityTypeId
+			lockType?: boolean
+	  }
 	| { mode: "edit"; kind: "assets" | "liabilities"; rowId: string }
 
 export interface ValueDialogProps {
 	dialog: ValueDialogDescriptor
 	plan: PlanInput
-	onSave: (values: { label: string; value: number }) => void
+	onSave: (values: {
+		typeId?: AssetTypeId | LiabilityTypeId
+		label: string
+		value: number
+	}) => void
 	onRemove: (id: string) => void
 	onClose: () => void
 	t: (key: string, vars?: Record<string, string>) => string
@@ -39,24 +53,40 @@ export function ValueDialog({
 	onClose,
 	t,
 }: ValueDialogProps) {
+	const catalog = dialog.kind === "assets" ? ASSET_TYPE_IDS : LIABILITY_TYPE_IDS
 	const existingRow =
 		dialog.mode === "edit"
 			? (plan[dialog.kind] as Array<AssetRow | LiabilityRow>).find(
 					(r) => r.id === dialog.rowId,
 				)
 			: null
-	const typeId =
+
+	const initialTypeId =
 		dialog.mode === "edit"
-			? (existingRow?.typeId ??
-				(dialog.kind === "assets" ? "stock" : "debt"))
-			: dialog.typeId
+			? (existingRow?.typeId ?? (dialog.kind === "assets" ? "stock" : "debt"))
+			: (dialog.typeId ?? (dialog.kind === "assets" ? "stock" : "debt"))
+
+	const [typeId, setTypeId] = useState<AssetTypeId | LiabilityTypeId>(
+		initialTypeId as AssetTypeId | LiabilityTypeId,
+	)
+	const isTypeLocked = dialog.mode === "add" ? Boolean(dialog.lockType) : true
+
 	const typeLabel = t(`type.${typeId}`)
 	const [label, setLabel] = useState(
-		dialog.mode === "edit" ? (existingRow?.label ?? "") : typeLabel,
+		dialog.mode === "edit" ? (existingRow?.label ?? "") : t(`type.${initialTypeId}`),
 	)
 	const [value, setValue] = useState(
 		dialog.mode === "edit" ? (existingRow?.value ?? 0) : 0,
 	)
+
+	const handleTypeChange = (newTypeId: string) => {
+		const oldTypeLabel = t(`type.${typeId}`)
+		const typedId = newTypeId as AssetTypeId | LiabilityTypeId
+		setTypeId(typedId)
+		if (label === oldTypeLabel || label === "") {
+			setLabel(t(`type.${newTypeId}`))
+		}
+	}
 
 	const title =
 		dialog.mode === "add"
@@ -73,10 +103,27 @@ export function ValueDialog({
 			width={520}
 		>
 			<Layout
-				header={<DialogHeader title={title} onOpenChange={() => onClose()} />}
+				defaultHasDividers
+				header={
+					<DialogHeader
+						title={title}
+						hasDivider
+						onOpenChange={() => onClose()}
+					/>
+				}
 				content={
 					<LayoutContent>
 						<Stack gap={1.5}>
+							<Selector
+								label={t("table.type")}
+								value={typeId}
+								onChange={handleTypeChange}
+								options={catalog.map((id) => ({
+									value: id,
+									label: t(`type.${id}`),
+								}))}
+								isDisabled={isTypeLocked}
+							/>
 							<TextInput
 								label={t("row.label")}
 								value={label}
@@ -94,7 +141,7 @@ export function ValueDialog({
 					</LayoutContent>
 				}
 				footer={
-					<LayoutFooter>
+					<LayoutFooter hasDivider>
 						<HStack gap={2} hAlign="end">
 							{dialog.mode === "edit" ? (
 								<PlainButton onClick={() => onRemove(dialog.rowId)}>
@@ -111,7 +158,8 @@ export function ValueDialog({
 								variant="primary"
 								onClick={() => {
 									onSave({
-										label: label.trim() || typeLabel,
+										typeId,
+										label: label.trim() || t(`type.${typeId}`),
 										value,
 									})
 								}}
