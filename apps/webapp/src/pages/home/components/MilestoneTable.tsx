@@ -6,8 +6,8 @@ import {
 	proportional,
 	type TableColumn,
 } from "@excited-live/design-system"
-import { useLocale } from "../lib/locale-context"
-import { type PlanInput } from "../lib/plan-service"
+import { useLocale } from "../../../lib/locale-context"
+import { type PlanInput } from "../../../lib/plan-service"
 import { ADD_ROW_ID } from "./EntryTable"
 import { MONTHS_EN, MONTHS_TH } from "./MonthYearPicker"
 

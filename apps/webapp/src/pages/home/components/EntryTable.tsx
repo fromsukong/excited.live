@@ -6,12 +6,12 @@ import {
 	proportional,
 	type TableColumn,
 } from "@excited-live/design-system"
-import { formatBaht } from "../lib/format"
+import { formatBaht } from "../../../lib/format"
 import {
 	rowLifetimeTotal,
 	type PeriodRow,
 	type PlanInput,
-} from "../lib/plan-service"
+} from "../../../lib/plan-service"
 
 /** Row id for the synthetic "+ Add row" line at the bottom of an editor table. */
 export const ADD_ROW_ID = "__add__"

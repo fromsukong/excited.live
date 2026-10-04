@@ -12,7 +12,7 @@ import {
 	EXPENSE_TYPE_IDS,
 	INCOME_TYPE_IDS,
 	LIABILITY_TYPE_IDS,
-} from "../lib/plan-service"
+} from "../../../lib/plan-service"
 
 export type TypePickerKind =
 	| "incomes"

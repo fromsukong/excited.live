@@ -12,29 +12,38 @@ import {
 	PlainButton,
 	SegmentedControl,
 	SegmentedControlItem,
+	Selector,
 	Stack,
 	Text,
 	TextInput,
 } from "@excited-live/design-system"
 import {
 	EXPENSE_TYPE_DEFAULT_FREQUENCY,
+	EXPENSE_TYPE_IDS,
 	INCOME_TYPE_DEFAULT_FREQUENCY,
+	INCOME_TYPE_IDS,
 	type AmountFrequency,
 	type ExpenseTypeId,
 	type IncomeTypeId,
 	type PeriodRow,
 	type PlanInput,
-} from "../lib/plan-service"
+} from "../../../lib/plan-service"
 import { MonthYearPicker } from "./MonthYearPicker"
 
 export type EntryDialogDescriptor =
-	| { mode: "add"; kind: "incomes" | "expenses"; typeId: string }
+	| {
+			mode: "add"
+			kind: "incomes" | "expenses"
+			typeId?: IncomeTypeId | ExpenseTypeId
+			lockType?: boolean
+	  }
 	| { mode: "edit"; kind: "incomes" | "expenses"; rowId: string }
 
 export interface EntryDialogProps {
 	dialog: EntryDialogDescriptor
 	plan: PlanInput
 	onSave: (values: {
+		typeId?: IncomeTypeId | ExpenseTypeId
 		label: string
 		amount: number
 		frequency: AmountFrequency
@@ -59,15 +68,24 @@ export function EntryDialog({
 	onClose,
 	t,
 }: EntryDialogProps) {
+	const catalog = dialog.kind === "incomes" ? INCOME_TYPE_IDS : EXPENSE_TYPE_IDS
 	const existingRow =
 		dialog.mode === "edit"
 			? plan[dialog.kind].find((r) => r.id === dialog.rowId)
 			: null
-	const typeId =
+
+	const initialTypeId =
 		dialog.mode === "edit"
 			? (existingRow?.typeId ??
 				(dialog.kind === "incomes" ? "salary" : "livingExpenses"))
-			: dialog.typeId
+			: (dialog.typeId ??
+				(dialog.kind === "incomes" ? "salary" : "livingExpenses"))
+
+	const [typeId, setTypeId] = useState<IncomeTypeId | ExpenseTypeId>(
+		initialTypeId as IncomeTypeId | ExpenseTypeId,
+	)
+	const isTypeLocked = dialog.mode === "add" ? Boolean(dialog.lockType) : true
+
 	const defaultFreq =
 		dialog.kind === "incomes"
 			? (INCOME_TYPE_DEFAULT_FREQUENCY[typeId as IncomeTypeId] ?? "monthly")
@@ -76,7 +94,7 @@ export function EntryDialog({
 	const [label, setLabel] = useState(
 		dialog.mode === "edit"
 			? (existingRow?.label ?? "")
-			: t(`type.${typeId}`),
+			: t(`type.${initialTypeId}`),
 	)
 	const [amount, setAmount] = useState(
 		dialog.mode === "edit" ? (existingRow?.amount ?? 0) : 0,
@@ -110,6 +128,20 @@ export function EntryDialog({
 		dialog.mode === "edit" ? (existingRow?.deductible ?? "none") : "none",
 	)
 
+	const handleTypeChange = (newTypeId: string) => {
+		const oldTypeLabel = t(`type.${typeId}`)
+		const typedId = newTypeId as IncomeTypeId | ExpenseTypeId
+		setTypeId(typedId)
+		if (label === oldTypeLabel || label === "") {
+			setLabel(t(`type.${newTypeId}`))
+		}
+		const newFreq =
+			dialog.kind === "incomes"
+				? (INCOME_TYPE_DEFAULT_FREQUENCY[typedId as IncomeTypeId] ?? "monthly")
+				: (EXPENSE_TYPE_DEFAULT_FREQUENCY[typedId as ExpenseTypeId] ?? "monthly")
+		setFrequency(newFreq)
+	}
+
 	const typeLabel = t(`type.${typeId}`)
 	const title =
 		dialog.mode === "add"
@@ -126,10 +158,27 @@ export function EntryDialog({
 			width={640}
 		>
 			<Layout
-				header={<DialogHeader title={title} onOpenChange={() => onClose()} />}
+				defaultHasDividers
+				header={
+					<DialogHeader
+						title={title}
+						hasDivider
+						onOpenChange={() => onClose()}
+					/>
+				}
 				content={
 					<LayoutContent>
 						<Grid columns={{ minWidth: 240, max: 2 }} gap={1.5}>
+							<Selector
+								label={t("table.type")}
+								value={typeId}
+								onChange={handleTypeChange}
+								options={catalog.map((id) => ({
+									value: id,
+									label: t(`type.${id}`),
+								}))}
+								isDisabled={isTypeLocked}
+							/>
 							<TextInput
 								label={t("row.label")}
 								value={label}
@@ -252,7 +301,7 @@ export function EntryDialog({
 					</LayoutContent>
 				}
 				footer={
-					<LayoutFooter>
+					<LayoutFooter hasDivider>
 						<HStack gap={2} hAlign="end">
 							{dialog.mode === "edit" ? (
 								<PlainButton onClick={() => onRemove(dialog.rowId)}>
@@ -269,7 +318,8 @@ export function EntryDialog({
 								variant="primary"
 								onClick={() => {
 									onSave({
-										label: label.trim() || typeLabel,
+										typeId,
+										label: label.trim() || t(`type.${typeId}`),
 										amount,
 										frequency,
 										startYear,
@@ -277,8 +327,9 @@ export function EntryDialog({
 										endYear,
 										endMonth,
 										growthMode,
-										growthRate,
-										...(dialog.kind === "expenses" ? { deductible } : {}),
+										growthRate: growthMode === "override" ? growthRate : 0,
+										deductible:
+											dialog.kind === "expenses" ? deductible : undefined,
 									})
 								}}
 							/>

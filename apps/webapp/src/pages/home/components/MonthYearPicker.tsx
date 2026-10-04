@@ -6,7 +6,7 @@ import {
 	Stack,
 	Text,
 } from "@excited-live/design-system"
-import { useLocale } from "../lib/locale-context"
+import { useLocale } from "../../../lib/locale-context"
 
 export const MONTHS_EN = [
 	"Jan",

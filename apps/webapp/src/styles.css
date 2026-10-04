@@ -66,7 +66,7 @@ button {
   padding: 0;
   color: var(--copy);
   background: transparent;
-  cursor: default;
+  cursor: pointer;
   text-decoration: none;
 }
 

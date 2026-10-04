@@ -11,7 +11,7 @@ import {
 	Stack,
 	TextInput,
 } from "@excited-live/design-system"
-import { type PlanInput } from "../lib/plan-service"
+import { type PlanInput } from "../../../lib/plan-service"
 import { MonthYearPicker } from "./MonthYearPicker"
 
 export interface MilestoneDialogProps {
@@ -49,7 +49,14 @@ export function MilestoneDialog({
 			width={520}
 		>
 			<Layout
-				header={<DialogHeader title={title} onOpenChange={() => onClose()} />}
+				defaultHasDividers
+				header={
+					<DialogHeader
+						title={title}
+						hasDivider
+						onOpenChange={() => onClose()}
+					/>
+				}
 				content={
 					<LayoutContent>
 						<Stack gap={1.5}>
@@ -72,7 +79,7 @@ export function MilestoneDialog({
 					</LayoutContent>
 				}
 				footer={
-					<LayoutFooter>
+					<LayoutFooter hasDivider>
 						<HStack gap={2} hAlign="end">
 							{id !== null ? (
 								<PlainButton onClick={() => onRemove(id)}>
