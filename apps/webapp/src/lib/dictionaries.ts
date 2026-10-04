@@ -230,6 +230,9 @@ export const strings: Dictionary = {
 	// Month / year picker
 	"picker.now": { en: "Now", th: "ตอนนี้" },
 	"picker.forever": { en: "Forever", th: "ตลอดไป" },
+	"picker.month": { en: "Month", th: "เดือน" },
+	"picker.year": { en: "Year", th: "ปี" },
+	"picker.thisYear": { en: "This year", th: "ปีนี้" },
 
 	// Settings page (mock)
 	"settings.note": { en: "Mock — nothing is saved yet.", th: "ตัวอย่าง — ยังไม่บันทึกจริง" },
