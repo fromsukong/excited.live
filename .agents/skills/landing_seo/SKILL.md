@@ -47,7 +47,7 @@ src/
 content/
   blog/<slug>.md              # posts (frontmatter: title, date, description, youtube?, draft?)
   docs/...                    # docs pages + meta files
-content.config.ts             # astro content collections: docs, meta, blog (zod schemas)
+src/content.config.ts         # astro content collections: docs, meta, blog (zod schemas)
 public/                       # robots.txt, _headers, katex.min.css, fonts, og-image.png
 BLOG.md                       # the blog/slides authoring contract (read before writing a post)
 n8n/                          # waitlist endpoint contract (section 4); real automation JSON
@@ -180,7 +180,7 @@ content/blog/<slug>.md
 - `splitSlides(renderedHtml)` returns `{ blogHtml, slidesHtml, slideCount }`; the
   blog strips slide blocks, the slides page builds deck cards. After adding a post,
   read BOTH pages (`/blog/<slug>/` and `/blog/<slug>/slides`) to check no echo.
-- `content.config.ts` zod schemas enforce frontmatter (docs need title; meta
+- `src/content.config.ts` zod schemas enforce frontmatter (docs need title; meta
   collection holds optional title/description/pages/icon for the docs tree; blog
   needs title + date, optional description/youtube/draft).
 
