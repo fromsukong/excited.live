@@ -10,6 +10,7 @@ One directory per skill, `snake_case`, each with a `SKILL.md`:
 - `tax_engine/`: the pure tax engine in `packages/tax`.
 - `design_system/`: Mastercard theme pipeline, component surface, the no-raw-HTML rule.
 - `deployment_ci/`: the three deploy tiers, workflow set, CI checks, deploy pitfalls.
+- `honcho_memory/`: shared agent memory system (Honcho), peer discovery, and context recall conventions.
 
 ## Conventions
 

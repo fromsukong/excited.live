@@ -14,3 +14,9 @@ apps/landingpage/.astro/
 .env
 .env.*
 !.env.example
+# Agent, editor and MCP configurations (real tokens must never be committed)
+.cursor/
+opencode.json
+opencode.jsonc
+*mcp*.json
+.mcp/
