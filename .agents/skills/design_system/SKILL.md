@@ -21,7 +21,7 @@ Source of truth: `packages/design-system/src/mastercardTheme.ts` (a `defineTheme
 
 - Typography: body `Sofia Sans` weight 450, heading weight 500, fallbacks `Arial, "Helvetica Neue", sans-serif`.
 - Quirk: keep the family name UNQUOTED (`family: "Sofia Sans"`). Astryx builds the font stack itself and quotes families that contain spaces, so pre-quoting produces a doubled `""Sofia Sans""`.
-- Tokens are `[light, dark]` pairs (36 overrides in the current theme) plus 3 component overrides: button (pill radius, tracking), badge (pill radius), dialog (padding).
+- Tokens are `[light, dark]` pairs: 36 token overrides (34 source pairs + 2 font families), plus 3 component overrides: button (pill radius, tracking), badge (pill radius), dialog (padding).
 - Radii: `--radius-element` 20px (buttons), `--radius-container` 40px (panels and dialogs), `--radius-inner` 999px (pills and circles).
 - Dialog padding lives in the theme: `components.dialog.base.padding: "28px 32px"`. It exists so content keeps breathing room from the 40px rounded corners.
 
@@ -65,7 +65,7 @@ Everything app code needs is exported from `packages/design-system/src/index.ts`
 - Astryx re-exports (themed by the Mastercard theme): layout `Stack`, `HStack`, `Grid`, `Card`; text `Text`, `Heading`; actions `Button`, `IconButton`, `Badge`; inputs `TextInput`, `NumberInput`, `DateInput`, `Selector`, `SegmentedControl` and `SegmentedControlItem`; overlays `Dialog`, `DialogHeader`; `Layout`, `LayoutContent`, `LayoutFooter`; data `Table` plus `proportional`, `pixel`, `useTableRowExpansion`; tabs `TabList`, `Tab`; chat `ChatComposer`, `ChatMessage`, `ChatMessageBubble`, `ChatMessageList`, `ChatToolCalls`, `ChatLayout`; and `Theme`.
 - Theme object: `mastercardTheme`.
 
-Drift warning: `packages/design-system/README.md` and the ESLint hint still mention `Box` and `neutralTheme`. Neither is exported by `index.ts` today (`neutralTheme` is a landing-app concern, and there is no `Box` export). For containers use `Stack`, `HStack`, `Grid`, or `Card`, or add a primitive to this package. When the README and `index.ts` disagree, `index.ts` is reality.
+Drift warning: `packages/design-system/README.md` still mentions `Box` and `neutralTheme`; the ESLint hint mentions `Box`. Neither is exported by `index.ts` today (`neutralTheme` is a landing-app concern, and there is no `Box` export). For containers use `Stack`, `HStack`, `Grid`, or `Card`, or add a primitive to this package. When the README and `index.ts` disagree, `index.ts` is reality.
 
 See `references/component_inventory.md` for the full export list with when-to-use notes.
 
