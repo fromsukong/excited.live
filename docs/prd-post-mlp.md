@@ -37,6 +37,17 @@ Phase 3+. Trigger-based: nothing here starts until its trigger fires. Each item 
 - One wallet per goal with its own target date and rules (v2 list from the original sheet).
 - Supersedes the shared goal-savings wallet assumption (OQ-3) once triggered.
 
+## 7. Public API & developer platform (trigger: MLP live + first external integration request)
+
+- Goal: self-serve extension — a user's own AI or tool reads their plan and runs sims directly ("tell your AI to get it from excited.live"); no feature request needed to extend.
+- Public v1 is curated, never a raw internal-endpoint export: (1) stateless compute — run sim/tax from posted params (grows the MLP MCP trial-sim contract, US-106); (2) read-your-own-data with scoped tokens. Everything else stays internal.
+- One contract, several doors: MCP server (the headline "tell your AI" surface) + OpenAPI spec + docs + llms.txt — generated from one definition, versioned (/api/v1).
+- Agent auth: scoped, revocable, audit-logged tokens (PDPA); advisor org roles enforced — a client's data never leaks across seats. Never session cookies.
+- Writes stay proposal-based (US-103 invariant): no public endpoint mutates a plan; agents propose diffs, the user accepts on the web.
+- Cost control: free stateless compute may be the public face; anything AI-backed sits behind the subscription + fair-use policy (pricing.md Open decision 1). Rate limits and quotas from day one.
+- Two layers: the app's internal transport is not the public contract. The public surface is a thin versioned layer over plan-service (P3), so internal routes stay free to change. Security lives in auth + validation — the repo is public (Apache-2.0), obscurity was never on the table.
+- Open: free public compute tier (distribution) vs fully gated — lean: compute free, plan data gated. Hard no's: plan-mutating public endpoints, metered endpoints for anonymous callers, wholesale "export all endpoints" dumps.
+
 ## Non-goals that stay non-goals
 
 - No brokerage/account execution — planning only, every phase.

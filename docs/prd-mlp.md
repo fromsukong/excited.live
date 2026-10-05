@@ -109,6 +109,7 @@ The real product. Accounts, a 5-minute onboarding wizard, a life-story chart, in
 - No white-label features (Phase 3).
 - No US user-facing tax.
 - No real exit-tax modeling (post-MVP backlog).
+- No public/third-party API beyond the user-facing MCP surface (post-MLP; see prd-post-mlp.md §7).
 
 ## 6. Design Considerations
 
