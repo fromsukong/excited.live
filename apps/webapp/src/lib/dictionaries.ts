@@ -59,16 +59,40 @@ export const strings: Dictionary = {
 	"plan.actions": { en: "Plan", th: "แผน" },
 	"plan.lastSyncedToday": { en: "Recomputed just now", th: "คำนวณใหม่เมื่อสักครู่" },
 
-	// Row and Table labels
-	"row.label": { en: "Name", th: "ชื่อรายการ" },
-	"row.amount": { en: "Amount", th: "จำนวนเงิน" },
-	"row.start": { en: "Start", th: "เริ่มต้น" },
-	"row.end": { en: "End", th: "สิ้นสุด" },
-	"row.growth": { en: "Growth", th: "การเติบโต" },
-	"row.growthMode.inflation": { en: "Inflation", th: "ตามเงินเฟ้อ" },
-	"row.growthMode.fixed": { en: "Fixed %", th: "คงที่ %" },
-	"row.growthMode.override": { en: "Override", th: "กำหนดเอง" },
-	"row.growthRate": { en: "Rate %", th: "อัตรา %" },
+	// Engine answers (used by the chat replies)
+	"info.retirement.left": { en: "{amount} left at {year}", th: "เหลือ {amount} ถึงปี {year}" },
+	"info.retirement.runsOut": { en: "money runs out {year}", th: "เงินหมดปี {year}" },
+	"info.runsOut.never": { en: "never", th: "ไม่หมด" },
+
+	// Editor (inline section below the grid)
+	"editor.heading": { en: "Plan inputs", th: "ตัวเลขของแผน" },
+	"editor.desc": {
+		en: "Everything here is editable — add rows for each income or expense, with start/end years and growth.",
+		th: "แก้ได้ทุกช่อง เพิ่มแถวรายได้หรือรายจ่ายได้ พร้อมปีเริ่ม-จบ และการเติบโต",
+	},
+
+	// Sections
+	"section.chart": { en: "Net worth over time", th: "มูลค่าสุทธิตลอดเวลา" },
+	"section.summaryLong": { en: "Long term", th: "ระยะยาว" },
+	"section.summaryThisYear": { en: "This year", th: "ปีนี้" },
+
+	// Rows
+	"incomes.heading": { en: "Income", th: "รายได้" },
+	"expenses.heading": { en: "Expenses", th: "ค่าใช้จ่าย" },
+	"row.label": { en: "Name", th: "ชื่อ" },
+	"table.metric": { en: "Metric", th: "ตัวชี้วัด" },
+	"table.value": { en: "Value", th: "มูลค่า" },
+	"table.search": { en: "Search", th: "ค้นหา" },
+	"table.wallet": { en: "Wallet", th: "กระเป๋า" },
+	"row.period": { en: "Period", th: "ช่วงเวลา" },
+	"row.amount": { en: "Amount (฿)", th: "จำนวน (บาท)" },
+	"row.startYear": { en: "Start", th: "เริ่ม" },
+	"row.endYear": { en: "End", th: "สิ้นสุด" },
+	"row.growth": { en: "Growth", th: "เติบโต" },
+	"growth.inflation": { en: "Inflation", th: "ตามเงินเฟ้อ" },
+	"growth.fixed": { en: "Fixed", th: "คงที่" },
+	"growth.override": { en: "Custom %", th: "กำหนดเอง %" },
+	"row.growthRate": { en: "Growth %", th: "อัตราเติบโต %" },
 	"row.deductible": { en: "Deductible", th: "ลดหย่อนภาษี" },
 	"deductible.none": { en: "No", th: "ไม่" },
 	"deductible.mortgageInterest": { en: "Mortgage", th: "ดอกเบี้ยบ้าน" },
@@ -201,8 +225,15 @@ export const strings: Dictionary = {
 	"row.until": { en: "Until", th: "ถึง" },
 	"a11y.netWorthChart": { en: "Net worth projection chart", th: "แผนภูมิมูลค่าสุทธิ" },
 
-	// Settings page
-	"settings.note": { en: "Saved per profile settings.", th: "บันทึกตามการตั้งค่าโปรไฟล์" },
+	// Month / year picker
+	"picker.now": { en: "Now", th: "ตอนนี้" },
+	"picker.forever": { en: "Forever", th: "ตลอดไป" },
+	"picker.month": { en: "Month", th: "เดือน" },
+	"picker.year": { en: "Year", th: "ปี" },
+	"picker.thisYear": { en: "This year", th: "ปีนี้" },
+
+	// Settings page (mock)
+	"settings.note": { en: "Mock — nothing is saved yet.", th: "ตัวอย่าง — ยังไม่บันทึกจริง" },
 	"settings.name": { en: "Display name", th: "ชื่อที่แสดง" },
 	"settings.birthday": { en: "Birthday", th: "วันเกิด" },
 	"settings.gender": { en: "Gender", th: "เพศ" },
@@ -246,6 +277,11 @@ export const strings: Dictionary = {
 	},
 	"chat.status.funded": { en: "on track", th: "กำลังไปได้ดี" },
 	"chat.status.short": { en: "at risk", th: "มีความเสี่ยง" },
+	"plan.keepCurrent": { en: "Every input is live", th: "ทุกตัวเลขแก้ได้สด ๆ" },
+	"plan.summaryBody": {
+		en: "Edit any input below — the chart, your numbers, and this plan update instantly.",
+		th: "แก้ตัวเลขด้านล่างได้เลย กราฟ ตัวเลข และแผนจะอัปเดตทันที",
+	},
 
 	// Empty states and resilient error loading (Root & Component level)
 	"empty.home.title": { en: "Unable to load plan", th: "ไม่สามารถโหลดข้อมูลแผนได้" },

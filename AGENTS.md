@@ -1,107 +1,43 @@
 # AGENTS.md — instructions for AI coding agents
 
-This is the contract for any AI agent working in this repo (Hermes, OpenCode,
-Claude Code, Codex, or a human following along). Read it before your first
-commit.
+Contract for any AI agent working in this repo (Hermes, OpenCode, Claude Code, Codex, agy). Read before your first commit.
 
-## What this repo is
+## Core rules
 
-excited.live — financial simulation software (tax first), built as a
-pnpm + turbo monorepo:
+1. **Never commit directly to `main`**. Work on a branch (`feat/*`, `fix/*`, `docs/*`) and open a PR.
+2. **Never commit secrets, tokens, or `.env` files**. Credentials belong in local user dotfiles or GitHub repo secrets.
+3. **Pure logic in `packages/*`**: No network, DOM, framework imports, or locale/timezone dependencies.
+4. **Bilingual UI strings**: Always `{ en, th }`, English first.
+5. **Don't edit generated files**: `routeTree.gen.ts`, `pnpm-lock.yaml`, `dist/`, `.output/`.
+6. **Done criteria**: `pnpm build && pnpm typecheck && pnpm lint` must pass (0 warnings) before opening a PR.
 
-- `apps/webapp` — TanStack Start + React 19, SSR, deployed on Cloudflare Pages
-- `packages/*` — pure logic engines (currently `packages/tax`), designed to be
-  shared by the web app, a future mobile surface, MCP tools, and white-label builds
+## Skill loading rules
 
-Product context: consumer plan $109/year gating the whole app, AI unlimited for personal use (fair-use TBD; 7-day free trial; no BYOK); Advisor tier $59/mo or $599/yr (5 client seats + unlimited 30-day trial clients, +$9.99/mo per extra long-term seat; AI via BYOK or $9.99/30k credit packs) — see docs/pricing.md Revision 3; white-label revenue later. User-facing text is bilingual `{ en, th }`, EN first.
+- **`honcho_memory`**: **Always load every time**. Use it on every turn to recall user context, inspect peers, or ground decisions in shared memory.
+- **All other skills**: **Load only on demand as needed** — do NOT load all skills upfront:
+  - `frontend_engineering` — only when building webapp UI, routes, or components.
+  - `design_system` — only when styling or modifying theme tokens (`packages/design-system`).
+  - `tax_engine` — only when touching tax math or `packages/tax`.
+  - `deployment_ci` — only when touching CI workflows or preview deploys.
+  - `simulation_engine` — only when touching `packages/sim`, plan math, or plan-service.
+  - `i18n_platform` — only when touching locale resolution, dictionaries, or en/th strings.
+  - `landing_seo` — only when touching `apps/landingpage`, its meta/SEO layer, or its content pipeline.
+  - `auth_workos` — only when touching authentication, the middleware chain, or auth routes.
 
-## Non-negotiable rules
-
-1. NEVER commit or push directly to `main`. Work on a branch (`feat/*`,
-   `fix/*`, `docs/*`) and open a PR. PR previews deploy automatically.
-2. `packages/*` engines stay PURE: no network, no DOM, no framework imports,
-   no locale/timezone-dependent logic.
-3. All user-facing strings are bilingual from day one: `{ en, th }`, EN first.
-4. Never commit secrets, tokens, or `.env` files. Cloudflare credentials live
-   only in GitHub repo secrets, referenced by workflows.
-5. Don't hand-edit generated files: `apps/webapp/src/routeTree.gen.ts`,
-   `pnpm-lock.yaml`, anything in `dist/` or `.output/`.
-
-## Setup and everyday commands
+## Setup & commands
 
 ```bash
 pnpm install
 pnpm dev        # webapp on http://localhost:3000
 pnpm build      # all packages + app (turbo, cached)
-pnpm typecheck  # tsc across the workspace
-pnpm lint       # eslint across the repo (flat config at the root)
+pnpm typecheck  # tsc across workspace
+pnpm lint       # eslint across repo (--max-warnings=0)
+pnpm test       # run engine tests
 ```
 
-CI runs Node 22; pnpm 10 is pinned via the `packageManager` field.
+## Agent execution guidelines
 
-## Definition of done (before you open a PR)
-
-- `pnpm build` and `pnpm typecheck` pass from the repo root.
-- `pnpm lint` passes — CI enforces zero warnings (`--max-warnings=0`), so a
-  local warning will block the PR.
-- New engine logic has tests, co-located as `*.test.ts` next to the source
-  (run from the root with `pnpm test`).
-- Your branch contains ONLY your commits. This clone is shared: run
-  `git log origin/main..HEAD` before every push and remove strays.
-- The PR description follows `.github/pull_request_template.md`.
-
-## Git safety for agents
-
-- Other agents and humans may use the same clone concurrently. Never
-  `checkout`, `reset`, `stash`, or `push` without recording it in your task
-  notes.
-- Prefer your own worktree: `git worktree add ../excitedlive-<topic> -b
-  <your-branch> origin/main`.
-- If you find the checkout sitting on someone else's branch, leave it alone —
-  create your own worktree/branch from `origin/main`.
-
-## Working with Antigravity CLI (`agy`)
-
-Some agent sessions here run headless via `agy -p "<task>"` (Antigravity CLI)
-as the code executor, with an orchestrator (Hermes/OpenCode) writing the spec
-and reviewing the diff. If you ARE the agy session: minimizing your own loop
-is the point of this workflow.
-
-- Smallest diff that satisfies the task. No drive-by refactors, no
-  reformatting of untouched files, no extra packages without being asked.
-- Read a file before editing it. Verify ONCE at the end
-  (`pnpm typecheck && pnpm lint && pnpm test`), not after every edit.
-- Finish with a short report: files changed, commands run, pass/fail results.
-- The orchestrator reviews the full `git diff` before anything is committed
-  or pushed — agy output is never merged unread.
-
-## Deploy model (read-only for agents)
-
-See DEVELOPMENT.md for the full picture. Short version: PR previews are
-automatic; pushes to `main` deploy to the prelive project; PRODUCTION
-(https://app.excited.live custom domain — the apex `excited.live` is reserved
-for the marketing site) deploys only via a manual `workflow_dispatch` trigger.
-Agents must not trigger production deploys without explicit human approval.
-
-## Product requirements (source of truth)
-
-`docs/PRD.md` is the **source of truth for product scope**, split by phase:
-
-- `docs/PRD.md` — overview + shared principles
-- `docs/prd-mvp.md` — Phase 1: Google Sheet MVP
-- `docs/prd-mlp.md` — Phase 2: Web App (MLP)
-- `docs/prd-post-mlp.md` — Phase 3+: trigger-based backlog
-
-Before implementing any feature, read the relevant PRD file first. New ideas go
-into the PRD (as user stories or backlog items) before they go into the sheet or
-code. The MVP scope grows over time; the PRD is where that growth is agreed.
-
-## Where to look next
-
-- `docs/PRD.md` — product requirements, source of truth (see above)
-- `DEVELOPMENT.md` — commands, mock vs live API mode, deploy pitfalls
-- `.github/pull_request_template.md` — required PR shape
-- `.agents/skills/README.md` (project-local agent skills): tax_engine, design_system,
-  deployment_ci, and frontend_engineering; loaded when the checkout is trusted, and
-  take precedence over same-named profile skills.
-- `packages/tax/src/index.ts` — the current (single-file) engine surface
+- **Minimal diffs**: Smallest change satisfying the task. No drive-by formatting or unsolicited refactors.
+- **Git isolation**: Work in a branch or dedicated worktree. Check `git log origin/main..HEAD` before pushing.
+- **Deploys**: Automatic for PR previews and prelive (`main`). Production deploys are manual and human-only.
+- **References**: `docs/PRD.md` (scope source of truth), `DEVELOPMENT.md` (dev details), `.agents/skills/README.md`.
