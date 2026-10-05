@@ -50,6 +50,13 @@ export const ADD_DIALOG_TYPE_IDS = new Set<string>(["salary"])
 export function usePlanDashboard() {
 	const { t, locale, setLocale } = useLocale()
 	const [plan, setPlan] = useState<PlanInput>(() => defaultPlan())
+	/**
+	 * US-101 — wizard bridge. The Welcome page composes its answers into a
+	 * complete PlanInput (via lib/wizard) and hands it over here. This is the
+	 * same plan-service-boundary path the editor uses; after the wizard every
+	 * answer stays editable as normal PlanInput fields.
+	 */
+	const applyWizardPlan = setPlan
 	const [horizon, setHorizon] = useState<HorizonKey>("30")
 	const [metric, setMetric] = useState<MetricKey>("metric.netWorth")
 	const [leftTab, setLeftTab] = useState<LeftTab>("financials")
@@ -439,6 +446,8 @@ export function usePlanDashboard() {
 		locale,
 		setLocale,
 		plan,
+		setPlan,
+		applyWizardPlan,
 		horizon,
 		setHorizon,
 		metric,

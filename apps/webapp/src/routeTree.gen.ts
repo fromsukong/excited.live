@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as LayoutRouteImport } from './routes/_layout'
 import { Route as LayoutIndexRouteImport } from './routes/_layout/index'
 import { Route as LayoutSettingsRouteImport } from './routes/_layout/settings'
+import { Route as LayoutWelcomeRouteImport } from './routes/_layout/welcome'
 import { Route as ApiAuthCallbackRouteImport } from './routes/api/auth/callback'
 import { Route as ApiAuthSignInRouteImport } from './routes/api/auth/sign-in'
 import { Route as ApiAuthSignOutRouteImport } from './routes/api/auth/sign-out'
@@ -28,6 +29,11 @@ const LayoutIndexRoute = LayoutIndexRouteImport.update({
 const LayoutSettingsRoute = LayoutSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => LayoutRoute,
+} as any)
+const LayoutWelcomeRoute = LayoutWelcomeRouteImport.update({
+  id: '/welcome',
+  path: '/welcome',
   getParentRoute: () => LayoutRoute,
 } as any)
 const ApiAuthCallbackRoute = ApiAuthCallbackRouteImport.update({
@@ -49,12 +55,14 @@ const ApiAuthSignOutRoute = ApiAuthSignOutRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof LayoutIndexRoute
   '/settings': typeof LayoutSettingsRoute
+  '/welcome': typeof LayoutWelcomeRoute
   '/api/auth/callback': typeof ApiAuthCallbackRoute
   '/api/auth/sign-in': typeof ApiAuthSignInRoute
   '/api/auth/sign-out': typeof ApiAuthSignOutRoute
 }
 export interface FileRoutesByTo {
   '/settings': typeof LayoutSettingsRoute
+  '/welcome': typeof LayoutWelcomeRoute
   '/': typeof LayoutIndexRoute
   '/api/auth/callback': typeof ApiAuthCallbackRoute
   '/api/auth/sign-in': typeof ApiAuthSignInRoute
@@ -64,6 +72,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_layout': typeof LayoutRouteWithChildren
   '/_layout/settings': typeof LayoutSettingsRoute
+  '/_layout/welcome': typeof LayoutWelcomeRoute
   '/_layout/': typeof LayoutIndexRoute
   '/api/auth/callback': typeof ApiAuthCallbackRoute
   '/api/auth/sign-in': typeof ApiAuthSignInRoute
@@ -74,12 +83,14 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/settings'
+    | '/welcome'
     | '/api/auth/callback'
     | '/api/auth/sign-in'
     | '/api/auth/sign-out'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/settings'
+    | '/welcome'
     | '/'
     | '/api/auth/callback'
     | '/api/auth/sign-in'
@@ -88,6 +99,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/_layout'
     | '/_layout/settings'
+    | '/_layout/welcome'
     | '/_layout/'
     | '/api/auth/callback'
     | '/api/auth/sign-in'
@@ -124,6 +136,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutSettingsRouteImport
       parentRoute: typeof LayoutRoute
     }
+    '/_layout/welcome': {
+      id: '/_layout/welcome'
+      path: '/welcome'
+      fullPath: '/welcome'
+      preLoaderRoute: typeof LayoutWelcomeRouteImport
+      parentRoute: typeof LayoutRoute
+    }
     '/api/auth/callback': {
       id: '/api/auth/callback'
       path: '/api/auth/callback'
@@ -150,11 +169,13 @@ declare module '@tanstack/react-router' {
 
 interface LayoutRouteChildren {
   LayoutSettingsRoute: typeof LayoutSettingsRoute
+  LayoutWelcomeRoute: typeof LayoutWelcomeRoute
   LayoutIndexRoute: typeof LayoutIndexRoute
 }
 
 const LayoutRouteChildren: LayoutRouteChildren = {
   LayoutSettingsRoute: LayoutSettingsRoute,
+  LayoutWelcomeRoute: LayoutWelcomeRoute,
   LayoutIndexRoute: LayoutIndexRoute,
 }
 
