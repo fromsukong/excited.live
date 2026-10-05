@@ -163,7 +163,8 @@ export async function fetchMonteCarloBandsData(plan: PlanInput): Promise<MonteCa
 	try {
 		return await apiFetch<MonteCarloResult>("/sim/monte-carlo", {
 			method: "POST",
-			body: JSON.stringify(plan),
+			// API contract: { plan, config? } — sending a bare plan 500s server-side.
+			body: JSON.stringify({ plan, config: defaultMonteCarloConfig }),
 		})
 	} catch {
 		// Fallback to local engine if backend endpoint is unavailable
