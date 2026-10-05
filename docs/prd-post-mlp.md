@@ -37,6 +37,17 @@ Phase 3+. Trigger-based: nothing here starts until its trigger fires. Each item 
 - One wallet per goal with its own target date and rules (v2 list from the original sheet).
 - Supersedes the shared goal-savings wallet assumption (OQ-3) once triggered.
 
+## 7. Public API for your own AI (trigger: MLP live + user demand for external AI/agent access)
+
+- Goal: self-serve extension — a user's own AI or tool reads their plan and runs sims directly ("tell your AI to get it from excited.live"); no feature request needed to extend.
+- Curated public v1, never a raw internal-endpoint export: (1) stateless compute — run sim/tax from posted params (grows the MLP MCP trial-sim contract, US-106); (2) read-your-own-data with scoped tokens; (3) proposal submission — staged diffs, applied only via web acceptance (US-103). Everything else stays internal.
+- One contract, several doors: MCP server (the headline "tell your AI" surface) + OpenAPI spec + docs + llms.txt — generated from one definition, versioned (/api/v1).
+- Agent auth: scoped, revocable, audit-logged tokens (PDPA); capability scopes (compute / plan:read / propose); a plan is opened to tokens only by its owner — advisor access needs the client's consent; tokens auto-revoke with prospect-seat expiry. Never session cookies.
+- Writes stay proposal-based (US-103 invariant): no public endpoint mutates a plan; agents propose diffs, the user accepts on the web.
+- Cost control: anything that triggers model spend sits behind the subscription and its fair-use guard (pricing.md Open decision 1). Rate limits from day one; quotas per key (anonymous access, if any, gets hard caps only).
+- Two layers: the app's internal transport is not the public contract. The public surface is a thin versioned layer over plan-service (P3), so internal routes stay free to change. Security lives in auth + validation — the repo is public (Apache-2.0), obscurity was never on the table.
+- Open (Prame; touches pricing.md Resolved 1 "no free core tier"): anonymous compute tier as a distribution face vs fully gated API — not decided. Hosted compute is convenience, not moat (the engines are cloneable). Hard no's: plan-mutating public endpoints, metered endpoints for anonymous callers, wholesale "export all endpoints" dumps.
+
 ## Non-goals that stay non-goals
 
 - No brokerage/account execution — planning only, every phase.
