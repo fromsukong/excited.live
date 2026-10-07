@@ -993,7 +993,7 @@ function AllowanceSection({
           <CountStepper
             label={def.label[locale]}
             hint={def.condition[locale]}
-            value={input.allowances[def.code]}
+            value={input.allowances[def.code] ?? 0}
             onChange={(value) => patchAllowance(def.code, value)}
             max={def.code === 'parents' ? 4 : 20}
           />
