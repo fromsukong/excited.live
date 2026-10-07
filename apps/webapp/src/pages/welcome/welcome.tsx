@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react"
+import { useEffect, useState } from "react"
 import { useNavigate } from "@tanstack/react-router"
 import {
 	Button,
@@ -16,6 +16,8 @@ import {
 	isBaselinePlan,
 	markWizardCompleted,
 	resetWizardCompleted,
+	wizardAnswersFromPlan,
+	wizardBaselinePlan,
 	type WizardAnswers,
 } from "../../lib/wizard"
 import { usePlanDashboardContext } from "../../hooks/usePlanDashboard"
@@ -29,6 +31,9 @@ import { WizardStepRetirement } from "./components/WizardStepRetirement"
 const STEP_IDS = ["income", "expenses", "goals", "retirement"] as const
 type StepId = (typeof STEP_IDS)[number]
 
+/** Gate result: what the /welcome route shows right now. */
+type WizardGate = "loading" | "running" | "returning"
+
 export function Welcome() {
 	const { t, plan, setPlan } = usePlanDashboardContext()
 	// SPA navigation: the plan lives in the PlanDashboardProvider above the
@@ -39,27 +44,58 @@ export function Welcome() {
 	const [answers, setAnswers] = useState<WizardAnswers>(emptyWizardAnswers)
 	const [stepIndex, setStepIndex] = useState(0)
 	const [finished, setFinished] = useState(false)
+	/**
+	 * First-run gate (mock mode): run the wizard when this browser never
+	 * completed it AND the plan is still the untouched engine default. A
+	 * returning user (flag set) or anyone who already edited their plan gets
+	 * the "welcome back" card — the wizard must never clobber existing work.
+	 *
+	 * The gate is STATE (not a memo over [finished, plan]): "Replay the intro"
+	 * only clears the localStorage flag, so the gate has to be re-resolvable on
+	 * demand for the button to do anything. It resolves in an effect so the
+	 * server and the first client render both paint the loading shell — the
+	 * flag lives in the browser and would otherwise mismatch hydration.
+	 */
+	const [gate, setGate] = useState<WizardGate>("loading")
+	/** True while the user deliberately replays the intro (sticky until done). */
+	const [replaying, setReplaying] = useState(false)
+	/**
+	 * Plan the current run writes back onto. null = first run (engine default).
+	 * A replay passes the live plan, so replaying edits the plan instead of
+	 * resetting everything the wizard does not own.
+	 */
+	const [baseline, setBaseline] = useState<PlanInput | null>(null)
+
+	useEffect(() => {
+		if (finished || replaying) {
+			setGate("running")
+			return
+		}
+		if (hasCompletedWizard()) {
+			setGate("returning")
+			return
+		}
+		setGate(isBaselinePlan(plan) ? "running" : "returning")
+	}, [finished, replaying, plan])
 
 	const step: StepId = STEP_IDS[stepIndex] ?? "income"
 	const isFirst = stepIndex === 0
 	const isLast = stepIndex === STEP_IDS.length - 1
 
-	// First-run gate (mock mode): show the wizard when this browser never
-	// completed it AND the plan is still the untouched engine default. A
-	// returning user (flag set) or anyone who already edited their plan goes
-	// straight to the dashboard — the wizard must never clobber existing work.
-	const wizardState = useMemo<"loading" | "first-run" | "returning">(() => {
-		if (finished) return "first-run"
-		if (typeof window === "undefined") return "loading"
-		if (hasCompletedWizard()) return "returning"
-		return isBaselinePlan(plan) ? "first-run" : "returning"
-	}, [finished, plan])
+	const restart = () => {
+		resetWizardCompleted()
+		setBaseline(plan)
+		setAnswers(wizardAnswersFromPlan(plan))
+		setStepIndex(0)
+		setFinished(false)
+		setReplaying(true)
+	}
 
-	if (wizardState === "loading") {
+	if (gate === "loading") {
 		return <Stack className="wizard-page" aria-hidden="true" />
 	}
 
-	if (wizardState === "returning") {
+	if (gate === "returning") {
 		return (
 			<Stack gap={3} className="wizard-page wizard-page--done">
 				<Card className="wizard-card" padding={4}>
@@ -72,7 +108,7 @@ export function Welcome() {
 								variant="primary"
 								onClick={() => void navigate({ to: "/" })}
 							/>
-							<PlainButton className="wizard-restart" onClick={resetWizardCompleted}>
+							<PlainButton className="wizard-restart" onClick={restart}>
 								{t("wizard.restart")}
 							</PlainButton>
 						</HStack>
@@ -99,7 +135,7 @@ export function Welcome() {
 	const current = stepIndex + 1
 
 	const finish = () => {
-		const next = applyWizardAnswers(answers)
+		const next = applyWizardAnswers(answers, baseline ?? wizardBaselinePlan())
 		setPlan(next)
 		setFinished(true)
 	}

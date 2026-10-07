@@ -129,6 +129,18 @@ export const strings: Dictionary = {
 	"dialog.cancel": { en: "Cancel", th: "ยกเลิก" },
 	"milestone.add": { en: "Add milestone", th: "เพิ่มหมุดหมาย" },
 	"milestone.edit": { en: "Edit milestone", th: "แก้ไขหมุดหมาย" },
+	// US-101 AC#2 — dashboard editors for the wizard's goals + retirement answers.
+	"goal.add": { en: "Add goal", th: "เพิ่มเป้าหมาย" },
+	"goal.edit": { en: "Edit goal", th: "แก้ไขเป้าหมาย" },
+	"goal.wallet": { en: "Funded from", th: "ใช้เงินจาก" },
+	"goal.status": { en: "Funded?", th: "พอไหม?" },
+	"retirement.editor.body": {
+		en: "These two numbers end your working income and set what you want to spend in retirement. The projection updates as you type.",
+		th: "สองตัวเลขนี้คือปีที่หยุดทำงาน และค่าใช้จ่ายที่อยากใช้ตอนเกษียณ แผนจะอัปเดตทันทีที่แก้",
+	},
+	// Calendar-year unit for year inputs: the app uses the Christian era
+	// throughout (EN "CE", TH "ค.ศ.") — never พ.ศ.
+	"unit.ce": { en: "CE", th: "ค.ศ." },
 
 	// Income types
 	"type.salary": { en: "Salary", th: "เงินเดือน" },
@@ -225,6 +237,9 @@ export const strings: Dictionary = {
 	"tab.assets": { en: "Assets", th: "ทรัพย์สิน" },
 	"tab.liabilities": { en: "Liabilities", th: "หนี้สิน" },
 	"tab.wallet": { en: "Wallet", th: "กระเป๋าเงิน" },
+	// US-101 AC#2 — the wizard's retirement + goals answers stay editable here.
+	"tab.retirement": { en: "Retirement", th: "เกษียณ" },
+	"tab.goals": { en: "Goals", th: "เป้าหมาย" },
 	"wallets.heading": { en: "Wallets", th: "กระเป๋าเงิน" },
 	"row.until": { en: "Until", th: "ถึง" },
 	"a11y.netWorthChart": { en: "Net worth projection chart", th: "แผนภูมิมูลค่าสุทธิ" },

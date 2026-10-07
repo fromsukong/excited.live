@@ -1,10 +1,25 @@
 /**
  * US-101 — Onboarding wizard model.
  *
- * Pure mapping layer between the wizard's answers and the real PlanInput
- * fields. The wizard never invents defaults: skipping a step keeps the
- * engine's value from `defaultPlanInput()`, so "skip everything" lands on
- * exactly the engine's sensible TH defaults.
+ * answer → PlanInput note (AC#2 "every wizard answer is editable later in the
+ * full inputs"). The wizard owns exactly four areas of the plan and nothing
+ * else — wallets, savings split, allowances, horizon, assets, liabilities and
+ * milestones stay exactly as the baseline set them:
+ *
+ *   wizard answer          PlanInput field                edit it afterwards
+ *   salaryMonthly       →  incomes[] row "Salary"        dashboard → Income tab
+ *   livingMonthly       →  expenses[] row "Living …"     dashboard → Expenses tab
+ *   goals[]             →  goals[] (GoalRow)             dashboard → Goals tab
+ *   retirementYear      →  retirementYear                dashboard → Retirement tab
+ *   retirementMonthly.. →  retirementMonthlyToday        dashboard → Retirement tab
+ *
+ * Skipping a step keeps the baseline value for its fields — the wizard never
+ * invents defaults, so "skip everything" lands on exactly the engine's TH
+ * defaults from `defaultPlanInput()`.
+ *
+ * The wizard is re-runnable: `wizardAnswersFromPlan()` seeds it from the live
+ * plan and `applyWizardAnswers(answers, plan)` writes back onto that same
+ * baseline, so replaying the intro edits the plan instead of resetting it.
  *
  * No DOM / no storage here — storage helpers live at the bottom and are the
  * only browser-aware part (guarded, SSR-safe).
@@ -30,6 +45,12 @@ export interface WizardGoalDraft {
 	label: string
 	amountToday: number
 	targetYear: number
+	/**
+	 * Passed through, never edited here: the wizard step has no wallet control
+	 * (a wizard goal is "goal savings", engine default), but a replay must not
+	 * silently move a goal the dashboard already funds from another wallet.
+	 */
+	wallet?: GoalRow["wallet"]
 }
 
 export function emptyWizardAnswers(): WizardAnswers {
@@ -58,11 +79,19 @@ const LIVING_LABEL = "Living expenses"
  *   replaced in place (same id/typeId/growth semantics, only the amount is
  *   user-driven). If the baseline somehow lacks them, a row is added with
  *   engine-consistent defaults.
- * - Goals: replace the baseline's (empty) goals list wholesale.
+ * - Goals: replace the baseline's goals list wholesale (the wizard shows them
+ *   all, so an empty step means "no goals").
  * - Retirement: only touched fields change.
+ *
+ * `baseline` defaults to the untouched engine plan (first run). Replaying the
+ * intro passes the live plan instead, so a replay edits the user's real plan
+ * rather than resetting everything the wizard does not own.
  */
-export function applyWizardAnswers(answers: WizardAnswers): PlanInput {
-	const plan = wizardBaselinePlan()
+export function applyWizardAnswers(
+	answers: WizardAnswers,
+	baseline: PlanInput = wizardBaselinePlan(),
+): PlanInput {
+	const plan = baseline
 
 	const incomes = plan.incomes.map((row) =>
 		row.label === SALARY_LABEL && answers.salaryMonthly !== null
@@ -87,7 +116,7 @@ export function applyWizardAnswers(answers: WizardAnswers): PlanInput {
 		label: goal.label,
 		amountToday: goal.amountToday,
 		targetYear: goal.targetYear,
-		wallet: "goal",
+		wallet: goal.wallet ?? "goal",
 	}))
 
 	return {
@@ -130,6 +159,28 @@ function livingRow(startYear: number, amount: number): PeriodRow {
 		amount,
 		growthMode: "inflation",
 		growthRate: 0,
+	}
+}
+
+/**
+ * Seed wizard answers from a live plan — the replay path. Whatever the user
+ * already has (or edited in the dashboard) comes back into the wizard, so
+ * replaying the intro is an edit, not a reset.
+ */
+export function wizardAnswersFromPlan(plan: PlanInput): WizardAnswers {
+	const salary = plan.incomes.find((row) => row.label === SALARY_LABEL)
+	const living = plan.expenses.find((row) => row.label === LIVING_LABEL)
+	return {
+		salaryMonthly: salary?.amount ?? null,
+		livingMonthly: living?.amount ?? null,
+		goals: plan.goals.map((goal) => ({
+			label: goal.label,
+			amountToday: goal.amountToday,
+			targetYear: goal.targetYear,
+			wallet: goal.wallet,
+		})),
+		retirementYear: plan.retirementYear,
+		retirementMonthlyToday: plan.retirementMonthlyToday,
 	}
 }
 

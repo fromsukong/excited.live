@@ -9,6 +9,7 @@ import {
 	type AssetRow,
 	type AssetTypeId,
 	type ExpenseTypeId,
+	type GoalRow,
 	type IncomeTypeId,
 	type LiabilityRow,
 	type LiabilityTypeId,
@@ -31,6 +32,8 @@ export type MetricKey = "metric.netWorth" | "metric.cashFlow"
 export type LeftTab =
 	| "financials"
 	| "milestone"
+	| "retirement"
+	| "goals"
 	| "incomes"
 	| "expenses"
 	| "assets"
@@ -89,6 +92,10 @@ export function usePlanDashboard() {
 	const [milestoneDialog, setMilestoneDialog] = useState<{
 		id: string | null
 	} | null>(null)
+	/** null = closed; { id: null } = add; { id } = edit. */
+	const [goalDialog, setGoalDialog] = useState<{ id: string | null } | null>(
+		null,
+	)
 
 	const summary = useMemo<
 		| { ok: true; data: PlanSummary }
@@ -312,6 +319,58 @@ export function usePlanDashboard() {
 		}))
 	}
 
+	/**
+	 * US-101 AC#2 — the wizard's retirement answers, editable afterwards.
+	 * `null` for the year means "no retirement switch" (income rows continue),
+	 * exactly what the wizard's skip path leaves behind.
+	 */
+	const setRetirementYear = (year: number | null) => {
+		setPlan((current) => ({ ...current, retirementYear: year }))
+	}
+
+	const setRetirementMonthlyToday = (monthly: number) => {
+		setPlan((current) => ({ ...current, retirementMonthlyToday: monthly }))
+	}
+
+	/** Goal rows (the wizard's step 3 answers) — same shape, editable after. */
+	const addGoalRow = (values: Omit<GoalRow, "id">) => {
+		setPlan((current) => {
+			let n = current.goals.length
+			let id = ""
+			do {
+				n += 1
+				id = `goal-${n}`
+			} while (current.goals.some((row) => row.id === id))
+			return { ...current, goals: [...current.goals, { id, ...values }] }
+		})
+	}
+
+	const patchGoalRow = (id: string, patch: Partial<GoalRow>) => {
+		setPlan((current) => ({
+			...current,
+			goals: current.goals.map((row) =>
+				row.id === id ? { ...row, ...patch } : row,
+			),
+		}))
+	}
+
+	const removeGoalRow = (id: string) => {
+		setPlan((current) => ({
+			...current,
+			goals: current.goals.filter((row) => row.id !== id),
+		}))
+	}
+
+	const handleSaveGoal = (values: Omit<GoalRow, "id">) => {
+		if (!goalDialog) return
+		if (goalDialog.id === null) {
+			addGoalRow(values)
+		} else {
+			patchGoalRow(goalDialog.id, values)
+		}
+		setGoalDialog(null)
+	}
+
 	const addValueRow = (
 		kind: "assets" | "liabilities",
 		typeId: AssetTypeId | LiabilityTypeId,
@@ -474,6 +533,8 @@ export function usePlanDashboard() {
 		setValueDialog,
 		milestoneDialog,
 		setMilestoneDialog,
+		goalDialog,
+		setGoalDialog,
 		summary,
 		shown,
 		shownBands,
@@ -481,11 +542,15 @@ export function usePlanDashboard() {
 		financialMetrics,
 		removeEntryRow,
 		removeMilestone,
+		removeGoalRow,
 		removeValueRow,
 		handleSaveEntry,
 		handleSaveValue,
 		handleSaveMilestone,
+		handleSaveGoal,
 		handlePickType,
+		setRetirementYear,
+		setRetirementMonthlyToday,
 	}
 }
 

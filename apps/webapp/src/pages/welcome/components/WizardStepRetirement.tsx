@@ -43,7 +43,7 @@ export function WizardStepRetirement({
 				max={currentYear + 60}
 				step={1}
 				isIntegerOnly
-				units="ค.ศ."
+				units={t("unit.ce")}
 				width="100%"
 			/>
 			<NumberInput
