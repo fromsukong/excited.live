@@ -19,7 +19,13 @@ workflow is what makes entries durable.
 `POST /webhook/waitlist` — JSON body:
 
 ```json
-{ "email": "user@example.com", "source": "landing" }
+{
+  "email": "user@example.com",
+  "lang": "en",
+  "source": "hero",
+  "page": "/",
+  "sentAt": "2026-10-07T12:00:00.000Z"
+}
 ```
 
 - `200 { "ok": true }` — stored.
@@ -31,5 +37,5 @@ workflow is what makes entries durable.
 
 - Emails are lowercased/deduplicated by the Sheet's own filtering later;
   the workflow does not block duplicates (idempotence left to the sheet).
-- Honeypot field (`website`) is filled by bots only; the form ignores
+- Honeypot field (`company_website`) is filled by bots only; the form ignores
   submissions that fill it client-side, so it never reaches this webhook.
