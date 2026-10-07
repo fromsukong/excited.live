@@ -50,6 +50,13 @@ describe("settings store", () => {
 
 	it("keeps settings isolated per user", async () => {
 		await store.save("user-d", { profileName: "D", gender: "female" })
+		// user-d reads back its own row (distinctive vs the default "")…
+		expect(await store.get("user-d")).toEqual({
+			profileName: "D",
+			birthday: undefined,
+			gender: "female",
+		})
+		// …and user-e, who never wrote, is clean.
 		expect(await store.get("user-e")).toEqual({
 			profileName: "",
 			birthday: undefined,

@@ -1,5 +1,3 @@
-import { mkdirSync } from "node:fs"
-import { dirname } from "node:path"
 import type { SqlDriver, SqlValue } from "./types"
 
 /**
@@ -9,24 +7,35 @@ import type { SqlDriver, SqlValue } from "./types"
  * alone. (Found by scripts/persistence-proof.sh running the built dist.)
  */
 const SQLITE_MODULE = "node:sqlite"
+const FS_MODULE = "node:fs"
+const PATH_MODULE = "node:path"
 
 /**
  * Local SQLite driver built on Node's built-in `node:sqlite` (Node >= 22.13).
  *
  * Same engine and SQL dialect as Cloudflare D1, so dev, tests and CI execute
- * the real migrations and the real store SQL instead of a stand-in. The module
- * is imported dynamically so a Workers bundle that never takes this branch
- * does not try to resolve a Node builtin — the D1 branch is the deploy path.
+ * the real migrations and the real store SQL instead of a stand-in. Every Node
+ * builtin this file needs is imported dynamically with a computed specifier,
+ * so the Workers bundle (`dist/worker.js`) carries no `fs`/`path`/`sqlite`
+ * static import — the D1 branch is the deploy path and the module graph it
+ * ships must stay Node-builtin-free. (Verified against built
+ * `dist/chunk-*.js`; see docs/persistence-proof.md.)
  */
 export async function createNodeSqliteDriver(file: string): Promise<SqlDriver> {
-	mkdirSync(dirname(file), { recursive: true })
+	const { mkdirSync } = (await import(FS_MODULE)) as typeof import("node:fs")
+	const { dirname } = (await import(PATH_MODULE)) as typeof import("node:path")
 	const { DatabaseSync: SqliteDatabase } = (await import(SQLITE_MODULE)) as typeof import("node:sqlite")
+
+	mkdirSync(dirname(file), { recursive: true })
 	const db = new SqliteDatabase(file)
 
 	return {
 		kind: "node-sqlite",
 		async exec(sql: string): Promise<void> {
-			db.exec(sql)
+			// Same call shape as the D1 driver (src/db/d1.ts): one statement, no
+			// parameters. `prepare()` refuses a multi-statement string, so a
+			// bag of statements can never slip through this door unnoticed.
+			db.prepare(sql).run()
 		},
 		async all<T>(sql: string, params: readonly SqlValue[] = []): Promise<T[]> {
 			return db.prepare(sql).all(...params) as T[]

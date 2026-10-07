@@ -15,7 +15,13 @@ describe("plan store", () => {
 	})
 
 	it("round-trips a saved plan byte for byte", async () => {
-		const plan = defaultPlanInput()
+		// Distinctive marker, not the default fixture: a default-vs-default
+		// compare passes even when nothing was persisted (FRO-72 nit 1).
+		const plan = { ...defaultPlanInput(), personalAllowances: 123456 } as ReturnType<
+			typeof defaultPlanInput
+		>
+		expect(JSON.stringify(plan)).not.toBe(JSON.stringify(defaultPlanInput()))
+
 		await store.save("user-a", plan)
 		expect(JSON.stringify(await store.get("user-a"))).toBe(JSON.stringify(plan))
 	})

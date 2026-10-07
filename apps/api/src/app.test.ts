@@ -53,7 +53,13 @@ describe("api/v1/plan", () => {
 
 	it("round-trips a PUT plan byte for byte", async () => {
 		const { app, db } = await openApi(tempDbFile())
-		const plan = defaultPlanInput()
+		// Distinctive marker: the default fixture would round-trip through the
+		// GET fallback too, so a default-vs-default compare passes even with
+		// persistence disabled (FRO-72 nit 1).
+		const plan = { ...defaultPlanInput(), personalAllowances: 123456 } as ReturnType<
+			typeof defaultPlanInput
+		>
+		expect(JSON.stringify(plan)).not.toBe(JSON.stringify(defaultPlanInput()))
 
 		const put = await app.request("/api/v1/plan", jsonRequest("PUT", "user-a", plan))
 		expect(put.status).toBe(200)
@@ -72,6 +78,11 @@ describe("api/v1/plan", () => {
 
 		await app.request("/api/v1/plan", jsonRequest("PUT", "user-a", plan))
 
+		// user-a reads back its own plan (fails outright without persistence)…
+		const own = await app.request("/api/v1/plan", { headers: { "x-user-id": "user-a" } })
+		expect(await own.text()).toBe(JSON.stringify(plan))
+
+		// …and user-b, who never wrote, is clean.
 		const other = await app.request("/api/v1/plan", { headers: { "x-user-id": "user-b" } })
 		expect(await other.text()).toBe(JSON.stringify(defaultPlanInput()))
 		db.driver.close()
@@ -123,6 +134,37 @@ describe("api/v1/settings", () => {
 
 		const get = await app.request("/api/v1/settings", { headers: { "x-user-id": "user-a" } })
 		expect(await get.text()).toBe('{"profileName":"Prame","gender":"male"}')
+		db.driver.close()
+	})
+
+	// FRO-72 nit 2 — this is the ONE intentional deviation from the pre-change
+	// in-memory handler: `PUT` still echoes the request body byte for byte, but
+	// the stored row is normalised into three columns, so a malformed body reads
+	// back normalised (the old handler echoed the raw object). Every documented
+	// contract case — all three keys with a `YYYY-MM-DD` birthday, or a
+	// birthday-less body — is byte-identical to the old handler; see
+	// apps/api/README.md ("Intentional deviations").
+	it("normalises a malformed PUT on read, while PUT still echoes the body", async () => {
+		const { app, db } = await openApi(tempDbFile())
+
+		const empty = await app.request("/api/v1/settings", jsonRequest("PUT", "user-a", {}))
+		expect(empty.status).toBe(200)
+		expect(await empty.json()).toEqual({ ok: true, data: {} })
+		const emptyRead = await app.request("/api/v1/settings", { headers: { "x-user-id": "user-a" } })
+		expect(await emptyRead.text()).toBe('{"profileName":"","gender":"female"}')
+
+		// Unknown keys are dropped; wrong types fall back to the column default.
+		const messy = { profileName: 42, gender: { nope: true }, unknownKey: "dropped" }
+		await app.request("/api/v1/settings", jsonRequest("PUT", "user-b", messy))
+		const messyRead = await app.request("/api/v1/settings", { headers: { "x-user-id": "user-b" } })
+		expect(await messyRead.text()).toBe('{"profileName":"","gender":"female"}')
+
+		// An explicit null birthday reads back absent (the column is nullable).
+		const nullBirthday = { profileName: "Nok", birthday: null, gender: "female" }
+		await app.request("/api/v1/settings", jsonRequest("PUT", "user-c", nullBirthday))
+		const nullRead = await app.request("/api/v1/settings", { headers: { "x-user-id": "user-c" } })
+		expect(await nullRead.text()).toBe('{"profileName":"Nok","gender":"female"}')
+
 		db.driver.close()
 	})
 })

@@ -25,9 +25,12 @@ request -> app.ts -> c.var.db (SqlDriver)
 | `src/db/migrations.generated.ts` | Generated mirror of the SQL (Workers cannot read files at runtime). `pnpm --filter @excited-live/api gen:migrations` |
 | `src/db/apply.ts` | Applies pending migrations, tracked in the wrangler-standard `d1_migrations` table |
 | `src/db/d1.ts` / `src/db/node-sqlite.ts` | The two drivers behind `SqlDriver` |
+| `src/db/d1-sqlite-stub.ts` | Test double for a D1 binding (a faithful one: its `exec()` splits on newlines exactly like real D1) |
 | `src/db/index.ts` | Resolution order + one cached handle per process |
 | `src/stores/plan-store.ts` | `plans(user_id PK, data JSON, updated_at)` |
 | `src/stores/settings-store.ts` | `user_settings(user_id PK, profile_name, birthday, gender, updated_at)` |
+| `scripts/persistence-proof.sh` | Restart proof on the Node driver |
+| `scripts/d1-proof.sh` | Restart proof on a **real** local D1 binding (workerd) |
 
 Schema (see `migrations/0001_init.sql`): `plans` keeps the plan document as a
 JSON snapshot (whatever the client PUT comes back byte-for-byte on GET — the
@@ -44,16 +47,37 @@ Contract notes:
   and fails loudly at boot if that is impossible (`EXCITED_API_DB_PATH` is how
   you point it somewhere writable).
 
+Intentional deviations (FRO-72):
+
+- **Malformed `PUT /api/v1/settings` reads back normalised.** `PUT` still echoes
+  the request body byte for byte, but the row is three columns, so a body that
+  the old in-memory handler echoed verbatim comes back through the columns:
+  `PUT {}` → old `{}`, now `{"profileName":"","gender":"female"}`; unknown keys
+  are dropped; a non-string `profileName`/`gender` falls back to the column
+  default; `birthday: null` reads back absent. Every documented contract case —
+  all three keys with a `YYYY-MM-DD` birthday, or no birthday at all — is
+  byte-identical to the pre-persistence handler.
+  Pinned by `src/app.test.ts` → "normalises a malformed PUT on read…".
+- **The D1 driver never uses `D1Database.exec()`.** Real D1's `exec()` splits its
+  input on newlines and runs each line as its own statement, so the multi-line
+  `CREATE TABLE`s the migrator runs died with
+  `D1_EXEC_ERROR ... incomplete input` (FRO-68). `createD1Driver`'s `exec()` is
+  `await binding.prepare(sql).run()` instead; `splitStatements` still guarantees
+  one statement per call. Proof: `scripts/d1-proof.sh` and
+  `src/db/d1-driver.test.ts`.
+
 ## Local dev / tests
 
 ```bash
 pnpm --filter @excited-live/api dev        # tsx watch, migrates on boot
 pnpm --filter @excited-live/api test       # vitest: stores, migrations, HTTP contract, restart
 pnpm --filter @excited-live/api gen:migrations
-bash apps/api/scripts/persistence-proof.sh # save -> restart -> still there
+bash apps/api/scripts/persistence-proof.sh # save -> restart -> still there (node:sqlite)
+bash apps/api/scripts/d1-proof.sh          # same, on a REAL local D1 binding (workerd)
 ```
 
-The last command's raw output is checked in at `docs/persistence-proof.md`.
+Both scripts' raw output is checked in at `docs/persistence-proof.md`. The second
+one needs network on first run (npx pulls wrangler + workerd) and nothing else.
 
 Env vars:
 
@@ -85,6 +109,14 @@ Wiring this to Cloudflare is a separate task; nothing below has been run.
 6. No env var is required for D1 (the binding provides it); add `nodejs_compat`
    only if the Workers runtime asks for it.
 
-Not verified locally: an actual D1 binding (needs provisioning). The D1 driver
-and the migrations run against a D1-shaped binding backed by real SQLite in
-`src/db/resolve.test.ts`.
+The Workers entry's module graph carries no Node builtins: the local fallback's
+`node:fs` / `node:path` / `node:sqlite` imports are dynamic, with computed
+specifiers, so `dist/chunk-*.js` has no static `fs` / `path` / `sqlite` import
+(FRO-72 nit 3, verified against the built bundle).
+
+Verified locally (FRO-72): a **real** local D1 binding, in the real Workers
+runtime (`wrangler dev --local`, workerd, unmodified `wrangler.toml`,
+auto-migrate on) — `GET /api/v1/settings` is `200` (it was a hard `500` before
+the `exec()` fix), plan + settings round-trip, and both survive a runtime
+restart. Transcript + method: `docs/persistence-proof.md`;
+re-run with `bash apps/api/scripts/d1-proof.sh`.
