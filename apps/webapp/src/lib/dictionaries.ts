@@ -129,6 +129,18 @@ export const strings: Dictionary = {
 	"dialog.cancel": { en: "Cancel", th: "ยกเลิก" },
 	"milestone.add": { en: "Add milestone", th: "เพิ่มหมุดหมาย" },
 	"milestone.edit": { en: "Edit milestone", th: "แก้ไขหมุดหมาย" },
+	// US-101 AC#2 — dashboard editors for the wizard's goals + retirement answers.
+	"goal.add": { en: "Add goal", th: "เพิ่มเป้าหมาย" },
+	"goal.edit": { en: "Edit goal", th: "แก้ไขเป้าหมาย" },
+	"goal.wallet": { en: "Funded from", th: "ใช้เงินจาก" },
+	"goal.status": { en: "Funded?", th: "พอไหม?" },
+	"retirement.editor.body": {
+		en: "These two numbers end your working income and set what you want to spend in retirement. The projection updates as you type.",
+		th: "สองตัวเลขนี้คือปีที่หยุดทำงาน และค่าใช้จ่ายที่อยากใช้ตอนเกษียณ แผนจะอัปเดตทันทีที่แก้",
+	},
+	// Calendar-year unit for year inputs: the app uses the Christian era
+	// throughout (EN "CE", TH "ค.ศ.") — never พ.ศ.
+	"unit.ce": { en: "CE", th: "ค.ศ." },
 
 	// Income types
 	"type.salary": { en: "Salary", th: "เงินเดือน" },
@@ -225,6 +237,9 @@ export const strings: Dictionary = {
 	"tab.assets": { en: "Assets", th: "ทรัพย์สิน" },
 	"tab.liabilities": { en: "Liabilities", th: "หนี้สิน" },
 	"tab.wallet": { en: "Wallet", th: "กระเป๋าเงิน" },
+	// US-101 AC#2 — the wizard's retirement + goals answers stay editable here.
+	"tab.retirement": { en: "Retirement", th: "เกษียณ" },
+	"tab.goals": { en: "Goals", th: "เป้าหมาย" },
 	"wallets.heading": { en: "Wallets", th: "กระเป๋าเงิน" },
 	"row.until": { en: "Until", th: "ถึง" },
 	"a11y.netWorthChart": { en: "Net worth projection chart", th: "แผนภูมิมูลค่าสุทธิ" },
@@ -281,6 +296,67 @@ export const strings: Dictionary = {
 	},
 	"chat.status.funded": { en: "on track", th: "กำลังไปได้ดี" },
 	"chat.status.short": { en: "at risk", th: "มีความเสี่ยง" },
+
+	// US-101 — onboarding wizard
+	"wizard.progressLabel": { en: "Wizard progress", th: "ความคืบหน้า" },
+	"wizard.stepCounter": { en: "Step {current} of {total}", th: "ขั้นที่ {current} จาก {total}" },
+	"wizard.back": { en: "Back", th: "ย้อนกลับ" },
+	"wizard.next": { en: "Next", th: "ถัดไป" },
+	"wizard.finish": { en: "See my plan", th: "ดูแผนของฉัน" },
+	"wizard.skipAll": { en: "Skip everything", th: "ข้ามทั้งหมด" },
+	"wizard.skipNote": {
+		en: "You can skip this — every number stays editable in the full plan afterwards.",
+		th: "ข้ามได้เลย ทุกตัวเลขแก้ไขได้ในแผนฉบับเต็มภายหลัง",
+	},
+	"wizard.income.title": { en: "How much do you make?", th: "คุณมีรายได้เดือนละเท่าไร?" },
+	"wizard.income.body": {
+		en: "Your monthly salary before tax. The plan starts from this number.",
+		th: "เงินเดือนต่อเดือนก่อนภาษี แผนจะเริ่มจากตัวเลขนี้",
+	},
+	"wizard.income.salary": { en: "Monthly salary", th: "เงินเดือนต่อเดือน" },
+	"wizard.income.hint": { en: "e.g. 100,000", th: "เช่น 100,000" },
+	"wizard.expenses.title": { en: "How much do you spend?", th: "คุณใช้จ่ายเดือนละเท่าไร?" },
+	"wizard.expenses.body": {
+		en: "Your usual monthly living costs — rent, food, transport, fun.",
+		th: "ค่าใช้จ่ายประจำเดือนปกติของคุณ ค่าเช่า ค่ากิน ค่าเดินทาง และของที่ชอบ",
+	},
+	"wizard.expenses.living": { en: "Monthly living expenses", th: "ค่าใช้จ่ายต่อเดือน" },
+	"wizard.expenses.hint": { en: "e.g. 40,000", th: "เช่น 40,000" },
+	"wizard.goals.title": { en: "Anything you're saving for?", th: "มีอะไรที่กำลังออมไปหาไหม?" },
+	"wizard.goals.body": {
+		en: "Up to three goals — a house, a wedding, a sabbatical. Entirely optional.",
+		th: "เลือกได้สูงสุด 3 เป้าหมาย เช่น บ้าน งานแต่ง หรือปีพัก ใส่หรือไม่ใส่ก็ได้",
+	},
+	"wizard.goals.add": { en: "Add a goal", th: "เพิ่มเป้าหมาย" },
+	"wizard.goals.amount": { en: "Cost (today's money)", th: "ค่าใช้จ่าย (ราคาวันนี้)" },
+	"wizard.goals.targetYear": { en: "Target year", th: "ปีที่ต้องการ" },
+	"wizard.goals.labelPlaceholder": { en: "e.g. House down payment", th: "เช่น เงินดาวน์บ้าน" },
+	"wizard.retirement.title": { en: "When do you want to retire?", th: "อยากเกษียณปีไหน?" },
+	"wizard.retirement.body": {
+		en: "Pick a year and the monthly spending you'd like in retirement (in today's money).",
+		th: "เลือกปีที่อยากหยุดทำงาน และค่าใช้จ่ายต่อเดือนตอนเกษียณ (คิดตามราคาวันนี้)",
+	},
+	"wizard.retirement.year": { en: "Retirement year", th: "ปีที่เกษียณ" },
+	"wizard.retirement.yearHint": { en: "e.g. 2055", th: "เช่น 2055" },
+	"wizard.retirement.monthly": { en: "Monthly spending in retirement", th: "ค่าใช้จ่ายตอนเกษียณ" },
+	"wizard.retirement.monthlyHint": { en: "e.g. 40,000", th: "เช่น 40,000" },
+	"wizard.done.title": { en: "Your plan is ready", th: "แผนของคุณพร้อมแล้ว" },
+	"wizard.done.body": {
+		en: "We built a complete plan from your answers — the chart on the next screen shows your whole life, and every number stays editable.",
+		th: "เราสร้างแผนฉบับสมบูรณ์จากคำตอบของคุณ หน้าถัดไปกราฟจะแสดงชีวิตทั้งหมดของคุณ และทุกตัวเลขยังแก้ได้",
+	},
+	"wizard.done.income": { en: "Income", th: "รายได้" },
+	"wizard.done.expenses": { en: "Expenses", th: "ค่าใช้จ่าย" },
+	"wizard.done.retireYear": { en: "Retiring", th: "เกษียณปี" },
+	"wizard.done.retireSpend": { en: "Retirement spending", th: "ค่าใช้จ่ายตอนเกษียณ" },
+	"wizard.done.cta": { en: "See my life plan", th: "ดูแผนชีวิตของฉัน" },
+	"wizard.returning.title": { en: "Welcome back", th: "ยินดีต้อนรับกลับมา" },
+	"wizard.returning.body": {
+		en: "You already have a plan in progress — the wizard never overwrites it.",
+		th: "คุณมีแผนที่เริ่มไว้แล้ว ตัวช่วยเริ่มต้นจะไม่ทับแผนเดิมของคุณ",
+	},
+	"wizard.goto.dashboard": { en: "Go to my plan", th: "ไปที่แผนของฉัน" },
+	"wizard.restart": { en: "Replay the intro", th: "เล่นตัวช่วยเริ่มต้นอีกครั้ง" },
 }
 
 /** Optional per-locale overrides on top of `strings` (none needed yet). */

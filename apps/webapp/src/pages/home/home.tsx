@@ -1,3 +1,5 @@
+import { useEffect } from "react"
+import { useNavigate } from "@tanstack/react-router"
 import {
 	PlainButton,
 	Stack,
@@ -13,6 +15,9 @@ import { EntryDialog } from "./components/EntryDialog"
 import { ValueDialog } from "./components/ValueDialog"
 import { MilestoneDialog } from "./components/MilestoneDialog"
 import { MilestoneTable } from "./components/MilestoneTable"
+import { GoalDialog } from "./components/GoalDialog"
+import { GoalTable } from "./components/GoalTable"
+import { RetirementEditor } from "./components/RetirementEditor"
 import { GroupedPeriodTable } from "./components/GroupedPeriodTable"
 import { GroupedValueTable } from "./components/GroupedValueTable"
 import { TypePickerDialog } from "./components/TypePickerDialog"
@@ -20,6 +25,7 @@ import {
 	HORIZONS,
 	usePlanDashboardContext,
 } from "../../hooks/usePlanDashboard"
+import { hasCompletedWizard, isBaselinePlan } from "../../lib/wizard"
 import {
 	type AssetTypeId,
 	type ExpenseTypeId,
@@ -47,6 +53,8 @@ export function Home() {
 		setValueDialog,
 		milestoneDialog,
 		setMilestoneDialog,
+		goalDialog,
+		setGoalDialog,
 		summary,
 		shown,
 		shownBands,
@@ -54,12 +62,35 @@ export function Home() {
 		financialMetrics,
 		removeEntryRow,
 		removeMilestone,
+		removeGoalRow,
 		removeValueRow,
 		handleSaveEntry,
 		handleSaveValue,
 		handleSaveMilestone,
+		handleSaveGoal,
 		handlePickType,
+		setRetirementYear,
+		setRetirementMonthlyToday,
 	} = usePlanDashboardContext()
+
+	// US-101 — first-run entry. A visitor who never finished the wizard and
+	// still has the untouched engine-default plan is guided to /welcome.
+	// Same gate the welcome page uses, so returning users (completed flag) and
+	// anyone who already edited their plan are never interrupted.
+	// SSR-safe: hasCompletedWizard() reports true on the server.
+	const navigate = useNavigate()
+	useEffect(() => {
+		if (hasCompletedWizard()) return
+		if (isBaselinePlan(plan)) {
+			void navigate({ to: "/welcome", replace: true })
+		}
+	}, [plan, navigate])
+
+	// US-101 AC#2 — the wizard's goals + retirement answers. The editors are
+	// real plan fields, so the projection-derived feedback (goal checks, the
+	// retirement verdict) has to travel with them.
+	const goalChecks = summary.ok ? summary.data.goals : null
+	const retirementVerdict = summary.ok ? summary.data.retirement : null
 
 	return (
 		<>
@@ -164,6 +195,8 @@ export function Home() {
 					onChange={(value) => {
 						if (
 							value === "milestone" ||
+							value === "retirement" ||
+							value === "goals" ||
 							value === "incomes" ||
 							value === "expenses" ||
 							value === "assets" ||
@@ -187,6 +220,16 @@ export function Home() {
 						value="milestone"
 						label={t("tab.milestone")}
 						panelId="left-panel-milestone"
+					/>
+					<Tab
+						value="retirement"
+						label={t("tab.retirement")}
+						panelId="left-panel-retirement"
+					/>
+					<Tab
+						value="goals"
+						label={t("tab.goals")}
+						panelId="left-panel-goals"
 					/>
 					<Tab
 						value="incomes"
@@ -257,6 +300,34 @@ export function Home() {
 							plan={plan}
 							onAdd={() => setMilestoneDialog({ id: null })}
 							onEdit={(id) => setMilestoneDialog({ id })}
+							t={t}
+						/>
+					</Stack>
+				) : leftTab === "retirement" ? (
+					<Stack
+						id="left-panel-retirement"
+						className="tab-inputs"
+						aria-label={t("tab.retirement")}
+					>
+						<RetirementEditor
+							plan={plan}
+							verdict={retirementVerdict}
+							onChangeYear={setRetirementYear}
+							onChangeMonthly={setRetirementMonthlyToday}
+							t={t}
+						/>
+					</Stack>
+				) : leftTab === "goals" ? (
+					<Stack
+						id="left-panel-goals"
+						className="tab-inputs"
+						aria-label={t("tab.goals")}
+					>
+						<GoalTable
+							goals={plan.goals}
+							checks={goalChecks}
+							onAdd={() => setGoalDialog({ id: null })}
+							onEdit={(id) => setGoalDialog({ id })}
 							t={t}
 						/>
 					</Stack>
@@ -450,6 +521,20 @@ export function Home() {
 						setMilestoneDialog(null)
 					}}
 					onClose={() => setMilestoneDialog(null)}
+					t={t}
+				/>
+			) : null}
+			{goalDialog ? (
+				<GoalDialog
+					key={goalDialog.id ?? "__add__"}
+					id={goalDialog.id}
+					plan={plan}
+					onSave={handleSaveGoal}
+					onRemove={(id) => {
+						removeGoalRow(id)
+						setGoalDialog(null)
+					}}
+					onClose={() => setGoalDialog(null)}
 					t={t}
 				/>
 			) : null}

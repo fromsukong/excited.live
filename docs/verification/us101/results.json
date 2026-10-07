@@ -1,0 +1,67 @@
+[
+  {
+    "name": "redirect-first-run",
+    "ok": true,
+    "detail": "landing after / -> http://localhost:3002/welcome"
+  },
+  {
+    "name": "en-wizard-visible",
+    "ok": true,
+    "detail": "Your plan, live | Plan | Settings | Numbers update as you type | ไทย | Step 1 of 4 | How much do you make? | Your monthly sa"
+  },
+  {
+    "name": "en-full-dashboard",
+    "ok": true,
+    "detail": "url=http://localhost:3002/"
+  },
+  {
+    "name": "en-full-numbers",
+    "ok": true,
+    "detail": "[\"Income\", \"Expenses\", \"Net Worth\\t฿67,079,281\", \"Change in Net Worth\\t฿66,086,882\", \"Liquid Net Worth\\t฿6,707,458\", \"Income\\t฿1,020,000\", \"Taxable Income\\t฿835,000\", \"Taxes\\t฿82,000\", \"Expenses\\t฿384,000\"]"
+  },
+  {
+    "name": "en-flag-set",
+    "ok": true,
+    "detail": "flag=1"
+  },
+  {
+    "name": "redirect-skip-path",
+    "ok": true,
+    "detail": "url=http://localhost:3002/welcome"
+  },
+  {
+    "name": "en-skip-numbers",
+    "ok": true,
+    "detail": "[\"Income\", \"Expenses\", \"Net Worth\\t฿72,745,397\", \"Change in Net Worth\\t฿71,704,391\", \"Liquid Net Worth\\t฿7,411,240\", \"Income\\t฿1,200,000\", \"Taxable Income\\t฿1,015,000\", \"Taxes\\t฿118,750\", \"Expenses\\t฿480,000\"]"
+  },
+  {
+    "name": "redirect-th",
+    "ok": true,
+    "detail": "url=http://localhost:3002/welcome"
+  },
+  {
+    "name": "th-wizard-visible",
+    "ok": true,
+    "detail": "แผนของคุณ สด ๆ | แผน | ตั้งค่า | ตัวเลขอัปเดตทันทีที่แก้ | EN | ขั้นที่ 1 จาก 4 | คุณมีรายได้เดือนละเท่าไร? | เงินเดือนต่อเด"
+  },
+  {
+    "name": "th-full-dashboard",
+    "ok": true,
+    "detail": "url=http://localhost:3002/"
+  },
+  {
+    "name": "th-full-numbers",
+    "ok": true,
+    "detail": "[\"มูลค่าสุทธิ\", \"รายได้\", \"ค่าใช้จ่าย\", \"มูลค่าสุทธิ\\t฿67,079,281\", \"การเปลี่ยนแปลงมูลค่าสุทธิ\\t฿66,086,882\", \"มูลค่าสุทธิสภาพคล่อง\\t฿6,707,458\", \"รายได้\\t฿1,020,000\", \"รายได้สุทธิที่ต้องเสียภาษี\\t฿835,000\", \"ภาษี\\t฿82,000\", \"อัตราภาษีเฉลี่ย\\t8.9%\", \"ค่าใช้จ่าย\\t฿384,000\", \"ยอดภาษีคงค้าง\\t฿82,000\"]"
+  },
+  {
+    "name": "th-skip-numbers",
+    "ok": true,
+    "detail": "[\"มูลค่าสุทธิ\", \"รายได้\", \"ค่าใช้จ่าย\", \"มูลค่าสุทธิ\\t฿72,745,397\", \"การเปลี่ยนแปลงมูลค่าสุทธิ\\t฿71,704,391\", \"มูลค่าสุทธิสภาพคล่อง\\t฿7,411,240\", \"รายได้\\t฿1,200,000\", \"รายได้สุทธิที่ต้องเสียภาษี\\t฿1,015,000\", \"ภาษี\\t฿118,750\", \"อัตราภาษีเฉลี่ย\\t10.8%\", \"ค่าใช้จ่าย\\t฿480,000\", \"ยอดภาษีคงค้าง\\t฿118,750\"]"
+  },
+  {
+    "name": "returning-no-redirect",
+    "ok": true,
+    "detail": "url=http://localhost:3002/"
+  }
+]

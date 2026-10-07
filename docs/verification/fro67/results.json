@@ -1,0 +1,178 @@
+{
+  "base": "http://localhost:3002",
+  "viewport": "390x844",
+  "total": 34,
+  "failed": 0,
+  "results": [
+    {
+      "id": "en.retirement.fields",
+      "pass": true,
+      "detail": "editor shows the engine's retirement answers: ฿210,839,456 left at 2075"
+    },
+    {
+      "id": "en.retirement.projection-changed",
+      "pass": true,
+      "detail": "chart readout 2055 · ฿72,745,397 → 2055 · ฿58,332,533"
+    },
+    {
+      "id": "en.retirement.verdict-changed",
+      "pass": true,
+      "detail": "verdict line: ฿210,839,456 left at 2075 → ฿148,447,145 left at 2075"
+    },
+    {
+      "id": "en.goals.empty",
+      "pass": true,
+      "detail": "goals tab offers \"Add goal\" with no rows yet"
+    },
+    {
+      "id": "en.goals.added",
+      "pass": true,
+      "detail": "row written: [\"Condo down payment\",\"5000000\",\"2035\"] → \"Name\tAmount\tTarget year / Condo down payment / short ฿4,497,406 in 2035 / \t฿5,000,000\t2035 / + Add goal\t\t\""
+    },
+    {
+      "id": "en.goals.check-visible",
+      "pass": true,
+      "detail": "goal check rendered next to the row (projection reacts to the goal): \"Condo down payment\""
+    },
+    {
+      "id": "en.goals.edited",
+      "pass": true,
+      "detail": "goal cost 5,000,000 → 20,000,000; check \"Condo down payment → Condo down payment\""
+    },
+    {
+      "id": "en.goals.check-tracks-edit",
+      "pass": true,
+      "detail": "re-editing the goal re-ran the check: \"Condo down payment\""
+    },
+    {
+      "id": "en.goals.removed",
+      "pass": true,
+      "detail": "row removed: \"Name\tAmount\tTarget year / + Add goal\t\t\""
+    },
+    {
+      "id": "en.plan.edits-kept",
+      "pass": true,
+      "detail": "plan still at the edited projection: 2055 · ฿58,332,533"
+    },
+    {
+      "id": "en.restart.card",
+      "pass": true,
+      "detail": "returning card shown (never overwrites the plan): \"Welcome back\""
+    },
+    {
+      "id": "en.restart.opens-wizard",
+      "pass": true,
+      "detail": "\"Replay the intro\" re-opened the wizard at step 1 of 4 (flag 1 → null)"
+    },
+    {
+      "id": "en.restart.seeded",
+      "pass": true,
+      "detail": "step 4 pre-filled from the live plan (retirement year 2040) — replay edits, never resets"
+    },
+    {
+      "id": "en.replay.non-destructive",
+      "pass": true,
+      "detail": "after the replay the plan is still the edited one (2055 · ฿58,332,533, retirement year 2040, removed goal still gone)"
+    },
+    {
+      "id": "en.layout.no-horizontal-scroll",
+      "pass": true,
+      "detail": "page width 390px vs viewport 390px (no sideways scroll)"
+    },
+    {
+      "id": "en.layout.tabs-reachable",
+      "pass": true,
+      "detail": "tab strip 726px in 330px (overflow 396px, scrollable)"
+    },
+    {
+      "id": "en.layout.editor-visible",
+      "pass": true,
+      "detail": "retirement inputs 2/2 on screen, verdict line visible: true"
+    },
+    {
+      "id": "th.retirement.fields",
+      "pass": true,
+      "detail": "editor shows the engine's retirement answers: เหลือ ฿210,839,456 ถึงปี 2075"
+    },
+    {
+      "id": "th.retirement.projection-changed",
+      "pass": true,
+      "detail": "chart readout 2055 · ฿72,745,397 → 2055 · ฿58,332,533"
+    },
+    {
+      "id": "th.retirement.verdict-changed",
+      "pass": true,
+      "detail": "verdict line: เหลือ ฿210,839,456 ถึงปี 2075 → เหลือ ฿148,447,145 ถึงปี 2075"
+    },
+    {
+      "id": "th.goals.empty",
+      "pass": true,
+      "detail": "goals tab offers \"เพิ่มเป้าหมาย\" with no rows yet"
+    },
+    {
+      "id": "th.goals.added",
+      "pass": true,
+      "detail": "row written: [\"เงินดาวน์คอนโด\",\"5000000\",\"2035\"] → \"ชื่อ\tจำนวนเงิน\tปีที่ต้องการ / เงินดาวน์คอนโด / ขาด ฿4,497,406 ในปี 2035 / \t฿5,000,000\t2035 / + เพิ่มเป้าหมาย\t\t\""
+    },
+    {
+      "id": "th.goals.check-visible",
+      "pass": true,
+      "detail": "goal check rendered next to the row (projection reacts to the goal): \"เงินดาวน์คอนโด\""
+    },
+    {
+      "id": "th.goals.edited",
+      "pass": true,
+      "detail": "goal cost 5,000,000 → 20,000,000; check \"เงินดาวน์คอนโด → เงินดาวน์คอนโด\""
+    },
+    {
+      "id": "th.goals.check-tracks-edit",
+      "pass": true,
+      "detail": "re-editing the goal re-ran the check: \"เงินดาวน์คอนโด\""
+    },
+    {
+      "id": "th.goals.removed",
+      "pass": true,
+      "detail": "row removed: \"ชื่อ\tจำนวนเงิน\tปีที่ต้องการ / + เพิ่มเป้าหมาย\t\t\""
+    },
+    {
+      "id": "th.plan.edits-kept",
+      "pass": true,
+      "detail": "plan still at the edited projection: 2055 · ฿58,332,533"
+    },
+    {
+      "id": "th.restart.card",
+      "pass": true,
+      "detail": "returning card shown (never overwrites the plan): \"ยินดีต้อนรับกลับมา\""
+    },
+    {
+      "id": "th.restart.opens-wizard",
+      "pass": true,
+      "detail": "\"เล่นตัวช่วยเริ่มต้นอีกครั้ง\" re-opened the wizard at step 1 of 4 (flag 1 → null)"
+    },
+    {
+      "id": "th.restart.seeded",
+      "pass": true,
+      "detail": "step 4 pre-filled from the live plan (retirement year 2040) — replay edits, never resets"
+    },
+    {
+      "id": "th.replay.non-destructive",
+      "pass": true,
+      "detail": "after the replay the plan is still the edited one (2055 · ฿58,332,533, retirement year 2040, removed goal still gone)"
+    },
+    {
+      "id": "th.layout.no-horizontal-scroll",
+      "pass": true,
+      "detail": "page width 390px vs viewport 390px (no sideways scroll)"
+    },
+    {
+      "id": "th.layout.tabs-reachable",
+      "pass": true,
+      "detail": "tab strip 782px in 330px (overflow 452px, scrollable)"
+    },
+    {
+      "id": "th.layout.editor-visible",
+      "pass": true,
+      "detail": "retirement inputs 2/2 on screen, verdict line visible: true"
+    }
+  ]
+}

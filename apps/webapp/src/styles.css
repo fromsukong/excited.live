@@ -1087,3 +1087,55 @@ button {
 }
 
 
+
+/* US-101 — onboarding wizard */
+.wizard-page {
+  max-width: 620px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.wizard-progress {
+  align-items: flex-start;
+}
+
+.wizard-progress__dots {
+  margin-top: 4px;
+}
+
+.wizard-progress__dot {
+  width: 34px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--color-border);
+  transition: background 0.2s ease;
+}
+
+.wizard-progress__dot.is-done {
+  background: var(--color-icon-orange);
+}
+
+.wizard-card {
+  background: var(--panel-bg);
+}
+
+.wizard-footer {
+  align-items: center;
+}
+
+.wizard-goal-row {
+  padding: 14px;
+  border: 1px solid var(--panel-border);
+  border-radius: var(--panel-radius, 12px);
+}
+
+.wizard-goal-remove {
+  align-self: flex-start;
+}
+
+.wizard-finish-facts {
+  padding: 14px 16px;
+  border: 1px solid var(--panel-border);
+  border-radius: var(--panel-radius, 12px);
+  background: var(--panel-bg);
+}

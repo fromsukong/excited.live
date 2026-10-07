@@ -104,7 +104,15 @@ export function computeMonteCarloBands(plan: PlanInput): MonteCarloResult {
 }
 
 /** Re-exports for UI typing — the UI never imports @excited-live/sim itself. */
-export type { PlanInput, PeriodRow, WalletId, GoalRow, SimulationYear } from "@excited-live/sim"
+export type {
+	PlanInput,
+	PeriodRow,
+	WalletId,
+	GoalRow,
+	GoalCheck,
+	SimulationYear,
+	RetirementVerdict,
+} from "@excited-live/sim"
 export type { MonteCarloResult, MonteCarloYear, MonteCarloBand } from "@excited-live/sim"
 export { realReturn, WALLET_IDS } from "@excited-live/sim"
 export {
