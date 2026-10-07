@@ -1,0 +1,73 @@
+import { Hono } from "hono"
+import { cors } from "hono/cors"
+import { logger } from "hono/logger"
+import { getDb } from "./db"
+import type { SqlDriver } from "./db/types"
+import type { ApiEnv } from "./lib/env"
+import { createPlanRouter } from "./routes/plan"
+import { createSettingsRouter } from "./routes/settings"
+import { simRouter } from "./routes/sim"
+
+export interface AppOptions {
+	/**
+	 * Pre-resolved database driver.
+	 *
+	 * Omitted in production: the middleware resolves the backend from the
+	 * request env (D1 binding) or the local SQLite file. Tests pass one in to
+	 * point the same app at a throwaway database.
+	 */
+	db?: SqlDriver
+}
+
+/**
+ * Build the API app.
+ *
+ * Response shapes are unchanged from the pre-persistence version: plan and
+ * settings are read through the `db` request variable, everything else
+ * (routing, CORS, /health, /) is identical.
+ */
+export function createApp(options: AppOptions = {}): Hono<ApiEnv> {
+	const app = new Hono<ApiEnv>()
+
+	app.use("*", logger())
+	app.use(
+		"*",
+		cors({
+			origin: (origin) => origin || "*",
+			allowHeaders: ["Content-Type", "Authorization", "x-user-id"],
+			allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+			credentials: true,
+		}),
+	)
+
+	app.get("/health", (c) => {
+		return c.json({ status: "ok", service: "excited-live-api", timestamp: new Date().toISOString() })
+	})
+
+	app.get("/", (c) => {
+		return c.json({
+			name: "excited.live API",
+			version: "0.0.1",
+			docs: "/health",
+		})
+	})
+
+	// Resolve the persistence backend once per app instance, on first request
+	// (on Workers the D1 binding is only visible through the request env).
+	let driverPromise: Promise<SqlDriver> | null = options.db ? Promise.resolve(options.db) : null
+
+	app.use("/api/v1/*", async (c, next) => {
+		driverPromise ??= getDb(c.env).then((resolved) => resolved.driver)
+		c.set("db", await driverPromise)
+		await next()
+	})
+
+	const apiV1 = new Hono<ApiEnv>()
+	apiV1.route("/plan", createPlanRouter())
+	apiV1.route("/settings", createSettingsRouter())
+	apiV1.route("/sim", simRouter)
+
+	app.route("/api/v1", apiV1)
+
+	return app
+}
