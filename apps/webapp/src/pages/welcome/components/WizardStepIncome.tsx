@@ -1,5 +1,5 @@
 import { NumberInput, Stack, Text } from "@excited-live/design-system"
-import { usePlanDashboard } from "../../../hooks/usePlanDashboard"
+import { usePlanDashboardContext } from "../../../hooks/usePlanDashboard"
 
 interface WizardStepProps {
 	t: (key: string, vars?: Record<string, string>) => string
@@ -17,7 +17,7 @@ export function WizardStepIncome({
 	value: number | null
 	onChange: (value: number | null) => void
 }) {
-	const { plan } = usePlanDashboard()
+	const { plan } = usePlanDashboardContext()
 	const current = plan.incomes.find((row) => row.typeId === "salary")
 	return (
 		<Stack gap={2}>

@@ -1,5 +1,5 @@
 import { NumberInput, Stack, Text } from "@excited-live/design-system"
-import { usePlanDashboard } from "../../../hooks/usePlanDashboard"
+import { usePlanDashboardContext } from "../../../hooks/usePlanDashboard"
 
 interface WizardStepProps {
 	t: (key: string, vars?: Record<string, string>) => string
@@ -23,7 +23,7 @@ export function WizardStepRetirement({
 		retirementMonthlyToday?: number | null
 	}) => void
 }) {
-	const { plan } = usePlanDashboard()
+	const { plan } = usePlanDashboardContext()
 	const currentYear = new Date().getFullYear()
 
 	return (

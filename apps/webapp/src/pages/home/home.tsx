@@ -1,3 +1,5 @@
+import { useEffect } from "react"
+import { useNavigate } from "@tanstack/react-router"
 import {
 	PlainButton,
 	Stack,
@@ -20,6 +22,7 @@ import {
 	HORIZONS,
 	usePlanDashboardContext,
 } from "../../hooks/usePlanDashboard"
+import { hasCompletedWizard, isBaselinePlan } from "../../lib/wizard"
 import {
 	type AssetTypeId,
 	type ExpenseTypeId,
@@ -60,6 +63,19 @@ export function Home() {
 		handleSaveMilestone,
 		handlePickType,
 	} = usePlanDashboardContext()
+
+	// US-101 — first-run entry. A visitor who never finished the wizard and
+	// still has the untouched engine-default plan is guided to /welcome.
+	// Same gate the welcome page uses, so returning users (completed flag) and
+	// anyone who already edited their plan are never interrupted.
+	// SSR-safe: hasCompletedWizard() reports true on the server.
+	const navigate = useNavigate()
+	useEffect(() => {
+		if (hasCompletedWizard()) return
+		if (isBaselinePlan(plan)) {
+			void navigate({ to: "/welcome", replace: true })
+		}
+	}, [plan, navigate])
 
 	return (
 		<>
