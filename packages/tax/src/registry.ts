@@ -1,18 +1,13 @@
-/**
- * Registry of available tax systems, keyed by country + tax year.
- *
- * Adding a new jurisdiction or year = write one `TaxSystem` implementation,
- * then register it here. The rest of the product (web / mobile / MCP) only
- * ever talks to the registry — no direct imports of individual systems.
- */
-
 import type { TaxCountry, TaxSystem } from "./types"
 import { thai2026System } from "./thai/thai-2026"
 import { us2026System } from "./us/us-2026"
 
 const systems = new Map<string, TaxSystem>()
 
-/** Register (or replace) a system for its country + tax year. */
+/**
+ * Register a tax system implementation for a country + tax year.
+ * Overwrites any existing registration for the same combination.
+ */
 export function registerTaxSystem(system: TaxSystem): void {
 	systems.set(`${system.country}-${system.taxYear}`, system)
 }
@@ -27,7 +22,7 @@ export function getTaxSystem(country: TaxCountry, taxYear: number): TaxSystem {
 		const available = [...systems.values()]
 			.map((item) => `${item.country} ${item.taxYear}`)
 			.join(", ")
-		throw new Error(`No tax system registered for ${country} ${taxYear}. Available: ${available || "none"}`)
+		throw new Error(`No tax system registered for ${country} ${taxYear}. Available: ${available}`)
 	}
 	return system
 }

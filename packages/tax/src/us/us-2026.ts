@@ -1,25 +1,27 @@
-// ---------------------------------------------------------------------------
-// United States — 2026 income tax — PLACEHOLDER SYSTEM
-//
-// IMPORTANT: This module is an ARCHITECTURE PLACEHOLDER only. It exists to
-// prove the multi-jurisdiction engine shape (see `thai/thai-2026.ts`, the real
-// implementation) so that real US support can be dropped in later without
-// structural changes.
-//
-// Every rate and threshold below is a PLACEHOLDER:
-//   - The real-world 2026 US tax schedule is subject to pending legislation
-//     (TCJA sunset at the end of 2025); the final 2026 numbers are NOT known.
-//   - We deliberately do NOT research live values. The 2025 standards below
-//     are used verbatim as a stand-in, flagged in every place they appear
-//     and surfaced to users via `assumptions` (en + th).
-//   - DO NOT use this module for real tax calculations. Verify every value
-//     against the enacted 2026 schedule before any real use.
-//
-// Pure engine: no network, no DOM, no Date/month-day dependence.
-// ---------------------------------------------------------------------------
+/**
+ * United States — individual income tax, tax year 2026.
+ *
+ * ⚠️ STRUCTURAL PLACEHOLDER ONLY ⚠️
+ * This system exists to prove the multi-jurisdiction shape of packages/tax
+ * (types, registry, config exposure, multi-status Progressive tables). Every
+ * rate, bracket and standard deduction is a 2025 STAND-IN because the real
+ * 2026 schedule depends on pending legislation (TCJA sunset on 2025-12-31).
+ *
+ * DO NOT USE FOR REAL CALCULATIONS.
+ *
+ * What is modeled (placeholder form):
+ * - 4 filing statuses (single, married_joint, married_separate, head_of_household)
+ *   via `input.filingStatus`.
+ * - 2025 standard deduction per status (single 15,000, married 30,000, head 22,500).
+ * - 2025 progressive brackets per status (10% to 37%).
+ * - Zero expense deductions (assessable = gross).
+ * - Itemized deductions and allowances are IGNORED (warnings pushed if non-zero).
+ * - Zero credits.
+ *
+ * Pure logic only: no network, no DOM, no date dependence.
+ */
 
 import type {
-	BracketBreakdown,
 	IncomeCategory,
 	LocalizedLabel,
 	TaxBracket,
@@ -34,52 +36,50 @@ const CURRENCY = "USD"
 const TAX_YEAR = 2026
 
 // ---------------------------------------------------------------------------
-// PLACEHOLDER — 2025 federal income tax brackets used as a stand-in for 2026.
-// The 2026 schedule is subject to pending legislation (TCJA sunset); verify
-// every value against the enacted schedule before any real use.
+// PLACEHOLDER brackets — 2025 federal schedules used as a stand-in for 2026.
+// Rates: 10%, 12%, 22%, 24%, 32%, 35%, 37%.
 // ---------------------------------------------------------------------------
 
 const SINGLE_BRACKETS: TaxBracket[] = [
-	{ upTo: 11_925, rate: 0.1 }, // 10% up to 11,925 (PLACEHOLDER 2025)
-	{ upTo: 48_475, rate: 0.12 }, // 12% up to 48,475 (PLACEHOLDER 2025)
-	{ upTo: 103_350, rate: 0.22 }, // 22% up to 103,350 (PLACEHOLDER 2025)
-	{ upTo: 197_300, rate: 0.24 }, // 24% up to 197,300 (PLACEHOLDER 2025)
-	{ upTo: 250_525, rate: 0.32 }, // 32% up to 250,525 (PLACEHOLDER 2025)
-	{ upTo: 626_350, rate: 0.35 }, // 35% up to 626,350 (PLACEHOLDER 2025)
-	{ upTo: Infinity, rate: 0.37 }, // 37% above 626,350 (PLACEHOLDER 2025)
+	{ upTo: 11_925, rate: 0.1 },
+	{ upTo: 48_475, rate: 0.12 },
+	{ upTo: 103_350, rate: 0.22 },
+	{ upTo: 197_300, rate: 0.24 },
+	{ upTo: 250_525, rate: 0.32 },
+	{ upTo: 626_350, rate: 0.35 },
+	{ upTo: Infinity, rate: 0.37 },
 ]
 
 const MARRIED_JOINT_BRACKETS: TaxBracket[] = [
-	{ upTo: 23_850, rate: 0.1 }, // PLACEHOLDER 2025
-	{ upTo: 96_950, rate: 0.12 }, // PLACEHOLDER 2025
-	{ upTo: 206_700, rate: 0.22 }, // PLACEHOLDER 2025
-	{ upTo: 394_600, rate: 0.24 }, // PLACEHOLDER 2025
-	{ upTo: 501_050, rate: 0.32 }, // PLACEHOLDER 2025
-	{ upTo: 751_600, rate: 0.35 }, // PLACEHOLDER 2025
-	{ upTo: Infinity, rate: 0.37 }, // PLACEHOLDER 2025
+	{ upTo: 23_850, rate: 0.1 },
+	{ upTo: 96_950, rate: 0.12 },
+	{ upTo: 206_700, rate: 0.22 },
+	{ upTo: 394_600, rate: 0.24 },
+	{ upTo: 501_050, rate: 0.32 },
+	{ upTo: 751_600, rate: 0.35 },
+	{ upTo: Infinity, rate: 0.37 },
 ]
 
 const MARRIED_SEPARATE_BRACKETS: TaxBracket[] = [
-	{ upTo: 11_925, rate: 0.1 }, // PLACEHOLDER 2025
-	{ upTo: 48_475, rate: 0.12 }, // PLACEHOLDER 2025
-	{ upTo: 103_350, rate: 0.22 }, // PLACEHOLDER 2025
-	{ upTo: 197_300, rate: 0.24 }, // PLACEHOLDER 2025
-	{ upTo: 250_525, rate: 0.32 }, // PLACEHOLDER 2025
-	{ upTo: 375_800, rate: 0.35 }, // PLACEHOLDER 2025
-	{ upTo: Infinity, rate: 0.37 }, // PLACEHOLDER 2025
+	{ upTo: 11_925, rate: 0.1 },
+	{ upTo: 48_475, rate: 0.12 },
+	{ upTo: 103_350, rate: 0.22 },
+	{ upTo: 197_300, rate: 0.24 },
+	{ upTo: 250_525, rate: 0.32 },
+	{ upTo: 375_800, rate: 0.35 },
+	{ upTo: Infinity, rate: 0.37 },
 ]
 
 const HEAD_OF_HOUSEHOLD_BRACKETS: TaxBracket[] = [
-	{ upTo: 17_000, rate: 0.1 }, // PLACEHOLDER 2025
-	{ upTo: 64_850, rate: 0.12 }, // PLACEHOLDER 2025
-	{ upTo: 103_350, rate: 0.22 }, // PLACEHOLDER 2025
-	{ upTo: 197_300, rate: 0.24 }, // PLACEHOLDER 2025
-	{ upTo: 250_500, rate: 0.32 }, // PLACEHOLDER 2025
-	{ upTo: 626_350, rate: 0.35 }, // PLACEHOLDER 2025
-	{ upTo: Infinity, rate: 0.37 }, // PLACEHOLDER 2025
+	{ upTo: 17_000, rate: 0.1 },
+	{ upTo: 64_850, rate: 0.12 },
+	{ upTo: 103_350, rate: 0.22 },
+	{ upTo: 197_300, rate: 0.24 },
+	{ upTo: 250_500, rate: 0.32 },
+	{ upTo: 626_350, rate: 0.35 },
+	{ upTo: Infinity, rate: 0.37 },
 ]
 
-/** Status-specific brackets, keyed by filing status code. */
 const BRACKETS_BY_STATUS: Record<string, TaxBracket[]> = {
 	single: SINGLE_BRACKETS,
 	married_joint: MARRIED_JOINT_BRACKETS,
@@ -185,7 +185,7 @@ function compute(input: TaxInput): UsTaxResult {
 	if (input.filingStatus !== undefined && statusOption.code !== input.filingStatus) {
 		errors.push(`Unknown filing status: ${input.filingStatus}`)
 	}
-	const statusBrackets = BRACKETS_BY_STATUS[statusOption.code] ?? SINGLE_BRACKETS
+	const statusBrackets = BRACKETS_BY_STATUS[statusOption.code]!
 	const nominalStandardDeduction = statusOption.standardDeduction // PLACEHOLDER 2025 stand-in
 
 	// US placeholder ignores the allowances input entirely: the US federal
@@ -194,6 +194,7 @@ function compute(input: TaxInput): UsTaxResult {
 		input.allowances.personal,
 		input.allowances.spouse,
 		input.allowances.children,
+		input.allowances.childrenSecondPlus2018 ?? 0,
 		input.allowances.parents,
 		input.allowances.disabled,
 	]
@@ -205,11 +206,21 @@ function compute(input: TaxInput): UsTaxResult {
 	// (standard deduction only). Warn when any amount is > 0.
 	const itemizedInputs = [
 		input.deductions.insurance,
+		input.deductions.healthInsurance ?? 0,
+		input.deductions.parentHealthInsurance ?? 0,
+		input.deductions.socialSecurity ?? 0,
+		input.deductions.prenatalAndChildbirth ?? 0,
 		input.deductions.mortgageInterest,
 		input.deductions.donations,
+		input.deductions.doubleDonations ?? 0,
+		input.deductions.thaiESG ?? 0,
+		input.deductions.easyEReceipt ?? 0,
 		input.deductions.retirementSavings.ssf,
 		input.deductions.retirementSavings.rmf,
 		input.deductions.retirementSavings.provident,
+		input.deductions.retirementSavings.pensionInsurance ?? 0,
+		input.deductions.retirementSavings.nsf ?? 0,
+		input.deductions.retirementSavings.gpf ?? 0,
 	]
 	if (itemizedInputs.some((amount) => amount > 0)) {
 		warnings.push("Itemized deductions input ignored under US placeholder")
@@ -228,12 +239,11 @@ function compute(input: TaxInput): UsTaxResult {
 	const taxableIncome = round2(Math.max(0, assessableIncome - standardDeduction))
 
 	// Progressive per-bracket math (contract):
-	// taxableInBracket = max(0, min(taxableIncome, upTo) - from), tax = taxableInBracket * rate.
 	let from = 0
-	const brackets: BracketBreakdown[] = statusBrackets.map((bracket, index) => {
+	const brackets = statusBrackets.map((bracket, index) => {
 		const taxableInBracket = round2(Math.max(0, Math.min(taxableIncome, bracket.upTo) - from))
 		const tax = round2(taxableInBracket * bracket.rate)
-		const breakdown: BracketBreakdown = {
+		const breakdown = {
 			index,
 			from,
 			to: bracket.upTo,
@@ -246,12 +256,9 @@ function compute(input: TaxInput): UsTaxResult {
 	})
 
 	const taxLiability = round2(sum(brackets.map((bracket) => bracket.tax)))
-
-	// The US placeholder models NO credits: netTax = taxLiability.
-	const credits = round2(0)
+	const credits = 0
 	const netTax = round2(Math.max(0, taxLiability - credits))
 
-	// Rate of the highest bracket with taxable income in it (0 when none).
 	let marginalRate = 0
 	for (const bracket of brackets) {
 		if (bracket.taxableInBracket > 0) {
@@ -315,16 +322,53 @@ function validate(input: TaxInput): string[] {
 	checkNonNegativeFinite(allowances.personal, "allowances.personal count")
 	checkNonNegativeFinite(allowances.spouse, "allowances.spouse count")
 	checkNonNegativeFinite(allowances.children, "allowances.children count")
+	if (allowances.childrenSecondPlus2018 !== undefined) {
+		checkNonNegativeFinite(allowances.childrenSecondPlus2018, "allowances.childrenSecondPlus2018 count")
+	}
 	checkNonNegativeFinite(allowances.parents, "allowances.parents count")
 	checkNonNegativeFinite(allowances.disabled, "allowances.disabled count")
 
 	const deductions = input.deductions
 	checkNonNegativeFinite(deductions.insurance, "deductions.insurance")
+	if (deductions.healthInsurance !== undefined) {
+		checkNonNegativeFinite(deductions.healthInsurance, "deductions.healthInsurance")
+	}
+	if (deductions.parentHealthInsurance !== undefined) {
+		checkNonNegativeFinite(deductions.parentHealthInsurance, "deductions.parentHealthInsurance")
+	}
+	if (deductions.socialSecurity !== undefined) {
+		checkNonNegativeFinite(deductions.socialSecurity, "deductions.socialSecurity")
+	}
+	if (deductions.prenatalAndChildbirth !== undefined) {
+		checkNonNegativeFinite(deductions.prenatalAndChildbirth, "deductions.prenatalAndChildbirth")
+	}
 	checkNonNegativeFinite(deductions.mortgageInterest, "deductions.mortgageInterest")
 	checkNonNegativeFinite(deductions.donations, "deductions.donations")
+	if (deductions.doubleDonations !== undefined) {
+		checkNonNegativeFinite(deductions.doubleDonations, "deductions.doubleDonations")
+	}
+	if (deductions.thaiESG !== undefined) {
+		checkNonNegativeFinite(deductions.thaiESG, "deductions.thaiESG")
+	}
+	if (deductions.easyEReceipt !== undefined) {
+		checkNonNegativeFinite(deductions.easyEReceipt, "deductions.easyEReceipt")
+	}
+
 	checkNonNegativeFinite(deductions.retirementSavings.ssf, "deductions.retirementSavings.ssf")
 	checkNonNegativeFinite(deductions.retirementSavings.rmf, "deductions.retirementSavings.rmf")
 	checkNonNegativeFinite(deductions.retirementSavings.provident, "deductions.retirementSavings.provident")
+	if (deductions.retirementSavings.pensionInsurance !== undefined) {
+		checkNonNegativeFinite(
+			deductions.retirementSavings.pensionInsurance,
+			"deductions.retirementSavings.pensionInsurance",
+		)
+	}
+	if (deductions.retirementSavings.nsf !== undefined) {
+		checkNonNegativeFinite(deductions.retirementSavings.nsf, "deductions.retirementSavings.nsf")
+	}
+	if (deductions.retirementSavings.gpf !== undefined) {
+		checkNonNegativeFinite(deductions.retirementSavings.gpf, "deductions.retirementSavings.gpf")
+	}
 
 	checkNonNegativeFinite(input.withheld, "withheld")
 	checkNonNegativeFinite(input.estimatedPaid, "estimatedPaid")
@@ -348,7 +392,7 @@ const assumptions: LocalizedLabel[] = [
 	},
 ]
 
-export const us2026System: UsTaxSystem = {
+export const us2026System: UsTaxSystem = deepFreeze({
 	country: "US",
 	taxYear: TAX_YEAR,
 	currency: CURRENCY,
@@ -356,27 +400,18 @@ export const us2026System: UsTaxSystem = {
 		en: "PLACEHOLDER US federal income tax system for 2026. Architecture skeleton only: 2025 standards stand in for the 2026 schedule, which is subject to pending legislation (TCJA sunset). Not for real use.",
 		th: "ระบบภาษีเงินได้บุคคลธรรมดาสหรัฐอเมริกา ปี 2026 (ค่าเริ่มต้น) โครงร่างสถาปัตยกรรมเท่านั้น: ใช้มาตรฐานปี 2025 แทนตารางปี 2026 ซึ่งขึ้นอยู่กับกฎหมายที่ยังไม่ผ่าน (TCJA sunset) ยังไม่พร้อมใช้งานจริง",
 	},
-	// Deep-frozen for the API contract. Protection mechanics differ by piece:
-	// options.bracketsByStatus / options.filingStatuses hold the SAME
-	// instances compute() reads, so freezing them in place IS the corruption
-	// guard; config.brackets is a defensive copy of SINGLE_BRACKETS (the
-	// engine reads BRACKETS_BY_STATUS, which is covered via the shared
-	// options entries).
-	config: deepFreeze({
+	validate,
+	compute,
+	assumptions,
+	config: {
 		country: "US",
 		taxYear: TAX_YEAR,
 		currency: CURRENCY,
-		// System-level brackets = the SINGLE status brackets (PLACEHOLDER).
-		// Status-specific brackets live in config.options.bracketsByStatus;
-		// compute() reads BRACKETS_BY_STATUS directly.
-		brackets: SINGLE_BRACKETS.map((bracket) => ({ ...bracket })),
-		incomeCategories: INCOME_CATEGORIES.map((category) => ({ ...category })),
+		brackets: SINGLE_BRACKETS,
+		incomeCategories: INCOME_CATEGORIES,
 		options: {
 			filingStatuses: FILING_STATUSES,
 			bracketsByStatus: BRACKETS_BY_STATUS,
 		},
-	}),
-	validate,
-	compute,
-	assumptions,
-}
+	},
+})

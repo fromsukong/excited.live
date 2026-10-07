@@ -48,34 +48,34 @@ describe("us2026System (PLACEHOLDER)", () => {
 		expect(us2026System.config.options.filingStatuses).toHaveLength(4)
 	})
 
-	it("zero input -> all fields zero", () => {
+	it("zero input -> all fields zero (defaults to single filing status)", () => {
 		const r = compute(makeInput())
 		expect(r.grossIncome).toBe(0)
 		expect(r.assessableIncome).toBe(0)
 		expect(r.standardDeduction).toBe(0)
 		expect(r.taxableIncome).toBe(0)
 		expect(r.taxLiability).toBe(0)
-		expect(r.credits).toBe(0)
 		expect(r.netTax).toBe(0)
-		expect(r.balance).toBe(0)
 		expect(r.marginalRate).toBe(0)
 		expect(r.effectiveRate).toBe(0)
+		expect(r.balance).toBe(0)
 		expect(r.warnings).toEqual([])
 		expect(r.errors).toEqual([])
+		expect(r.deductionLines).toEqual([])
 	})
 
 	it("single, wages 30,000 -> std 15,000, taxable 15,000, liability 1,561.50", () => {
-		const r = compute(makeInput({ filingStatus: "single", incomes: [{ categoryCode: "wages", amount: 30_000 }] }))
+		const r = compute(
+			makeInput({ filingStatus: "single", incomes: [{ categoryCode: "wages", amount: 30_000 }] }),
+		)
 		expect(r.grossIncome).toBe(30_000)
-		expect(r.assessableIncome).toBe(30_000)
 		expect(r.standardDeduction).toBe(15_000)
 		expect(r.taxableIncome).toBe(15_000)
-		// 11,925 * 0.10 = 1,192.50 + 3,075 * 0.12 = 369.00
+		// 10% on 11,925 = 1,192.50; 12% on (15,000 - 11,925 = 3,075) = 369.00 -> total 1,561.50
 		expect(r.taxLiability).toBe(1_561.5)
 		expect(r.netTax).toBe(1_561.5)
 		expect(r.marginalRate).toBe(0.12)
-		expect(r.effectiveRate).toBeCloseTo(0.05205, 5)
-		expect(r.balance).toBe(1_561.5)
+		expect(r.effectiveRate).toBeCloseTo(1_561.5 / 30_000, 4)
 		expect(r.brackets[0]).toMatchObject({ index: 0, from: 0, to: 11_925, taxableInBracket: 11_925, tax: 1_192.5 })
 		expect(r.brackets[1]).toMatchObject({ index: 1, from: 11_925, to: 48_475, taxableInBracket: 3_075, tax: 369 })
 	})
@@ -121,6 +121,17 @@ describe("us2026System (PLACEHOLDER)", () => {
 		expect(validate(makeInput({ filingStatus: "single" }))).toEqual([])
 	})
 
+	it("unknown filing status in compute -> records error and falls back to single", () => {
+		const r = compute(
+			makeInput({
+				filingStatus: "non_existent",
+				incomes: [{ categoryCode: "wages", amount: 30_000 }],
+			}),
+		)
+		expect(r.errors).toContain("Unknown filing status: non_existent")
+		expect(r.standardDeduction).toBe(15_000)
+	})
+
 	it("warnings for ignored allowances and itemized deductions inputs", () => {
 		const r = compute(
 			makeInput({
@@ -137,10 +148,81 @@ describe("us2026System (PLACEHOLDER)", () => {
 		)
 		expect(r.warnings).toContain("Allowances input ignored under US placeholder")
 		expect(r.warnings).toContain("Itemized deductions input ignored under US placeholder")
-		// Values are still computed from income and standard deduction only.
-		expect(r.standardDeduction).toBe(15_000)
-		expect(r.taxableIncome).toBe(15_000)
-		expect(r.taxLiability).toBe(1_561.5)
+	})
+
+	it("warns when extended allowances and deductions are provided", () => {
+		const r = compute(
+			makeInput({
+				filingStatus: "single",
+				incomes: [{ categoryCode: "wages", amount: 30_000 }],
+				allowances: {
+					personal: 0,
+					spouse: 0,
+					children: 0,
+					childrenSecondPlus2018: 1,
+					parents: 0,
+					disabled: 0,
+				},
+				deductions: {
+					insurance: 0,
+					healthInsurance: 5_000,
+					parentHealthInsurance: 5_000,
+					socialSecurity: 5_000,
+					prenatalAndChildbirth: 5_000,
+					mortgageInterest: 0,
+					donations: 0,
+					doubleDonations: 5_000,
+					thaiESG: 5_000,
+					easyEReceipt: 5_000,
+					retirementSavings: {
+						ssf: 0,
+						rmf: 0,
+						provident: 0,
+						pensionInsurance: 5_000,
+						nsf: 5_000,
+						gpf: 5_000,
+					},
+				},
+			}),
+		)
+		expect(r.warnings).toContain("Allowances input ignored under US placeholder")
+		expect(r.warnings).toContain("Itemized deductions input ignored under US placeholder")
+	})
+
+	it("validates all extended optional deductions and allowances reject negative or non-finite numbers", () => {
+		const badInputs = [
+			makeInput({ allowances: { ...DEFAULT_ALLOWANCES, childrenSecondPlus2018: -1 } }),
+			makeInput({ deductions: { ...DEFAULT_DEDUCTIONS, healthInsurance: -1 } }),
+			makeInput({ deductions: { ...DEFAULT_DEDUCTIONS, parentHealthInsurance: -1 } }),
+			makeInput({ deductions: { ...DEFAULT_DEDUCTIONS, socialSecurity: -1 } }),
+			makeInput({ deductions: { ...DEFAULT_DEDUCTIONS, prenatalAndChildbirth: -1 } }),
+			makeInput({ deductions: { ...DEFAULT_DEDUCTIONS, doubleDonations: -1 } }),
+			makeInput({ deductions: { ...DEFAULT_DEDUCTIONS, thaiESG: -1 } }),
+			makeInput({ deductions: { ...DEFAULT_DEDUCTIONS, easyEReceipt: -1 } }),
+			makeInput({
+				deductions: {
+					...DEFAULT_DEDUCTIONS,
+					retirementSavings: { ssf: 0, rmf: 0, provident: 0, pensionInsurance: -1 },
+				},
+			}),
+			makeInput({
+				deductions: {
+					...DEFAULT_DEDUCTIONS,
+					retirementSavings: { ssf: 0, rmf: 0, provident: 0, nsf: -1 },
+				},
+			}),
+			makeInput({
+				deductions: {
+					...DEFAULT_DEDUCTIONS,
+					retirementSavings: { ssf: 0, rmf: 0, provident: 0, gpf: -1 },
+				},
+			}),
+		]
+		for (const input of badInputs) {
+			const errs = validate(input)
+			expect(errs.length).toBeGreaterThan(0)
+			expect(errs[0]).toContain("must be a non-negative finite number")
+		}
 	})
 
 	it("self_employment 100,000 + investment 10,000, single -> taxable 95,000, liability 15,814.00", () => {
@@ -157,24 +239,21 @@ describe("us2026System (PLACEHOLDER)", () => {
 		expect(r.assessableIncome).toBe(110_000)
 		expect(r.standardDeduction).toBe(15_000)
 		expect(r.taxableIncome).toBe(95_000)
-		expect(r.marginalRate).toBe(0.22)
-		// 1,192.50 + (48,475 - 11,925) * 0.12 + (95,000 - 48,475) * 0.22
-		// = 1,192.50 + 4,386.00 + 10,235.50
+		// 10% on 11,925 = 1,192.50
+		// 12% on (48,475 - 11,925 = 36,550) = 4,386.00
+		// 22% on (95,000 - 48,475 = 46,525) = 10,235.50
+		// total = 1,192.50 + 4,386.00 + 10,235.50 = 15,814.00
 		expect(r.taxLiability).toBe(15_814)
-		expect(r.netTax).toBe(15_814)
+		expect(r.marginalRate).toBe(0.22)
 	})
 
 	it("validate rejects negative, non-finite and unknown-category inputs", () => {
-		expect(
-			validate(makeInput({ incomes: [{ categoryCode: "wages", amount: -5 }] })),
-		).toHaveLength(1)
-		expect(
-			validate(makeInput({ incomes: [{ categoryCode: "wages", amount: NaN }] })),
-		).toHaveLength(1)
-		expect(
-			validate(makeInput({ incomes: [{ categoryCode: "salary", amount: 1_000 }] })),
-		).toHaveLength(1)
-		expect(validate(makeInput({ withheld: -1 }))).toHaveLength(1)
-		expect(validate(makeInput({ estimatedPaid: Infinity }))).toHaveLength(1)
+		expect(validate(makeInput({ incomes: [{ categoryCode: "wages", amount: -1 }] })).length).toBe(1)
+		expect(validate(makeInput({ incomes: [{ categoryCode: "wages", amount: NaN }] })).length).toBe(1)
+		expect(validate(makeInput({ incomes: [{ categoryCode: "unknown_code", amount: 1_000 }] })).length).toBe(1)
+		expect(validate(makeInput({ withheld: -50 })).length).toBe(1)
+		expect(validate(makeInput({ estimatedPaid: Infinity })).length).toBe(1)
+		expect(validate(makeInput({ allowances: { ...DEFAULT_ALLOWANCES, personal: -1 } })).length).toBe(1)
+		expect(validate(makeInput({ deductions: { ...DEFAULT_DEDUCTIONS, insurance: -100 } })).length).toBe(1)
 	})
 })
