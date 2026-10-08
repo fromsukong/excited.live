@@ -1,0 +1,5 @@
+# Everything is owned by the repo owner: only Prame's approval satisfies the
+# required review on `main`, so agents/bots can never approve a merge.
+# The file owns itself too (GitHub docs: define an owner for CODEOWNERS).
+* @fromsukong
+/.github/CODEOWNERS @fromsukong
