@@ -19,7 +19,8 @@ keep EN and TH consistent.
 
 Workspace name `@excited-live/i18n`. Everything exported:
 
-- `Locale = "en" | "th"`, `LOCALES: readonly ["en", "th"]`, `DEFAULT_LOCALE = "en"`
+- `Locale = "en" | "th"`, `LOCALES: readonly Locale[]` (`["en", "th"] as const`),
+  `DEFAULT_LOCALE = "en"`
   (product launches EN-first in Thailand).
 - `LocalizedLabel { en: string, th: string }`. The same structural shape exists in
   `packages/tax/src/types.ts`; both engines speak the same label so tax labels render

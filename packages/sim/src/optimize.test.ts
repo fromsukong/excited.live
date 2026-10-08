@@ -1,8 +1,8 @@
 /**
  * Optimizer tests — expected numbers hand-computed from the TH 2026 brackets.
  * Case A (income 1,200,000): assessable 1,100,000; no RMF → taxable 1,015,000,
- * tax 108,000. At the 30% cap (330,000) → taxable 685,000, tax 70,000 →
- * recommended 330,000, saved 38,000.
+ * tax 118,750. At the 30% cap (330,000) → taxable 685,000, tax 55,250 →
+ * recommended 330,000, saved 63,500.
  * Case B (income 600,000): assessable 550,000; taxable 465,000 → tax 24,000.
  * Cap 165,000 would overshoot taxable; 1000-baht walk-down finds the smallest
  * contribution that still saves tax: taxable 1,000 → tax 50 → recommended
