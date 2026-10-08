@@ -1,4 +1,5 @@
 import {
+	HStack,
 	PlainButton,
 	Stack,
 	Tab,
@@ -16,10 +17,11 @@ import { MilestoneTable } from "./components/MilestoneTable"
 import { GroupedPeriodTable } from "./components/GroupedPeriodTable"
 import { GroupedValueTable } from "./components/GroupedValueTable"
 import { TypePickerDialog } from "./components/TypePickerDialog"
+import { PageEmptyState } from "../../components/PageEmptyState"
 import {
 	HORIZONS,
-	usePlanDashboardContext,
-} from "../../hooks/usePlanDashboard"
+	useHome,
+} from "./useHome"
 import {
 	type AssetTypeId,
 	type ExpenseTypeId,
@@ -30,6 +32,8 @@ import {
 export function Home() {
 	const {
 		t,
+		status,
+		reload,
 		plan,
 		horizon,
 		setHorizon,
@@ -51,6 +55,8 @@ export function Home() {
 		shown,
 		shownBands,
 		bandCaption,
+		bandStatus,
+		retryBand,
 		financialMetrics,
 		removeEntryRow,
 		removeMilestone,
@@ -59,7 +65,28 @@ export function Home() {
 		handleSaveValue,
 		handleSaveMilestone,
 		handlePickType,
-	} = usePlanDashboardContext()
+	} = useHome()
+
+	// Root error boundary: if root page data fails to load, show empty state with reload button.
+	// Guarantees NO child endpoints are called.
+	if (status === "loading") {
+		return (
+			<Stack className="chart-panel__inner" vAlign="center" hAlign="center" padding={4}>
+				<Text color="secondary">{t("plan.lastSyncedToday")}</Text>
+			</Stack>
+		)
+	}
+
+	if (status === "error") {
+		return (
+			<PageEmptyState
+				title={t("empty.home.title")}
+				description={t("empty.home.description")}
+				actionLabel={t("action.reload")}
+				onAction={reload}
+			/>
+		)
+	}
 
 	return (
 		<>
@@ -155,6 +182,16 @@ export function Home() {
 								? ` · ${t("chart.band.unmet", { year: String(bandCaption.unmetYear) })}`
 								: ""}
 						</Text>
+					) : null}
+					{bandStatus === "error" && metric === "metric.netWorth" ? (
+						<HStack gap={2} vAlign="center" className="chart-band-caption">
+							<Text size="sm" color="secondary">
+								{t("component.error.band")}
+							</Text>
+							<PlainButton onClick={retryBand}>
+								<Text size="sm">{t("action.retry")}</Text>
+							</PlainButton>
+						</HStack>
 					) : null}
 				</Stack>
 

@@ -124,24 +124,20 @@ export function MonthYearPicker({
 	const foreverLabel = t("picker.forever") || "Forever"
 
 	// Resolve user's birth year and month for relative age tags
+	// NOTE: settings birthday now lives on the settings page (useSettings) and is not
+	// part of the plan dashboard context anymore; fall back to plan.birthYear.
 	const ctx = useSafePlanDashboardContext()
 	const { birthYear, birthMonth } = useMemo(() => {
 		let bYear = 2002
 		let bMonth = 7 // Default August matches 23y 5m in Jan 2026
 
-		if (ctx?.birthday) {
-			const bDate = new Date(ctx.birthday)
-			if (!Number.isNaN(bDate.getTime())) {
-				bYear = bDate.getFullYear()
-				bMonth = bDate.getMonth()
-			}
-		} else if (ctx?.plan?.birthYear != null) {
+		if (ctx?.plan?.birthYear != null) {
 			bYear = ctx.plan.birthYear
 			bMonth = 7
 		}
 
 		return { birthYear: bYear, birthMonth: bMonth }
-	}, [ctx?.birthday, ctx?.plan?.birthYear])
+	}, [ctx?.plan?.birthYear])
 
 	const options = useMemo<SelectorOptionType[]>(() => {
 		const startYear = Math.min(currentYear, year ?? currentYear)

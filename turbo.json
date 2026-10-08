@@ -1,11 +1,29 @@
 {
 	"$schema": "https://turbo.build/schema.json",
+	"globalEnv": [
+		"PORT",
+		"VITE_API_MODE",
+		"BACKEND_API_URL",
+		"WORKOS_CLIENT_ID",
+		"WORKOS_API_KEY",
+		"WORKOS_REDIRECT_URI",
+		"WORKOS_COOKIE_PASSWORD",
+		"WORKOS_REQUIRE_AUTH"
+	],
 	"tasks": {
 		"build": {
 			"dependsOn": ["^build"],
 			"outputs": [".output/**", "dist/**"]
 		},
 		"dev": {
+			"cache": false,
+			"persistent": true
+		},
+		"dev:api": {
+			"cache": false,
+			"persistent": true
+		},
+		"start": {
 			"cache": false,
 			"persistent": true
 		},

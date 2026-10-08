@@ -2,17 +2,18 @@
  * Plan service — the ONLY boundary between the dashboard UI and plan math.
  *
  * ┌──────────────────────────────────────────────────────────────────────────┐
- * │ MOCK SERVICE LAYER — intentional MVP stub (2026-09-06)                   │
+ * │ SERVICE LAYER — Mock vs Live Dispatching (2026-10-04)                    │
  * │                                                                          │
- * │ Everything runs in the browser on top of the pure engines                │
- * │ (@excited-live/sim, which wraps @excited-live/tax). When the real        │
- * │ backend + persistence land (MLP, US-100):                                │
+ * │ In "mock" mode (VITE_API_MODE=mock, pnpm dev):                           │
+ * │   Everything runs in the browser on top of the pure engines              │
+ * │   (@excited-live/sim, which wraps @excited-live/tax).                    │
  * │                                                                          │
- * │   1. Keep every exported type and function name in this file.            │
- * │   2. Replace ONLY the function bodies (fetch → /api/plan endpoints).     │
- * │   3. UI components must never import from @excited-live/sim directly —   │
- * │      they consume types + functions from this file only, so the swap     │
- * │      stays a one-file change.                                            │
+ * │ In "live" mode (VITE_API_MODE=live, pnpm dev:api / production):          │
+ * │   Calls the backend endpoints (/api/v1/plan, /api/v1/sim/*) with         │
+ * │   graceful fallback to pure engines.                                     │
+ * │                                                                          │
+ * │ UI components must never import from @excited-live/sim directly —        │
+ * │ they consume types + functions from this file only.                      │
  * └──────────────────────────────────────────────────────────────────────────┘
  */
 
@@ -36,6 +37,7 @@ import {
 	type MonteCarloResult,
 	yearlyAmount,
 } from "@excited-live/sim"
+import { apiFetch, isLiveApi } from "./api-client"
 
 /** Everything the UI needs, computed in one pass from the plan. */
 export interface PlanSummary {
@@ -89,18 +91,85 @@ export function defaultPlan(): PlanInput {
 	return defaultPlanInput()
 }
 
+const MOCK_PLAN_KEY = "excited_live_plan_input"
+
+function getMockPlan(): PlanInput {
+	if (typeof window === "undefined") return defaultPlan()
+	try {
+		const raw = localStorage.getItem(MOCK_PLAN_KEY)
+		if (!raw) return defaultPlan()
+		return JSON.parse(raw) as PlanInput
+	} catch {
+		return defaultPlan()
+	}
+}
+
+function saveMockPlan(plan: PlanInput): void {
+	if (typeof window === "undefined") return
+	try {
+		localStorage.setItem(MOCK_PLAN_KEY, JSON.stringify(plan))
+	} catch {
+		// Ignore storage quota errors in mock mode
+	}
+}
+
+/**
+ * Root page endpoint for Home: loads the active user plan.
+ */
+export async function fetchPlanData(): Promise<PlanInput> {
+	if (!isLiveApi()) {
+		return getMockPlan()
+	}
+
+	return await apiFetch<PlanInput>("/plan")
+}
+
+/**
+ * Persists the active user plan.
+ */
+export async function savePlanData(plan: PlanInput): Promise<void> {
+	if (!isLiveApi()) {
+		saveMockPlan(plan)
+		return
+	}
+
+	await apiFetch<void>("/plan", {
+		method: "PUT",
+		body: JSON.stringify(plan),
+	})
+}
+
 /** Wallet metadata for rendering (labels stay in the engine, bilingual). */
 export const walletDefs = DEFAULT_WALLETS
 
 /**
- * US-110 — Monte Carlo market bands for the chart overlay. Same MOCK-layer
- * contract as the rest of this file: when a backend lands, this body swaps
- * to a fetch without touching the UI.
+ * US-110 — Monte Carlo market bands for the chart overlay.
  */
 export function computeMonteCarloBands(plan: PlanInput): MonteCarloResult {
 	// Seeded config — same plan ⇒ same bands (SSR/client + reload match).
 	// The engine treats an omitted seed as "random run" by design.
 	return runMonteCarlo(plan, defaultMonteCarloConfig)
+}
+
+/**
+ * Component endpoint for Monte Carlo market bands.
+ * Can be fetched asynchronously for the chart overlay.
+ */
+export async function fetchMonteCarloBandsData(plan: PlanInput): Promise<MonteCarloResult> {
+	if (!isLiveApi()) {
+		return computeMonteCarloBands(plan)
+	}
+
+	try {
+		return await apiFetch<MonteCarloResult>("/sim/monte-carlo", {
+			method: "POST",
+			// API contract: { plan, config? } — sending a bare plan 500s server-side.
+			body: JSON.stringify({ plan, config: defaultMonteCarloConfig }),
+		})
+	} catch {
+		// Fallback to local engine if backend endpoint is unavailable
+		return computeMonteCarloBands(plan)
+	}
 }
 
 /** Re-exports for UI typing — the UI never imports @excited-live/sim itself. */

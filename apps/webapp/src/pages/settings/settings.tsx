@@ -7,18 +7,40 @@ import {
 	TextInput,
 } from "@excited-live/design-system"
 import { GenderField } from "./components/GenderField"
-import { usePlanDashboardContext } from "../../hooks/usePlanDashboard"
+import { useSettings } from "./useSettings"
+import { PageEmptyState } from "../../components/PageEmptyState"
 
 export function Settings() {
 	const {
 		t,
+		status,
+		reload,
 		profileName,
 		setProfileName,
 		birthday,
 		setBirthday,
 		gender,
 		setGender,
-	} = usePlanDashboardContext()
+	} = useSettings()
+
+	if (status === "loading") {
+		return (
+			<Stack className="chart-panel__inner settings-panel" vAlign="center" hAlign="center" padding={4}>
+				<Text color="secondary">{t("plan.lastSyncedToday")}</Text>
+			</Stack>
+		)
+	}
+
+	if (status === "error") {
+		return (
+			<PageEmptyState
+				title={t("empty.settings.title")}
+				description={t("empty.settings.description")}
+				actionLabel={t("action.reload")}
+				onAction={reload}
+			/>
+		)
+	}
 
 	return (
 		<Stack gap={3} className="chart-panel__inner settings-panel">

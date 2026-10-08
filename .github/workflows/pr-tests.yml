@@ -129,3 +129,23 @@ jobs:
         env:
           AFFECTED_PACKAGE: ${{ matrix.task }}
         run: pnpm exec turbo run test --filter="$AFFECTED_PACKAGE" --output-logs=errors-only
+
+  # apps/api has no test script yet, so it is invisible to the test matrix
+  # above. Gate it explicitly: typecheck + build prove the package compiles
+  # inside the workspace (deps resolved via pnpm workspace links).
+  api-gate:
+    name: api (typecheck + build)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 10.12.0
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec turbo run typecheck build --filter=@excited-live/api
+

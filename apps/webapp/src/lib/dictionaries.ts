@@ -58,11 +58,6 @@ export const strings: Dictionary = {
 	// Right column — plan summary card
 	"plan.actions": { en: "Plan", th: "แผน" },
 	"plan.lastSyncedToday": { en: "Recomputed just now", th: "คำนวณใหม่เมื่อสักครู่" },
-	"plan.keepCurrent": { en: "Every input is live", th: "ทุกตัวเลขแก้ได้สด ๆ" },
-	"plan.summaryBody": {
-		en: "Edit any input below — the chart, your numbers, and this plan update instantly.",
-		th: "แก้ตัวเลขด้านล่างได้เลย กราฟ ตัวเลข และแผนจะอัปเดตทันที",
-	},
 
 	// Engine answers (used by the chat replies)
 	"info.retirement.left": { en: "{amount} left at {year}", th: "เหลือ {amount} ถึงปี {year}" },
@@ -87,6 +82,7 @@ export const strings: Dictionary = {
 	"row.label": { en: "Name", th: "ชื่อ" },
 	"table.metric": { en: "Metric", th: "ตัวชี้วัด" },
 	"table.value": { en: "Value", th: "มูลค่า" },
+	"table.search": { en: "Search", th: "ค้นหา" },
 	"table.wallet": { en: "Wallet", th: "กระเป๋า" },
 	"row.period": { en: "Period", th: "ช่วงเวลา" },
 	"row.amount": { en: "Amount (฿)", th: "จำนวน (บาท)" },
@@ -281,6 +277,33 @@ export const strings: Dictionary = {
 	},
 	"chat.status.funded": { en: "on track", th: "กำลังไปได้ดี" },
 	"chat.status.short": { en: "at risk", th: "มีความเสี่ยง" },
+	"plan.keepCurrent": { en: "Every input is live", th: "ทุกตัวเลขแก้ได้สด ๆ" },
+	"plan.summaryBody": {
+		en: "Edit any input below — the chart, your numbers, and this plan update instantly.",
+		th: "แก้ตัวเลขด้านล่างได้เลย กราฟ ตัวเลข และแผนจะอัปเดตทันที",
+	},
+
+	// Empty states and resilient error loading (Root & Component level)
+	"empty.home.title": { en: "Unable to load plan", th: "ไม่สามารถโหลดข้อมูลแผนได้" },
+	"empty.home.description": {
+		en: "Something went wrong while fetching your plan. Click reload to try again.",
+		th: "เกิดข้อผิดพลาดในการโหลดข้อมูลแผนของคุณ คลิกโหลดใหม่เพื่อลองอีกครั้ง",
+	},
+	"empty.settings.title": { en: "Unable to load settings", th: "ไม่สามารถโหลดข้อมูลการตั้งค่าได้" },
+	"empty.settings.description": {
+		en: "Something went wrong while fetching your settings. Click reload to try again.",
+		th: "เกิดข้อผิดพลาดในการโหลดข้อมูลการตั้งค่าของคุณ คลิกโหลดใหม่เพื่อลองอีกครั้ง",
+	},
+	"action.reload": { en: "Reload", th: "โหลดใหม่" },
+	"action.retry": { en: "Retry", th: "ลองใหม่" },
+	"component.error.band": {
+		en: "Market band simulation unavailable.",
+		th: "ไม่สามารถโหลดแถบการจำลองตลาดได้",
+	},
+	"component.error.generic": {
+		en: "Failed to load this section.",
+		th: "ไม่สามารถโหลดข้อมูลส่วนนี้ได้",
+	},
 }
 
 /** Optional per-locale overrides on top of `strings` (none needed yet). */
