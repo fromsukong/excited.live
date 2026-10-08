@@ -11,26 +11,26 @@
 		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
-		"@astryxdesign/core": "^0.5.0",
-		"@astryxdesign/theme-neutral": "^0.5.0",
+		"@astryxdesign/core": "catalog:",
+		"@astryxdesign/theme-neutral": "catalog:",
 		"@excited-live/design-system": "workspace:*",
 		"@excited-live/i18n": "workspace:*",
 		"@excited-live/sim": "workspace:*",
 		"@excited-live/tax": "workspace:*",
-		"@tanstack/react-router": "^1.170.32",
-		"@tanstack/react-start": "^1.168.49",
+		"@tanstack/react-router": "catalog:",
+		"@tanstack/react-start": "catalog:",
 		"@workos-inc/node": "^10.13.0",
 		"@workos/authkit-tanstack-react-start": "^0.11.0",
 		"echarts": "6.1.0",
-		"react": "^19.2.0",
-		"react-dom": "^19.2.0"
+		"react": "catalog:",
+		"react-dom": "catalog:"
 	},
 	"devDependencies": {
-		"@types/node": "^24.0.0",
-		"@types/react": "^19.2.0",
-		"@types/react-dom": "^19.2.0",
-		"@vitejs/plugin-react": "^6.1.0",
-		"typescript": "^5.8.3",
-		"vite": "^8.2.2"
+		"@types/node": "catalog:",
+		"@types/react": "catalog:",
+		"@types/react-dom": "catalog:",
+		"@vitejs/plugin-react": "catalog:",
+		"typescript": "catalog:",
+		"vite": "catalog:"
 	}
 }

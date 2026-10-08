@@ -19,15 +19,15 @@
 		"theme:check": "astryx theme build src/mastercardTheme.ts -o src/mastercard-theme.css --check"
 	},
 	"peerDependencies": {
-		"@astryxdesign/core": "^0.5.0",
-		"react": "^19.2.0"
+		"@astryxdesign/core": "catalog:",
+		"react": "catalog:"
 	},
 	"devDependencies": {
-		"@astryxdesign/cli": "0.5.0",
-		"@astryxdesign/core": "^0.5.0",
-		"@types/react": "^19.2.0",
-		"react": "^19.2.0",
-		"tsup": "^8.5.0",
-		"typescript": "^5.8.3"
+		"@astryxdesign/cli": "catalog:",
+		"@astryxdesign/core": "catalog:",
+		"@types/react": "catalog:",
+		"react": "catalog:",
+		"tsup": "catalog:",
+		"typescript": "catalog:"
 	}
 }

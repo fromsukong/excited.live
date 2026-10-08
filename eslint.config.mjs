@@ -62,6 +62,8 @@ export default tseslint.config(
 			"**/.verify/**",
 			"**/routeTree.gen.ts",
 			"**/*.cjs",
+			"**/src-tauri/target/**",
+			"**/src-tauri/gen/android/**",
 		],
 	},
 	js.configs.recommended,
