@@ -9,7 +9,7 @@ Shipped-state baseline: `main` @ `904a5f3`. Flows that exist in code carry `[shi
 - Flow-first. Each flow describes the experience, not the implementation. Route and screen names are given only where they already exist, so the doc stays honest about what is real today.
 - One flow, one block: Goal, Entry, Steps, States, Exit, Route / screen, Status, References.
 - Status legend: `[shipped]` on `main`, `[in review]` in an open PR, `[planned]` backlog (user story in brackets).
-- References are pointers to study, never copied. Our principles (P1-P9 in [PRD.md](PRD.md)) and our design language ([DESIGN.md](../DESIGN.md)) win wherever a reference conflicts. Deviations are collected in section 9.
+- References are pointers to study, never copied. Our principles (P1-P9 in [PRD.md](PRD.md)) and our design language ([DESIGN.md](../DESIGN.md)) win wherever a reference conflicts. Deviations are collected in section 8.
 - Copy stays bilingual-aware: EN first, `{ en, th }` per P4. Thai is casual, short, spoken. No em-dashes in EN. No AI-isms.
 - Post-MLP items with no shipped flow are outlines only, marked `outline`.
 
@@ -21,7 +21,7 @@ App map:
 | `apps/tax-webapp` | Standalone TH/US income-tax calculator. | `/` |
 | `apps/tax-mobile` | Tauri v2 Android scaffold. View/summarize first. | `/`, `/about` |
 | `apps/landingpage` | Marketing, waitlist, blog, docs. | `/` |
-| `apps/api` | BFF. Not user-facing, specced as the boundary in section 6. | `/api/v1` |
+| `apps/api` | BFF. Not user-facing, specced as the boundary in section 5. | `/api/v1` |
 
 ## 1. webapp
 
@@ -211,7 +211,7 @@ Steps:
 6. Advisor tier shows seat count and client seats on the same screen, for advisor accounts.
 States: empty, no subscription yet shows the trial start. loading, activation is pending until confirmed. error, a failed activation keeps the plan state and shows how to retry.
 Exit: subscribed, back on the plan with the gate lifted.
-Route / screen: planned. Billing crosses the api boundary (section 6, B-6).
+Route / screen: planned. Billing crosses the api boundary (section 5, B-6).
 References:
 - [Semrush: Upgrading a plan](https://mobbin.com/flows/336112e3-8d59-4359-a5de-141ae6379f6b) (ref05). Borrow the plan recommendation and the 7-day trial with a skip option; near-exact parallel to our flow.
 - [Evernote: Subscribing to a plan](https://mobbin.com/flows/8be6375d-6615-4720-85b7-e3e5e255cdf3). Borrow the classic subscribe path.
