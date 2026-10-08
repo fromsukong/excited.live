@@ -22,8 +22,8 @@
 		"@excited-live/tax": "workspace:*"
 	},
 	"devDependencies": {
-		"tsup": "^8.5.0",
-		"typescript": "^5.8.3",
-		"vitest": "^3.2.0"
+		"tsup": "catalog:",
+		"typescript": "catalog:",
+		"vitest": "catalog:"
 	}
 }
