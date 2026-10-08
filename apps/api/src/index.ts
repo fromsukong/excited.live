@@ -1,46 +1,28 @@
-import { Hono } from "hono"
-import { cors } from "hono/cors"
-import { logger } from "hono/logger"
 import { serve } from "@hono/node-server"
-import { planRouter } from "./routes/plan"
-import { settingsRouter } from "./routes/settings"
-import { simRouter } from "./routes/sim"
+import { createApp } from "./app"
+import { getDb } from "./db"
 
-const app = new Hono()
-
-app.use("*", logger())
-app.use(
-	"*",
-	cors({
-		origin: (origin) => origin || "*",
-		allowHeaders: ["Content-Type", "Authorization", "x-user-id"],
-		allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-		credentials: true,
-	}),
-)
-
-app.get("/health", (c) => {
-	return c.json({ status: "ok", service: "excited-live-api", timestamp: new Date().toISOString() })
-})
-
-app.get("/", (c) => {
-	return c.json({
-		name: "excited.live API",
-		version: "0.0.1",
-		docs: "/health",
-	})
-})
-
-const apiV1 = new Hono()
-apiV1.route("/plan", planRouter)
-apiV1.route("/settings", settingsRouter)
-apiV1.route("/sim", simRouter)
-
-app.route("/api/v1", apiV1)
+const app = createApp()
 
 const port = Number(process.env.PORT) || 8000
 
 if (process.env.NODE_ENV !== "test") {
+	try {
+		// Open (and migrate) the database before accepting traffic: a broken
+		// database should fail loudly at boot, not silently serve volatile data.
+		const db = await getDb()
+		console.log(`[excited-live-api] persistence: ${db.mode} (${db.location})`)
+		if (db.migrations.length > 0) {
+			console.log(`[excited-live-api] migrations applied: ${db.migrations.join(", ")}`)
+		}
+	} catch (error) {
+		console.error("[excited-live-api] persistence unavailable:", error)
+		console.error(
+			"[excited-live-api] set EXCITED_API_DB_PATH to a writable file, or bind a D1 database to DB.",
+		)
+		process.exit(1)
+	}
+
 	console.log(`[excited-live-api] Running on http://localhost:${port}`)
 	serve({
 		fetch: app.fetch,

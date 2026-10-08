@@ -1,0 +1,23 @@
+# Cloudflare Workers config for the excited.live API.
+#
+# Deployment is NOT wired yet — this file makes the D1 binding and the Workers
+# entry point repo-ready so the future deploy task is mechanical.
+# Nothing here provisions anything: no `wrangler d1 create`, no deploy.
+#
+# Runtime resolution (src/db/index.ts):
+#   1. env.DB (this D1 binding)  -> D1
+#   2. otherwise                 -> local SQLite file via node:sqlite
+
+name = "excited-live-api"
+main = "dist/worker.js"
+compatibility_date = "2026-08-30"
+
+# Provisioning (future task, needs Prame's go):
+#   npx wrangler d1 create excited-live-api
+#   -> paste the printed database_id below
+#   npx wrangler d1 migrations apply excited-live-api --remote
+[[d1_databases]]
+binding = "DB"
+database_name = "excited-live-api"
+database_id = "REPLACE_WITH_DATABASE_ID"
+migrations_dir = "migrations"

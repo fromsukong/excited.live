@@ -130,11 +130,12 @@ jobs:
           AFFECTED_PACKAGE: ${{ matrix.task }}
         run: pnpm exec turbo run test --filter="$AFFECTED_PACKAGE" --output-logs=errors-only
 
-  # apps/api has no test script yet, so it is invisible to the test matrix
-  # above. Gate it explicitly: typecheck + build prove the package compiles
-  # inside the workspace (deps resolved via pnpm workspace links).
+  # apps/api now has a test script, so the matrix above picks it up when the
+  # package (or its deps) change. Gate it explicitly as well: typecheck + build
+  # + tests must pass even for changes the affected-set computation cannot see
+  # (lockfile, root config), and this job is the api-specific CI contract.
   api-gate:
-    name: api (typecheck + build)
+    name: api (typecheck + build + test)
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -147,5 +148,5 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm exec turbo run typecheck build --filter=@excited-live/api
+      - run: pnpm exec turbo run typecheck build test --filter=@excited-live/api
 
