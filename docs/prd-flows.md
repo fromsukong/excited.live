@@ -32,12 +32,12 @@ Entry: any webapp URL. `/_layout` resolves auth server-side before the dashboard
 Steps:
 1. The page renders the dashboard shell. The topbar shows the wordmark, the "plan / settings" nav, a sync indicator, the EN/TH toggle, and the auth slot (`Topbar`, `TopbarAuth`).
 2. Auth is unconfigured (local mock, PR preview): the auth slot renders nothing and the visitor works in a local mock plan. No dead end.
-3. Auth is configured and there is no session: the slot shows a sign-in link that carries `returnPathname`, so the user lands back where they left off.
+3. Auth is configured and there is no session: the slot shows a sign-in link, and the user lands back where they left off.
 4. Auth is configured and there is a session: the slot shows the first name (or email) and a sign-out link.
-5. Sign-in leaves and returns through `/api/auth/sign-in`, `/api/auth/callback`, `/api/auth/sign-out` (WorkOS AuthKit).
+5. Sign-in leaves the app and returns, handled by the hosted provider.
 States: empty, the sign-in link. loading, the dashboard shell renders with the chart panel filled by `Suspense`. error, auth resolution is server-side and a failure falls back to the guest path.
 Exit: signed in, on the dashboard with a saved plan. Or guest, on the dashboard with a local plan.
-Route / screen: `/_layout` (`__root.tsx`, `_layout.tsx`), `TopbarAuth`.
+Route / screen: `/_layout` (`__root.tsx`, `_layout.tsx`), `TopbarAuth`; auth routes `/api/auth/sign-in`, `/api/auth/callback`, `/api/auth/sign-out` (WorkOS AuthKit), return param `returnPathname`.
 References:
 - [Monarch: Dashboard](https://mobbin.com/flows/38ad0506-1509-44dc-86c2-b8c0904cac81) (ref01 + ref02). Borrow the idea that the first thing behind a fresh sign-in is a small get-started card, then the real dashboard. We keep our own sign-in: no standalone marketing screen inside the app.
 - [Rocket Money: Onboarding](https://mobbin.com/flows/fed2772b-6edd-432f-b195-0691f2d84d04). Borrow the paced, brand-forward entry feel. Our entry is lighter: one link, then the shell.
@@ -172,11 +172,10 @@ Steps:
 1. The user opens the tax tool. The cutoff dropdown and the recommended contribution amount are the primary controls.
 2. A headline shows tax saved in baht for the recommended amount.
 3. A real-return headline shows the comparison, with an expandable per-year table.
-4. Numbers match the sheet within rounding on the same inputs.
-5. TH only user-facing (US-109). No US path here.
+4. TH only user-facing (US-109). No US path here.
 States: empty, with no income the tool explains what it needs instead of showing zeros as an answer. loading, recompute is quick and shows the last good numbers while it settles. error, an invalid input disables the recommendation with an inline reason.
 Exit: the user takes the recommended amount back to their plan.
-Route / screen: `/_layout/`, planned. Engine support already exists (`packages/sim` optimizer, `packages/tax`).
+Route / screen: `/_layout/`, planned tax tool.
 References:
 - [Quicken: Planning tools](https://mobbin.com/flows/60d65df9-072f-427e-81c3-c4041e22888c). Borrow the tool-switcher layout for the tax tab arrangement.
 - [Quicken: Calculating retirement projections](https://mobbin.com/flows/16d37ef8-fe5c-4316-9b37-b36e375c532f) (ref04). Borrow the assumptions panel beside the projection.
@@ -236,14 +235,14 @@ Entry: `/`. Single route.
 Steps:
 1. The header shows the brand lockup, the app name, and an EN / ไทย segmented toggle.
 2. The hero states the question in one line and one sub-line.
-3. A country switch offers Thailand and United States. Choosing US shows a placeholder banner and a placeholder badge, because the US engine is a structural stand-in.
+3. A country switch offers Thailand and United States. Choosing US shows a placeholder banner and a placeholder badge.
 States: empty, the form starts with empty money fields, visibly untouched, not zeroes. loading, a small query-status line confirms the engine sync. error, a validation problem zeroes the result and lists the warnings in the assumptions panel.
 Exit: the visitor reads a number, or continues to more inputs.
 Route / screen: `/` (`apps/tax-webapp/src/routes/index.tsx`).
 References:
 - [Oyster: Using salary insights tool](https://mobbin.com/flows/1370cef5-5f96-4089-9d8a-2f6f5116cb74). Borrow the number-forward tool framing.
 - [Airbnb: Estimating earnings](https://mobbin.com/flows/623a1812-f435-4989-81d0-23a2644396ad). Borrow the income-to-number estimate framing for the hero.
-- Copy note: hero `{ en: "How much income tax will you pay?", th: "คุณจะจ่ายภาษีเท่าไหร่?" }`, sub `{ en: "Estimate your individual income tax, live, in your browser.", th: "คำนวณภาษีเงินได้บุคคลธรรมดา คำนวณสดในเบราว์เซอร์ของคุณ" }`.
+- Copy note: hero `{ en: "How much income tax will you pay?", th: "คุณจะจ่ายภาษีเท่าไหร่?" }`, sub `{ en: "Estimate your individual income tax, live, in your browser.", th: "ประเมินภาษีเงินได้บุคคลธรรมดาแบบสด ๆ ในเบราว์เซอร์" }`.
 
 ### F-21 Enter income `[shipped]`
 
@@ -335,7 +334,7 @@ Steps:
 2. Then optional deductions, one screen, skippable.
 3. Then household, one screen, skippable.
 4. A progress hint and a help affordance on each step.
-States: empty, skippable steps default to TH values. loading, model load is instant, it is local. error, invalid input blocks the next step with a reason.
+States: empty, skippable steps default to TH values. loading, compute is local, so results appear without a spinner. error, invalid input blocks the next step with a reason.
 Exit: results.
 Route / screen: `/`, planned.
 References:
@@ -375,7 +374,8 @@ Route / screen: `/` (`apps/landingpage/src/pages/index.astro`).
 References:
 - [ISO Meet](https://mobbin.com/sites/sections/c494bf4c-177f-4b26-830f-1168406fd48f) (ref08). Borrow the waitlist section shape: one promise, one field, one button.
 - [Base](https://mobbin.com/sites/sections/75fb9e38-9f05-494f-92ab-86ff2a2e5efd). Borrow waitlist section rhythm and spacing.
-- Copy note: headline `{ en: "Plan the life you want to live", th: "วางแผนชีวิตแบบที่คุณอยากใช้ชีวิต" }`, sub `{ en: "Simulate your money and your plans before you live them. Tax, expenses, and life goals. Free for everyone.", th: "จำลองการเงินและแผนชีวิตของคุณก่อนใช้จริง ภาษี ค่าใช้จ่าย และเป้าหมายต่าง ๆ ฟรีสำหรับทุกคน" }`.
+- Copy note: headline `{ en: "Plan the life you want to live", th: "วางแผนชีวิตที่คุณอยากใช้จริง" }`, sub `{ en: "Simulate your money and your plans before you live them. Tax, expenses, and life goals. Try everything free for 7 days.", th: "จำลองการเงินและแผนชีวิตก่อนใช้จริง ภาษี ค่าใช้จ่าย และเป้าหมายต่าง ๆ ทดลองใช้ฟรี 7 วัน" }`.
+- Pricing-honesty note: the shipped hero still says "free for everyone". That copy is stale against [pricing.md](pricing.md) Revision 3, which gates the whole app and makes the 7-day trial the only free access. This doc states the trial framing; the landing page copy needs a matching fix in a later code PR (docs only here, so it is flagged, not changed).
 
 ### F-41 Demo `[shipped]`
 
@@ -424,8 +424,21 @@ States: empty, the blog index with no posts shows a simple list. loading, static
 Exit: back to the site, or join the waitlist from the footer.
 Route / screen: `/blog`, `/blog/[slug]`, `/docs/[...slug]`, `/og/*`, `/sitemap.xml`, `/api/search.json`.
 References:
-- [Mailchimp pricing section](https://mobbin.com/sites/sections/3eefd7ba-1398-453d-9c7b-0dac1d869c40), [Framer pricing section](https://mobbin.com/sites/sections/7506bd76-c42f-431d-8478-8f477d4ba895), and [Revolut pricing section](https://mobbin.com/sites/sections/cac16ee8-d037-4b22-8de1-5eedc7457b1a). Borrow pricing-section rhythm for the future pricing page. There is no pricing page yet.
+- No reference in the set covers an article or a docs reading flow. Stated, not forced. Article layout and the docs nav stay on our own design language.
 - Copy note: keep article titles plain and concrete, no clickbait.
+
+### F-44 Pricing page `[planned]` (outline) ([pricing.md](pricing.md) Revision 3)
+
+Goal (outline only): a visitor reads what they get, what the trial includes, and what it costs, then starts the trial or signs up.
+Outline: one plan card for the $109/year personal plan with the 7-day trial, a quieter Advisor tier card ($59/month or $599/year), and a short FAQ. No pricing page exists yet, so this is an outline.
+States: empty and loading not applicable (static page). error, none on the page itself.
+Exit: start the trial, or return to the hero.
+Route / screen: `/pricing`, planned. The three pricing sections in the reference set land here.
+References:
+- [Mailchimp pricing section](https://mobbin.com/sites/sections/3eefd7ba-1398-453d-9c7b-0dac1d869c40). Borrow the plan-tier rhythm and the plain per-plan benefit list.
+- [Framer pricing section](https://mobbin.com/sites/sections/7506bd76-c42f-431d-8478-8f477d4ba895). Borrow the clean two-tier contrast and the short FAQ below it.
+- [Revolut pricing section](https://mobbin.com/sites/sections/cac16ee8-d037-4b22-8de1-5eedc7457b1a). Borrow the tiered-plan layout for the personal-plus-advisor pair.
+- Copy note: plain money talk, `{ en: "$109 a year, 7 days free", th: "$109 ต่อปี ทดลองฟรี 7 วัน" }`.
 
 ## 5. api boundary (not user-facing)
 
@@ -453,7 +466,7 @@ The api is the single boundary every flow crosses (P3). Specced here so flows st
 
 ## 7. Reference index
 
-Counts: 39 references linked across 23 flows. Every flow cites at least one. Five flows state honestly that no reference in the set fits a specific detail (sign-in form, sliders, settings form, cross-app handoff, screenshot carousel), and build that detail on our own design language instead.
+Counts: 39 references linked across 24 flows. Two flows carry no reference from the set and say so instead of forcing one (F-09 settings, F-43 blog and docs). Four flows state that no reference fits one specific detail (F-01 sign-in form, F-06 sliders, F-24 cross-app handoff, F-41 screenshot carousel) and build that detail on our own design language.
 
 Per flow:
 
@@ -481,7 +494,8 @@ Per flow:
 | F-40 | ISO Meet (ref08), Base |
 | F-41 | Revolut Total wealth |
 | F-42 | ISO Meet (ref08), Threads |
-| F-43 | Mailchimp pricing, Framer pricing, Revolut pricing |
+| F-43 | none in set (stated) |
+| F-44 | Mailchimp pricing, Framer pricing, Revolut pricing |
 
 Notable picks: Semrush for the trial-to-subscription flow (ref05) is the closest single parallel in the set. Quicken Calculating retirement projections (ref04) carries the high / expected / low framing that our chart already uses. Oyster Using equity tax calculator (ref06) carries the methodology note that matches our honest-estimate posture. Origin Creating a forecast (ref03) is our closest desktop scenario analog.
 
@@ -492,6 +506,7 @@ Notable picks: Semrush for the trial-to-subscription flow (ref05) is the closest
 - Principles win on conflict: TH tax only user-facing (P6, P7), pure engines (P2), one backend boundary (P3), bilingual `{ en, th }` (P4), Astryx-first (P5). Where a reference shows a pattern that breaks one of these, we note the deviation and keep our way.
 - Copy: ours stays short, spoken, and calm. No hype, no em-dashes in EN, no AI-isms.
 - Honesty: estimates are labeled as estimates. Placeholder jurisdictions carry a visible placeholder banner. No reference's "bigger number" framing overrides our honest-estimate posture.
+- Per-flow conflicts worth an audit line: F-10 borrows Semrush's trial-with-skip but we capture no card at launch (manual PromptPay, [pricing.md](pricing.md)). F-02 borrows YNAB's long setup for pacing only; ours stays 4 steps, not 20. F-08 borrows Quicken's assumptions panel, but the sheet stays the reference for our numbers. F-40 borrows the ISO Meet waitlist shape but drops its free-access claim for the 7-day trial framing ([pricing.md](pricing.md)).
 
 ## 9. Open questions for Prame
 
