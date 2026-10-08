@@ -453,7 +453,7 @@ The api is the single boundary every flow crosses (P3). Specced here so flows st
 
 ## 7. Reference index
 
-Counts: 39 references linked across 23 flows plus the advisor outline. Every flow cites at least one. Five flows state honestly that no reference in the set fits a specific detail (sign-in form, sliders, settings form, cross-app handoff, screenshot carousel), and build that detail on our own design language instead.
+Counts: 39 references linked across 23 flows. Every flow cites at least one. Five flows state honestly that no reference in the set fits a specific detail (sign-in form, sliders, settings form, cross-app handoff, screenshot carousel), and build that detail on our own design language instead.
 
 Per flow:
 
