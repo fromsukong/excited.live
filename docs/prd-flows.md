@@ -207,7 +207,7 @@ Steps:
 2. The trial state is visible in the topbar, with days left.
 3. When the trial ends, gated actions route to the subscribe screen.
 4. The subscribe screen shows one recommendation, the yearly price, and the trial status. There is a skip option while the trial is active.
-5. Purchase at launch is manual PromptPay activation (pricing.md Revision 3), so the screen explains the step and then confirms activation.
+5. Purchase at launch is manual PromptPay activation ([pricing.md](pricing.md) Revision 3), so the screen explains the step and then confirms activation.
 6. Advisor tier shows seat count and client seats on the same screen, for advisor accounts.
 States: empty, no subscription yet shows the trial start. loading, activation is pending until confirmed. error, a failed activation keeps the plan state and shows how to retry.
 Exit: subscribed, back on the plan with the gate lifted.
@@ -221,7 +221,7 @@ References:
 ### F-11 Advisor workspace `outline` (phase 3)
 
 Goal (outline only): an advisor manages several clients, each with their own plan and consent.
-Outline: a client list, a client detail panel with the plan summary, an invite flow for client seats, and a per-client AI usage control. Plans always belong to the client. Nothing here starts until the white-label trigger fires (prd-post-mlp.md section 3).
+Outline: a client list, a client detail panel with the plan summary, an invite flow for client seats, and a per-client AI usage control. Plans always belong to the client. Nothing here starts until the white-label trigger fires ([prd-post-mlp.md](prd-post-mlp.md) section 3).
 References:
 - [QuickBooks: Customer hub](https://mobbin.com/flows/9c451ace-4365-4c25-b676-7035bba43a72). Borrow the client hub layout.
 - [Copilot: Client detail](https://mobbin.com/flows/d2652c8f-f9ba-4b9b-9bc1-a19c39a42d4f). Borrow the client detail panel.
@@ -441,7 +441,7 @@ The api is the single boundary every flow crosses (P3). Specced here so flows st
 
 ## 6. Post-MLP outlines without shipped flows
 
-`outline` items only, kept short. Each becomes a full flow spec when its trigger fires (prd-post-mlp.md).
+`outline` items only, kept short. Each becomes a full flow spec when its trigger fires ([prd-post-mlp.md](prd-post-mlp.md)).
 
 - Mobile surface (trigger: MLP activated plus mobile demand). View and summarize: headline answers, chart, goal status. Minimal editing; serious planning stays on web.
 - White-label for advisors (trigger: first advisor pilot). Branding, advisor dashboard, client management, export. Overlaps F-11.
