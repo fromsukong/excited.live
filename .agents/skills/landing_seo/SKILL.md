@@ -48,7 +48,9 @@ content/
   blog/<slug>.md              # posts (frontmatter: title, date, description, youtube?, draft?)
   docs/...                    # docs pages + meta files
 src/content.config.ts         # astro content collections: docs, meta, blog (zod schemas)
-public/                       # robots.txt, _headers, katex.min.css, fonts, og-image.png
+public/                       # robots.txt, _headers, katex.min.css, fonts, og.png,
+                              # favicon.svg, favicon-32.png, apple-touch-icon.png,
+                              # logo-mark.png, logo-wordmark.png, blog/, demo/
 BLOG.md                       # the blog/slides authoring contract (read before writing a post)
 n8n/                          # waitlist endpoint contract (section 4); real automation JSON
 ```

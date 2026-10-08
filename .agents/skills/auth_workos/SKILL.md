@@ -55,8 +55,9 @@ Staging values live in GitHub repo secrets or a local `.env` only (see
 `WORKOS_REQUIRE_AUTH`).
 
 - `authkitConfigured()`: true iff all four `WORKOS_*` vars are set. When NOT
-  configured it warns once per process ("[auth] WORKOS_* env vars not set, AuthKit
-  disabled for this environment") and returns false, so unconfigured environments
+  configured it warns once per process ("[auth] WORKOS_* env vars not set — AuthKit
+  disabled for this environment (auth routes unavailable)") and returns false, so
+  unconfigured environments
   (PR previews, prelive, local mock work) keep running with normal rendering: 
   authkitMiddleware throws on first use when its config is missing, hence the gate.
 - `authRequired()`: `authkitConfigured() && (WORKOS_REQUIRE_AUTH === "true" ||
