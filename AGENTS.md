@@ -11,6 +11,14 @@ Contract for any AI agent working in this repo (Hermes, OpenCode, Claude Code, C
 5. **Don't edit generated files**: `routeTree.gen.ts`, `pnpm-lock.yaml`, `dist/`, `.output/`.
 6. **Done criteria**: `pnpm build && pnpm typecheck && pnpm lint` must pass (0 warnings) before opening a PR.
 
+## PR & merge pipeline
+
+- **Review is local, not in the PR.** Run the local review gate before pushing; the PR itself carries no review content.
+- **PR body format.** First line: `**Human attention needed:** YES — <one-line why>` or `**Human attention needed:** NO`. Then a short `## Summary` (what changed + why, a few bullets). Preview links are auto-appended; add nothing else.
+  - YES when: money/tax math, auth, data, infra, user-visible behavior, or anything not fully verified. NO when: docs/CI-only, mechanical, verified safe.
+- **Auto-merge.** Arm it right after opening the PR: `gh pr merge <number> --auto --squash`. Arm from a user account (the assistant's credentials), never a bot/`GITHUB_TOKEN` — bot-armed merges do not trigger the deploy workflows. `main` is protected: GitHub merges automatically once Prame approves and the required checks pass — squash only.
+- **Never merge or push to `main` yourself.** After Prame approves, do not push anything: a new push dismisses his approval and blocks the merge.
+
 ## Skill loading rules
 
 - **`honcho_memory`**: **Always load every time**. Use it on every turn to recall user context, inspect peers, or ground decisions in shared memory.

@@ -150,3 +150,27 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm exec turbo run typecheck build test --filter=@excited-live/api
 
+  # Single required status check for branch protection. The job name must
+  # match the required context on `main` ("PR gate"). Fails if any dependency
+  # failed; a skipped `test` job (no affected packages with tests) counts as
+  # a pass. Skipped when the run itself is cancelled (concurrency supersedes).
+  gate:
+    name: PR gate
+    needs: [detect, lint, test, api-gate]
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Aggregate dependency results
+        run: |
+          for r in \
+            "${{ needs.detect.result }}" \
+            "${{ needs.lint.result }}" \
+            "${{ needs.test.result }}" \
+            "${{ needs.api-gate.result }}"; do
+            case "$r" in
+              success|skipped) ;;
+              *) echo "::error::dependency result: $r"; exit 1 ;;
+            esac
+          done
+          echo "All gated jobs passed."
